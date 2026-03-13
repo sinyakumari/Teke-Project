@@ -74,8 +74,8 @@ export default function HomePage() {
       endOfDay.setHours(23, 59, 59, 999)
 
       const endOfWeek = new Date()
-      endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()))
-      endOfWeek.setHours(23, 59, 59, 999)
+     endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
+endOfWeek.setHours(23, 59, 59, 999)
 
       const todayList = allTasks.filter((t) => {
         if (!t.deadline) return false
@@ -133,141 +133,145 @@ export default function HomePage() {
   const allTasksOnTrack = todayTasks.length === 0
 
   return (
-    <div className="px-4 pt-6">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-[#1a1f2e]">
-            {greeting}, {user?.name} 👋
-          </h1>
-          <p className="text-green-600 text-sm font-medium mt-0.5">
-            {allTasksOnTrack ? 'All tasks on track 👍' : `${todayTasks.length} task(s) due today`}
-          </p>
-        </div>
-        <Avatar name={user?.name || '?'} size="md" />
-      </div>
-
-      {/* Stat Cards */}
-      <div className="flex gap-3 mb-6">
-        <StatCard
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 3L22 8.5V10H2V8.5L12 3Z" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M6 10V17M10 10V17M14 10V17M18 10V17" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M3 17H21" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          }
-          count={activeTrainings}
-          label="Active Trainings"
-          iconBg="bg-gray-100"
-          countColor="text-[#1a1f2e]"
-        />
-        <StatCard
-          icon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="9" stroke="#16a34a" strokeWidth="2"/>
-              <path d="M8 12L11 15L16 9" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          }
-          count={tasksDone}
-          label="Tasks Done"
-          iconBg="bg-green-50"
-          countColor="text-green-600"
-        />
-      </div>
-
-      {/* Today's Tasks */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-[#1a1f2e] text-base">Today&apos;s Tasks</h2>
-          <Link href="/tasks" className="text-sm text-gray-400">
-            See All
-          </Link>
-        </div>
-
-        {todayTasks.length === 0 ? (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
-            <span className="text-xl">🎉</span>
-            <p className="text-green-600 font-medium text-sm">
-              All caught up for today! 🎉
-            </p>
+    <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="px-4 pt-6 pb-12">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-bold text-[#1a1f2e]">
+                {greeting}, {user?.name} 👋
+              </h1>
+              <p className="text-green-600 text-sm font-medium mt-0.5">
+                {allTasksOnTrack ? 'All tasks on track 👍' : `${todayTasks.length} task(s) due today`}
+              </p>
+            </div>
+            <Avatar name={user?.name || '?'} size="md" />
           </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {todayTasks.map((task) => (
-              <TaskCard
-                key={task._id}
-                task={task}
-                onClick={() => {}}
-              />
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Review Reminders */}
-      {reviewReminders.length > 0 && (
-        <div className="mb-6">
-          <h2 className="font-bold text-[#1a1f2e] text-base mb-3">
-            Review Reminders
-          </h2>
-          <div className="flex flex-col gap-2">
-            {reviewReminders.map((reminder, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm"
-              >
-                <div className="bg-orange-100 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">🔔</span>
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm text-[#1a1f2e]">
-                    {reminder.title}
-                  </p>
-                  <p className="text-orange-500 text-xs font-medium">
-                    {reminder.dayLabel}
-                  </p>
-                  <p className="text-gray-400 text-xs">
-                    {reminder.daysOverdue} days overdue
-                  </p>
-                </div>
-                <Link
-                  href={`/trainings/${reminder.trainingId}`}
-                  className="text-sm font-semibold text-[#1a1f2e] flex items-center gap-1"
-                >
-                  Review
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18L15 12L9 6" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </Link>
+          {/* Stat Cards */}
+          <div className="flex gap-3 mb-6">
+            <StatCard
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 3L22 8.5V10H2V8.5L12 3Z" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 10V17M10 10V17M14 10V17M18 10V17" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M3 17H21" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              }
+              count={activeTrainings}
+              label="Active Trainings"
+              iconBg="bg-gray-100"
+              countColor="text-[#1a1f2e]"
+            />
+            <StatCard
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#16a34a" strokeWidth="2"/>
+                  <path d="M8 12L11 15L16 9" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+              count={tasksDone}
+              label="Tasks Done"
+              iconBg="bg-green-50"
+              countColor="text-green-600"
+            />
+          </div>
+
+          {/* Today's Tasks */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-[#1a1f2e] text-base">Today&apos;s Tasks</h2>
+              <Link href="/tasks" className="text-sm text-gray-400">
+                See All
+              </Link>
+            </div>
+
+            {todayTasks.length === 0 ? (
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+                <span className="text-xl">🎉</span>
+                <p className="text-green-600 font-medium text-sm">
+                  All caught up for today! 🎉
+                </p>
               </div>
-            ))}
+            ) : (
+              <div className="flex flex-col gap-2">
+                {todayTasks.map((task) => (
+                  <TaskCard
+                    key={task._id}
+                    task={task}
+                    onClick={() => {}}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Review Reminders */}
+          {reviewReminders.length > 0 && (
+            <div className="mb-6">
+              <h2 className="font-bold text-[#1a1f2e] text-base mb-3">
+                Review Reminders
+              </h2>
+              <div className="flex flex-col gap-2">
+                {reviewReminders.map((reminder, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                  >
+                    <div className="bg-orange-100 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg">🔔</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-[#1a1f2e]">
+                        {reminder.title}
+                      </p>
+                      <p className="text-orange-500 text-xs font-medium">
+                        {reminder.dayLabel}
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        {reminder.daysOverdue} days overdue
+                      </p>
+                    </div>
+                    <Link
+                      href={`/trainings/${reminder.trainingId}`}
+                      className="text-sm font-semibold text-[#1a1f2e] flex items-center gap-1"
+                    >
+                      Review
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 18L15 12L9 6" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* This Week */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-[#1a1f2e] text-base">This Week</h2>
+              <Link href="/tasks" className="text-sm text-gray-400">
+                See All
+              </Link>
+            </div>
+
+            {weekTasks.length === 0 ? (
+              <p className="text-gray-400 text-sm">No upcoming tasks this week</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {weekTasks.map((task) => (
+                  <TaskCard
+                    key={task._id}
+                    task={task}
+                    onClick={() => {}}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
-
-      {/* This Week */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-[#1a1f2e] text-base">This Week</h2>
-          <Link href="/tasks" className="text-sm text-gray-400">
-            See All
-          </Link>
-        </div>
-
-        {weekTasks.length === 0 ? (
-          <p className="text-gray-400 text-sm">No upcoming tasks this week</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {weekTasks.map((task) => (
-              <TaskCard
-                key={task._id}
-                task={task}
-                onClick={() => {}}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

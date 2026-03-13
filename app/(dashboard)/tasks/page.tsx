@@ -53,18 +53,31 @@ export default function TasksPage() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const endOfToday = new Date()
+  endOfToday.setHours(23, 59, 59, 999)
+
   const endOfWeek = new Date()
-  endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()))
+  endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
   endOfWeek.setHours(23, 59, 59, 999)
 
+  // Today only
+  const todayTasks = filteredTasks.filter((task) => {
+    if (!task.deadline) return false
+    const d = new Date(task.deadline)
+    return d >= today && d <= endOfToday
+  })
+
+  // After today until end of week
   const thisWeekTasks = filteredTasks.filter((task) => {
     if (!task.deadline) return false
     const d = new Date(task.deadline)
-    return d >= today && d <= endOfWeek
+    return d > endOfToday && d <= endOfWeek
   })
 
+  // No deadline
   const noDeadlineTasks = filteredTasks.filter((task) => !task.deadline)
 
+  // Overdue or far future
   const otherTasks = filteredTasks.filter((task) => {
     if (!task.deadline) return false
     const d = new Date(task.deadline)
@@ -72,157 +85,169 @@ export default function TasksPage() {
   })
 
   return (
-    <div className="px-4 pt-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-[#1a1f2e]">Tasks</h1>
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-xl">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
-              <rect x="14" y="3" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
-              <rect x="3" y="14" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
-              <rect x="14" y="14" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
-            </svg>
-          </button>
-          <button
-            onClick={() => router.push('/tasks/new')}
-            className="p-2 hover:bg-gray-100 rounded-xl"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 5V19M5 12H19"
-                stroke="#1a1f2e"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+    <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="px-4 pt-6 pb-32">
 
-      {/* Filter Pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
-        {filterOptions.map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setActiveFilter(filter)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              activeFilter === filter
-                ? 'bg-[#1a1f2e] text-white'
-                : 'bg-white text-gray-500 border border-gray-200'
-            }`}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filteredTasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <div className="bg-gray-100 w-16 h-16 rounded-2xl flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <rect x="5" y="3" width="14" height="18" rx="2" stroke="#9ca3af" strokeWidth="2"/>
-              <path d="M9 7H15M9 11H15M9 15H12" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold text-[#1a1f2e]">Tasks</h1>
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-xl">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1" stroke="#1a1f2e" strokeWidth="2"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => router.push('/tasks/new')}
+                className="p-2 hover:bg-gray-100 rounded-xl"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5V19M5 12H19" stroke="#1a1f2e" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <p className="font-bold text-[#1a1f2e]">No tasks found</p>
-          <p className="text-gray-400 text-sm">
-            {activeFilter === 'All'
-              ? 'Create your first task to get started'
-              : `No ${activeFilter} tasks`}
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {/* This Week Section */}
-          {thisWeekTasks.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  This Week
-                </p>
-                <span className="text-xs text-gray-400">
-                  {thisWeekTasks.length}
-                </span>
-              </div>
-              <div className="flex flex-col gap-2">
-                {thisWeekTasks.map((task) => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    onClick={() => router.push(`/tasks/${task._id}`)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Other Deadlines Section */}
-          {otherTasks.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Other Deadlines
-                </p>
-                <span className="text-xs text-gray-400">
-                  {otherTasks.length}
-                </span>
-              </div>
-              <div className="flex flex-col gap-2">
-                {otherTasks.map((task) => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    onClick={() => router.push(`/tasks/${task._id}`)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Filter Pills */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide sticky top-0 bg-[#f2f2f7] z-10 pt-2">
+            {filterOptions.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeFilter === filter
+                    ? 'bg-[#1a1f2e] text-white'
+                    : 'bg-white text-gray-500 border border-gray-200'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
 
-          {/* No Deadline Section */}
-          {noDeadlineTasks.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  No Deadline
-                </p>
-                <span className="text-xs text-gray-400">
-                  {noDeadlineTasks.length}
-                </span>
+          {/* Content */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <div className="bg-gray-100 w-16 h-16 rounded-2xl flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <rect x="5" y="3" width="14" height="18" rx="2" stroke="#9ca3af" strokeWidth="2"/>
+                  <path d="M9 7H15M9 11H15M9 15H12" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </div>
-              <div className="flex flex-col gap-2">
-                {noDeadlineTasks.map((task) => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    onClick={() => router.push(`/tasks/${task._id}`)}
-                  />
-                ))}
-              </div>
+              <p className="font-bold text-[#1a1f2e]">No tasks found</p>
+              <p className="text-gray-400 text-sm">
+                {activeFilter === 'All'
+                  ? 'Create your first task to get started'
+                  : `No ${activeFilter} tasks`}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+
+              {/* TODAY */}
+              {todayTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Today
+                    </p>
+                    <span className="text-xs text-gray-400">{todayTasks.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {todayTasks.map((task) => (
+                      <TaskCard
+                        key={task._id}
+                        task={task}
+                        onClick={() => router.push(`/tasks/${task._id}`)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* THIS WEEK */}
+              {thisWeekTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      This Week
+                    </p>
+                    <span className="text-xs text-gray-400">{thisWeekTasks.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {thisWeekTasks.map((task) => (
+                      <TaskCard
+                        key={task._id}
+                        task={task}
+                        onClick={() => router.push(`/tasks/${task._id}`)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* OTHER DEADLINES */}
+              {otherTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Other Deadlines
+                    </p>
+                    <span className="text-xs text-gray-400">{otherTasks.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {otherTasks.map((task) => (
+                      <TaskCard
+                        key={task._id}
+                        task={task}
+                        onClick={() => router.push(`/tasks/${task._id}`)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* NO DEADLINE */}
+              {noDeadlineTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      No Deadline
+                    </p>
+                    <span className="text-xs text-gray-400">{noDeadlineTasks.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {noDeadlineTasks.map((task) => (
+                      <TaskCard
+                        key={task._id}
+                        task={task}
+                        onClick={() => router.push(`/tasks/${task._id}`)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Floating + Button */}
       <button
         onClick={() => router.push('/tasks/new')}
-        className="fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
+        className="fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg z-20"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 5V19M5 12H19"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
+          <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
         </svg>
       </button>
     </div>
