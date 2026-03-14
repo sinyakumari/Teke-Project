@@ -6,6 +6,7 @@ import Avatar from '@/components/ui/Avatar'
 import StatCard from '@/components/ui/StatCard'
 import TaskCard from '@/components/ui/TaskCard'
 import { getGreeting } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 interface User {
   name: string
@@ -21,29 +22,28 @@ interface Task {
   trainingId?: { _id: string; title: string }
 }
 
-interface Training {
-  _id: string
-  title: string
-  startDate?: string
-}
-
-interface ReviewReminder {
-  trainingId: string
-  title: string
-  dayLabel: string
-  daysOverdue: number
-}
-
 export default function HomePage() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [activeTrainings, setActiveTrainings] = useState(0)
-  const [tasksDone, setTasksDone] = useState(0)
+  const [stats, setStats] = useState({
+    activeTrainings: 0,
+    tasksDone: 0,
+    pending: 0,
+    weekTotal: 0,
+    weekCompleted: 0
+  })
   const [todayTasks, setTodayTasks] = useState<Task[]>([])
   const [weekTasks, setWeekTasks] = useState<Task[]>([])
-  const [reviewReminders, setReviewReminders] = useState<ReviewReminder[]>([])
   const [loading, setLoading] = useState(true)
 
   const greeting = getGreeting()
+  const now = new Date()
+  const todayDate = now.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
 
   useEffect(() => {
     fetchData()
@@ -62,59 +62,54 @@ export default function HomePage() {
       const tasksData = await tasksRes.json()
 
       setUser(userData.user)
-      setActiveTrainings(trainingsData.trainings?.length || 0)
-
+      
       const allTasks: Task[] = tasksData.tasks || []
-      const completed = allTasks.filter((t) => t.status === 'Complete')
-      setTasksDone(completed.length)
+      const completedTotal = allTasks.filter(t => t.status === 'Complete').length
 
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const endOfDay = new Date()
-      endOfDay.setHours(23, 59, 59, 999)
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+      
+      const dayOfWeek = now.getDay()
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const startOfWeek = new Date(startOfDay)
+      startOfWeek.setDate(startOfDay.getDate() + diffToMonday)
+      
+      const endOfWeek = new Date(startOfWeek)
+      endOfWeek.setDate(startOfWeek.getDate() + 6)
+      endOfWeek.setHours(23, 59, 59, 999)
 
-      const endOfWeek = new Date()
-     endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
-endOfWeek.setHours(23, 59, 59, 999)
-
-      const todayList = allTasks.filter((t) => {
+      const todayList = allTasks.filter(t => {
         if (!t.deadline) return false
         const d = new Date(t.deadline)
-        return d >= today && d <= endOfDay
+        return d >= startOfDay && d <= endOfDay
       })
 
-      const weekList = allTasks.filter((t) => {
+      const weekList = allTasks.filter(t => {
         if (!t.deadline) return false
         const d = new Date(t.deadline)
-        return d > endOfDay && d <= endOfWeek
+        return d >= startOfDay && d <= endOfWeek
+      })
+
+      const weekTasksDue = allTasks.filter(t => {
+        if (!t.deadline) return false
+        const d = new Date(t.deadline)
+        return d >= startOfWeek && d <= endOfWeek
+      })
+      
+      const weekCompleted = weekTasksDue.filter(t => t.status === 'Complete').length
+      const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'Complete').length
+
+      setStats({
+        activeTrainings: trainingsData.trainings?.length || 0,
+        tasksDone: completedTotal,
+        pending: pendingThisWeek,
+        weekTotal: weekTasksDue.length,
+        weekCompleted: weekCompleted
       })
 
       setTodayTasks(todayList)
       setWeekTasks(weekList)
 
-      const trainings: Training[] = trainingsData.trainings || []
-      const reminders: ReviewReminder[] = []
-
-      trainings.forEach((training) => {
-        if (!training.startDate) return
-        const start = new Date(training.startDate)
-        const daysSinceStart = Math.floor(
-          (today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        const reviewDays = [3, 7, 14, 30]
-        reviewDays.forEach((day) => {
-          if (daysSinceStart >= day) {
-            reminders.push({
-              trainingId: training._id,
-              title: training.title,
-              dayLabel: `Day ${day} Review`,
-              daysOverdue: daysSinceStart - day,
-            })
-          }
-        })
-      })
-
-      setReviewReminders(reminders.slice(0, 5))
     } catch (error) {
       console.error('Error fetching home data:', error)
     } finally {
@@ -130,146 +125,154 @@ endOfWeek.setHours(23, 59, 59, 999)
     )
   }
 
-  const allTasksOnTrack = todayTasks.length === 0
+  const progressPercentage = stats.weekTotal > 0 
+    ? Math.round((stats.weekCompleted / stats.weekTotal) * 100) 
+    : 0
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="px-4 pt-6 pb-12">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-6">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-16 lg:px-6 lg:pt-3">
+        <div className="max-w-7xl mx-auto">
+          
+          {/* Exact Header Layout */}
+          <div className="flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-[#1a1f2e]">
-                {greeting}, {user?.name} 👋
-              </h1>
-              <p className="text-green-600 text-sm font-medium mt-0.5">
-                {allTasksOnTrack ? 'All tasks on track 👍' : `${todayTasks.length} task(s) due today`}
+              <div className="flex items-center gap-2 mb-1">
+                 <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">
+                    {greeting}, {user?.name}
+                 </h1>
+                 <span className="text-3xl">👋</span>
+              </div>
+              <p className="text-[#10b981] text-sm font-black">
+                {todayTasks.length} task(s) due today
               </p>
             </div>
-            <Avatar name={user?.name || '?'} size="md" />
+            
+            <div className="flex items-center gap-4">
+               <div className="hidden lg:block text-right">
+                  <p className="text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                    {dayName}
+                  </p>
+                  <p className="text-[#1a1f2e] text-sm font-black">
+                     {todayDate}
+                  </p>
+               </div>
+               <Avatar name={user?.name || '?'} size="md" />
+            </div>
           </div>
 
-          {/* Stat Cards */}
-          <div className="flex gap-3 mb-6">
+          {/* Stat Grid (4 Cards) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 items-stretch">
             <StatCard
               icon={
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3L22 8.5V10H2V8.5L12 3Z" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6 10V17M10 10V17M14 10V17M18 10V17" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M3 17H21" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 8V21H3V8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M23 3H1V8H23V3Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10 12H14" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               }
-              count={activeTrainings}
+              count={stats.activeTrainings}
               label="Active Trainings"
-              iconBg="bg-gray-100"
-              countColor="text-[#1a1f2e]"
+              iconBg="bg-blue-500"
             />
             <StatCard
               icon={
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="#16a34a" strokeWidth="2"/>
-                  <path d="M8 12L11 15L16 9" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               }
-              count={tasksDone}
+              count={stats.tasksDone}
               label="Tasks Done"
-              iconBg="bg-green-50"
-              countColor="text-green-600"
+              iconBg="bg-green-500"
+            />
+            <StatCard
+              variant="dual"
+              pending={stats.pending}
+              weekCount={stats.weekTotal}
+            />
+            <StatCard
+              variant="progress"
+              percentage={progressPercentage}
+              fraction={`${stats.weekCompleted}/${stats.weekTotal}`}
             />
           </div>
 
-          {/* Today's Tasks */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-[#1a1f2e] text-base">Today&apos;s Tasks</h2>
-              <Link href="/tasks" className="text-sm text-gray-400">
-                See All
-              </Link>
-            </div>
-
-            {todayTasks.length === 0 ? (
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
-                <span className="text-xl">🎉</span>
-                <p className="text-green-600 font-medium text-sm">
-                  All caught up for today! 🎉
-                </p>
+          {/* Combined Task Area Layout */}
+          <div className="space-y-6">
+            
+            {/* Today's Tasks Section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-black text-[#1a1f2e]">Today&apos;s Tasks</h2>
+                  <span className="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    {todayTasks.length} DUE
+                  </span>
+                </div>
+                <Link 
+                  href="/tasks" 
+                  className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
+                >
+                  See All
+                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
+                </Link>
               </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {todayTasks.map((task) => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    onClick={() => {}}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Review Reminders */}
-          {reviewReminders.length > 0 && (
-            <div className="mb-6">
-              <h2 className="font-bold text-[#1a1f2e] text-base mb-3">
-                Review Reminders
-              </h2>
-              <div className="flex flex-col gap-2">
-                {reviewReminders.map((reminder, index) => (
-                  <div
-                    key={index}
-                    className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm"
-                  >
-                    <div className="bg-orange-100 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg">🔔</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm text-[#1a1f2e]">
-                        {reminder.title}
-                      </p>
-                      <p className="text-orange-500 text-xs font-medium">
-                        {reminder.dayLabel}
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        {reminder.daysOverdue} days overdue
-                      </p>
-                    </div>
-                    <Link
-                      href={`/trainings/${reminder.trainingId}`}
-                      className="text-sm font-semibold text-[#1a1f2e] flex items-center gap-1"
-                    >
-                      Review
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                    </Link>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {todayTasks.length === 0 ? (
+                  <div className="col-span-full bg-green-50/50 border border-green-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <span className="text-3xl mb-2">🎉</span>
+                    <p className="text-green-600 font-black">You&apos;re all caught up for today!</p>
                   </div>
-                ))}
+                ) : (
+                  todayTasks.slice(0, 2).map((task) => (
+                    <div key={task._id} className="h-[140px]">
+                        <TaskCard
+                          task={task}
+                          onClick={() => router.push(`/tasks/${task._id}`)}
+                          onStatusChange={() => fetchData()}
+                        />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-          )}
 
-          {/* This Week */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-[#1a1f2e] text-base">This Week</h2>
-              <Link href="/tasks" className="text-sm text-gray-400">
-                See All
-              </Link>
+            {/* This Week Tasks Section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-black text-[#1a1f2e]">This Week</h2>
+                  <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    {weekTasks.length} TASKS
+                  </span>
+                </div>
+                <Link 
+                  href="/tasks" 
+                  className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
+                >
+                  See All
+                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {weekTasks.length === 0 ? (
+                  <p className="text-slate-300 font-black text-xs uppercase tracking-widest col-span-full">No other tasks this week</p>
+                ) : (
+                  weekTasks.slice(0, 2).map((task) => (
+                    <div key={task._id} className="h-[140px]">
+                        <TaskCard
+                          task={task}
+                          onClick={() => router.push(`/tasks/${task._id}`)}
+                          onStatusChange={() => fetchData()}
+                        />
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
-            {weekTasks.length === 0 ? (
-              <p className="text-gray-400 text-sm">No upcoming tasks this week</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {weekTasks.map((task) => (
-                  <TaskCard
-                    key={task._id}
-                    task={task}
-                    onClick={() => {}}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>

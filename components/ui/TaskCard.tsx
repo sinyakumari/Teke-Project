@@ -1,112 +1,127 @@
 'use client'
 
+import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
 
 interface Task {
-    _id: string
-    name: string
-    status: string
-    deadline?: string
-    blockedBy?: { _id: string; name: string }[]
-    trainingId?: { _id: string; title: string }
+  _id: string
+  name: string
+  status: string
+  deadline?: string
+  blockedBy?: { _id: string; name: string }[]
+  trainingId?: { _id: string; title: string }
 }
 
 interface TaskCardProps {
-    task: Task
-    onClick: () => void
+  task: Task
+  onClick: () => void
+  onStatusChange?: (newStatus: string) => void
 }
 
-const statusColors: Record<string, string> = {
-    Pending: 'text-gray-500 border-gray-300',
-    'In Progress': 'text-blue-500 border-blue-300',
-    Complete: 'text-green-500 border-green-300',
-    Delayed: 'text-orange-500 border-orange-300',
-    Canceled: 'text-red-500 border-red-300',
-}
+export default function TaskCard({ task, onClick, onStatusChange }: TaskCardProps) {
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [currentStatus, setCurrentStatus] = useState(task.status)
 
-export default function TaskCard({ task, onClick }: TaskCardProps) {
-    const isBlocked = task.blockedBy && task.blockedBy.length > 0
-    const blockerName = isBlocked ? task.blockedBy![0].name : null
+  const isComplete = currentStatus === 'Complete'
+  const isBlocked = task.blockedBy && task.blockedBy.length > 0
+  const blockerName = isBlocked ? task.blockedBy![0].name : null
 
-    return (
-        <div
-            onClick={onClick}
-            className={`bg-white rounded-2xl p-4 shadow-sm cursor-pointer active:scale-95 transition-transform ${isBlocked ? 'opacity-70' : ''
-                }`}
+  async function toggleStatus(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (isUpdating) return
+
+    const newStatus = isComplete ? 'Pending' : 'Complete'
+    setIsUpdating(true)
+    
+    try {
+      const res = await fetch(`/api/tasks/${task._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      
+      if (res.ok) {
+        setCurrentStatus(newStatus)
+        if (onStatusChange) onStatusChange(newStatus)
+      }
+    } catch (error) {
+      console.error('Error toggling task status:', error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-2xl p-5 shadow-sm border border-slate-50 cursor-pointer active:scale-[0.98] transition-all relative group h-full flex flex-col justify-center ${
+        isBlocked ? 'opacity-80' : ''
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        {/* Functional Checkbox */}
+        <button
+          onClick={toggleStatus}
+          disabled={isUpdating}
+          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 mt-1 ${
+            isComplete
+              ? 'bg-[#1a1f2e] border-[#1a1f2e] shadow-md shadow-slate-200'
+              : 'bg-white border-slate-200 group-hover:border-slate-300'
+          }`}
         >
-            <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        {isBlocked && (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="11" width="18" height="11" rx="2" stroke="#9ca3af" strokeWidth="2" />
-                                <path d="M7 11V7C7 4.79086 9.23858 3 12 3C14.7614 3 17 4.79086 17 7V11" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                        )}
-                        <p className={`font-semibold text-sm ${isBlocked ? 'text-gray-400' : 'text-[#1a1f2e]'}`}>
-                            {task.name}
-                        </p>
-                    </div>
+          {isComplete && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          {isUpdating && (
+             <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+          )}
+        </button>
 
-                    {task.trainingId && (
-                        <div className="flex items-center gap-1 mb-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 3L22 8.5V10H2V8.5L12 3Z" stroke="#9ca3af" strokeWidth="2" />
-                            </svg>
-                            <span className="text-xs text-gray-400 border border-gray-200 rounded-full px-2 py-0.5">
-                                {task.trainingId.title}
-                            </span>
-                        </div>
-                    )}
+        <div className="flex-1 min-w-0">
+          <h3 className={`text-lg font-black truncate mb-2 transition-colors ${
+            isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
+          }`}>
+            {task.name}
+          </h3>
 
-                    {isBlocked && blockerName && (
-                        <div className="flex items-center gap-1 mt-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="#f97316" strokeWidth="2" strokeLinecap="round" />
-                                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="#f97316" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                            <span className="text-xs text-orange-500">
-                                Blocked by &quot;{blockerName}&quot;
-                            </span>
-                        </div>
-                    )}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {task.trainingId && (
+              <div className="flex items-center gap-1.5 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                <span className="text-indigo-600 text-[14px] material-symbols-outlined font-black">school</span>
+                <span className="text-[11px] font-black text-indigo-600 tracking-tight">
+                  {task.trainingId.title}
+                </span>
+              </div>
+            )}
 
-                    {task.deadline && (
-                        <div className="flex items-center gap-1 mt-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9ca3af" strokeWidth="2" />
-                                <path d="M3 9H21M8 2V6M16 2V6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                            <span className="text-xs text-gray-400">
-                                {formatDate(task.deadline)}
-                            </span>
-                        </div>
-                    )}
+            {task.deadline && (
+              <p className="text-[11px] font-black text-slate-400">
+                {formatDate(task.deadline)}
+              </p>
+            )}
+          </div>
 
-                    {!task.deadline && (
-                        <div className="flex items-center gap-1 mt-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="#9ca3af" strokeWidth="2" />
-                                <path d="M3 9H21M8 2V6M16 2V6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                            <span className="text-xs text-gray-400">No deadline</span>
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <span
-                        className={`text-xs border rounded-full px-2 py-0.5 flex items-center gap-1 ${statusColors[task.status] || 'text-gray-500 border-gray-300'
-                            }`}
-                    >
-                        <span className="w-1.5 h-1.5 rounded-full bg-current inline-block" />
-                        {task.status}
-                    </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                </div>
-            </div>
+          {/* Status Label (match screenshot) */}
+          <div className="mt-3 flex items-center gap-1.5">
+             <span className={`w-1.5 h-1.5 rounded-full ${
+               isComplete ? 'bg-green-500' : 'bg-orange-500'
+             }`} />
+             <span className={`text-[11px] font-black ${
+               isComplete ? 'text-green-600' : 'text-orange-500'
+             }`}>
+               {isComplete ? 'Complete' : 'Pending'}
+             </span>
+          </div>
         </div>
-    )
+
+        {isBlocked && (
+          <div className="absolute top-5 right-5 text-orange-400" title={`Blocked by ${blockerName}`}>
+            <span className="material-symbols-outlined text-[18px]">lock</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

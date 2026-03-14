@@ -9,18 +9,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-72 flex flex-col h-full overflow-hidden">
-        {/* Top bar */}
-        <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 shrink-0">
-          <div />
-          <p className="text-xs text-gray-400">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
-        </div>
 
         <div className="flex-1 font-sans overflow-hidden flex flex-col relative min-h-0">
           {children}

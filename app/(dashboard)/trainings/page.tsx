@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TrainingCard from '@/components/ui/TrainingCard'
+import TrainingTable from '@/components/ui/TrainingTable'
 
 interface Training {
   _id: string
@@ -28,6 +29,7 @@ export default function TrainingsPage() {
   const [trainings, setTrainings] = useState<Training[]>([])
   const [taskCounts, setTaskCounts] = useState<TaskCount[]>([])
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useState<'grid' | 'table'>('grid')
 
   useEffect(() => {
     fetchTrainings()
@@ -80,34 +82,74 @@ export default function TrainingsPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        <div className="px-4 pt-6 pb-32">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-32 lg:px-6 lg:pt-3">
+        <div className="max-w-7xl mx-auto">
+          
           {/* Header */}
-          <h1 className="text-xl font-bold text-center text-[#1a1f2e] mb-4">
-            Trainings
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">Trainings</h1>
+            <div className="flex items-center gap-2">
+              {/* View Toggle */}
+              <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
+                 <button 
+                  onClick={() => setView('grid')}
+                  className={`p-1.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[#1a1f2e] text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
+                 >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                 </button>
+                 <button 
+                  onClick={() => setView('table')}
+                  className={`p-1.5 rounded-lg transition-all ${view === 'table' ? 'bg-[#1a1f2e] text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
+                 >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/>
+                        <line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6" x2="3.01" y2="6"/>
+                        <line x1="3" y1="12" x2="3.01" y2="12"/>
+                        <line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                 </button>
+              </div>
+
+              <button
+                onClick={() => router.push('/trainings/new')}
+                className="bg-[#1a1f2e] text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <path d="M12 5V19M5 12H19"/>
+                </svg>
+                New Training
+              </button>
+            </div>
+          </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-gray-200 mb-4 sticky top-0 bg-[#f2f2f7] z-10 pt-2">
+          <div className="flex gap-2 mb-6 sticky top-0 bg-[#f2f2f7] z-10 pt-2 pb-2">
             <button
               onClick={() => setActiveTab('active')}
-              className={`flex-1 pb-3 text-sm font-semibold transition-colors ${
+              className={`px-6 py-2 rounded-full text-xs font-black transition-all ${
                 activeTab === 'active'
-                  ? 'text-[#1a1f2e] border-b-2 border-[#1a1f2e]'
-                  : 'text-gray-400'
+                  ? 'bg-blue-500 text-white shadow-md shadow-blue-100'
+                  : 'bg-white text-slate-400 border border-slate-200'
               }`}
             >
-              Active ({trainings.length > 0 && activeTab === 'active' ? trainings.length : 0})
+              ACTIVE ({trainings.length > 0 && activeTab === 'active' ? trainings.length : 0})
             </button>
             <button
               onClick={() => setActiveTab('archived')}
-              className={`flex-1 pb-3 text-sm font-semibold transition-colors ${
+              className={`px-6 py-2 rounded-full text-xs font-black transition-all ${
                 activeTab === 'archived'
-                  ? 'text-[#1a1f2e] border-b-2 border-[#1a1f2e]'
-                  : 'text-gray-400'
+                  ? 'bg-slate-500 text-white shadow-md shadow-slate-100'
+                  : 'bg-white text-slate-400 border border-slate-200'
               }`}
             >
-              Archived ({trainings.length > 0 && activeTab === 'archived' ? trainings.length : 0})
+              ARCHIVED ({trainings.length > 0 && activeTab === 'archived' ? trainings.length : 0})
             </button>
           </div>
 
@@ -117,49 +159,31 @@ export default function TrainingsPage() {
               <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : trainings.length === 0 ? (
-            /* Empty State */
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="bg-gray-100 w-20 h-20 rounded-2xl flex items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 3L22 8.5V10H2V8.5L12 3Z"
-                    stroke="#9ca3af"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M6 10V17M10 10V17M14 10V17M18 10V17"
-                    stroke="#9ca3af"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M3 17H21"
-                    stroke="#9ca3af"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
+              <div className="bg-white w-20 h-20 rounded-[2rem] shadow-sm border border-slate-100 flex items-center justify-center">
+                <span className="text-4xl">🎓</span>
               </div>
               <div className="text-center">
-                <p className="font-bold text-[#1a1f2e] text-base">
-                  No trainings here
-                </p>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="font-black text-[#1a1f2e] text-lg">No trainings found</p>
+                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
                   Create your first training to start tracking
                 </p>
               </div>
               <button
                 onClick={() => router.push('/trainings/new')}
-                className="bg-[#1a1f2e] text-white px-8 py-3 rounded-2xl font-semibold text-sm"
+                className="bg-[#1a1f2e] text-white px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-slate-200 mt-2"
               >
                 Create Training
               </button>
             </div>
+          ) : view === 'table' ? (
+            <TrainingTable 
+                trainings={trainings} 
+                taskCounts={taskCounts}
+                onTrainingClick={(id) => router.push(`/trainings/${id}`)}
+            />
           ) : (
-            /* Training Cards */
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {trainings.map((training) => {
                 const counts = getTaskCount(training._id)
                 return (
@@ -180,10 +204,10 @@ export default function TrainingsPage() {
         </div>
       </div>
 
-      {/* Floating + Button */}
+      {/* Floating + Button (Mobile) */}
       <button
         onClick={() => router.push('/trainings/new')}
-        className="fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg z-20"
+        className="lg:hidden fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg z-20"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
@@ -196,4 +220,4 @@ export default function TrainingsPage() {
       </button>
     </div>
   )
-}
+}

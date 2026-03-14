@@ -34,7 +34,7 @@ export default function TrainingCard({
     return (
         <div
             onClick={onClick}
-            className="bg-white rounded-2xl p-4 shadow-sm cursor-pointer active:scale-95 transition-transform"
+            className="bg-white rounded-2xl p-4 shadow-sm cursor-pointer active:scale-[0.98] transition-all"
         >
             <div className="flex items-start justify-between mb-2">
                 <h3 className="font-bold text-[#1a1f2e] text-base flex-1 pr-2">
