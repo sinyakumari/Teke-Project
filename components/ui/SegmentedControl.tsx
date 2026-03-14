@@ -17,12 +17,12 @@ export default function SegmentedControl({
     onChange,
 }: SegmentedControlProps) {
     return (
-        <div className="flex bg-gray-100 rounded-full p-1 w-fit">
+        <div className="flex bg-gray-100 rounded-full p-1 w-full">
             {options.map((option) => (
                 <button
                     key={option.value}
                     onClick={() => onChange(option.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${value === option.value
+                    className={`flex-1 px-4 py-2 rounded-full text-xs font-semibold transition-all ${value === option.value
                             ? 'bg-[#1a1f2e] text-white'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
