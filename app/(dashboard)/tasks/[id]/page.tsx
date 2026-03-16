@@ -6,15 +6,16 @@ import Link from 'next/link'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
   description?: string
   notes?: string
-  priority?: 'Low' | 'Medium' | 'High'
-  blockedBy?: { _id: string; name: string }[]
-  trainingId?: { _id: string; title: string }
+  priority?: string
+  blocked_by_task_id?: string
+  training_id?: string
+  training?: { id: string; title: string }
 }
 
 export default function TaskDetailPage() {
@@ -97,10 +98,11 @@ export default function TaskDetailPage() {
   }
 
   const statusColors: Record<string, string> = {
-    'To Do': 'bg-slate-100 text-slate-500',
-    'In Progress': 'bg-blue-50 text-blue-600',
-    'Complete': 'bg-green-50 text-green-600',
-    'Pending': 'bg-orange-50 text-orange-600',
+    'pending': 'bg-slate-100 text-slate-500',
+    'in_progress': 'bg-blue-50 text-blue-600',
+    'complete': 'bg-green-50 text-green-600',
+    'delayed': 'bg-orange-50 text-orange-600',
+    'canceled': 'bg-red-50 text-red-600',
   }
 
   return (
@@ -144,39 +146,39 @@ export default function TaskDetailPage() {
             <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 mb-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="bg-slate-50 w-12 h-12 rounded-2xl flex items-center justify-center text-xl">
-                  {task.status === 'Complete' ? '✅' : '📝'}
+                  {task.status === 'complete' ? '✅' : '📝'}
                 </div>
                 <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase ${statusColors[task.status] || 'bg-slate-100 text-slate-500'}`}>
-                  {task.status}
+                  {task.status.replace('_', ' ')}
                 </div>
               </div>
 
               <h1 className="text-2xl font-bold text-[#1a1f2e] mb-2">{task.name}</h1>
-              {task.trainingId && (
+              {task.training && (
                 <Link
-                  href={`/trainings/${task.trainingId._id}`}
+                  href={`/trainings/${task.training.id}`}
                   className="inline-flex items-center gap-1.5 text-indigo-600 text-sm font-bold mb-6 hover:underline"
                 >
                   <span className="material-symbols-outlined text-[18px]">school</span>
-                  {task.trainingId.title}
+                  {task.training.title}
                 </Link>
               )}
 
               {/* Quick Actions */}
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
-                  onClick={() => handleStatusChange(task.status === 'Complete' ? 'To Do' : 'Complete')}
+                  onClick={() => handleStatusChange(task.status === 'complete' ? 'pending' : 'complete')}
                   disabled={actionLoading}
                   className={`flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold transition-all active:scale-95 ${
-                    task.status === 'Complete'
+                    task.status === 'complete'
                       ? 'bg-slate-100 text-slate-500'
                       : 'bg-[#1a1f2e] text-white shadow-lg shadow-slate-200'
                   }`}
                 >
                   <span className="material-symbols-outlined text-[20px]">
-                    {task.status === 'Complete' ? 'undo' : 'check_circle'}
+                    {task.status === 'complete' ? 'undo' : 'check_circle'}
                   </span>
-                  {task.status === 'Complete' ? 'Mark Incomplete' : 'Mark Complete'}
+                  {task.status === 'complete' ? 'Mark Incomplete' : 'Mark Complete'}
                 </button>
                 <button
                   className="flex items-center justify-center gap-2 py-3.5 bg-white text-[#1a1f2e] border-2 border-[#1a1f2e] rounded-2xl font-bold hover:bg-slate-50 transition-all active:scale-95"
@@ -264,23 +266,20 @@ export default function TaskDetailPage() {
             {activeTab === 'Dependencies' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-lg font-bold text-[#1a1f2e]">Blocked By</h2>
-                {task.blockedBy && task.blockedBy.length > 0 ? (
+                {task.blocked_by_task_id ? (
                   <div className="space-y-3">
-                    {task.blockedBy.map((dep) => (
                       <Link
-                        key={dep._id}
-                        href={`/tasks/${dep._id}`}
+                        href={`/tasks/${task.blocked_by_task_id}`}
                         className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:bg-slate-50 transition-all group"
                       >
                         <div className="flex items-center gap-3">
                           <div className="bg-orange-50 w-10 h-10 rounded-xl flex items-center justify-center text-orange-500">
                             <span className="material-symbols-outlined">warning</span>
                           </div>
-                          <span className="text-sm font-bold text-[#1a1f2e]">{dep.name}</span>
+                          <span className="text-sm font-bold text-[#1a1f2e]">Blocked Task</span>
                         </div>
                         <span className="material-symbols-outlined text-slate-300 group-hover:text-[#1a1f2e] transition-colors">chevron_right</span>
                       </Link>
-                    ))}
                   </div>
                 ) : (
                   <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">

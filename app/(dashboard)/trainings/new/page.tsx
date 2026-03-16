@@ -57,19 +57,23 @@ export default function NewTrainingPage() {
     setLoading(true)
     setError('')
     try {
+      // Map frontend values to Supabase schema
+      const mappedLocationType = locationType === 'Online' ? 'online' : 'offline'
+      const mappedStructure = structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
+
       const res = await fetch('/api/trainings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           instructor,
-          locationType,
-          structure,
+          locationType: mappedLocationType,
+          structure: mappedStructure,
           startDate: startDate || undefined,
           endDate: endDate || undefined,
           duration: duration ? Number(duration) : undefined,
-          unit,
-          category,
+          unit: unit || undefined,
+          category: category.toLowerCase(),
           vision,
           objective,
           notes,

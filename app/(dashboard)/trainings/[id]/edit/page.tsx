@@ -43,16 +43,16 @@ export default function EditTrainingPage() {
 
       setTitle(t.title || '')
       setInstructor(t.instructor || '')
-      setLocationType(t.locationType || 'Online')
-      setStructure(t.structure || 'Single Session')
-      setStartDate(t.startDate ? t.startDate.split('T')[0] : '')
-      setEndDate(t.endDate ? t.endDate.split('T')[0] : '')
-      setDuration(t.duration || '')
-      setUnit(t.unit || 'Hours')
-      setCategory(t.category || '')
+      setLocationType(t.location_type === 'offline' ? 'In Person' : 'Online')
+      setStructure(t.structure === 'multi-lesson' ? 'Multi-Lesson' : 'Single Session')
+      setStartDate(t.start_date ? t.start_date.split('T')[0] : '')
+      setEndDate(t.end_date ? t.end_date.split('T')[0] : '')
+      setDuration(t.duration_value || '')
+      setUnit(t.duration_unit ? (t.duration_unit.charAt(0).toUpperCase() + t.duration_unit.slice(1)) : 'Hours')
+      setCategory(t.category ? (t.category.charAt(0).toUpperCase() + t.category.slice(1)) : '')
       setVision(t.vision || '')
-      setObjective(t.objective || '')
-      setNotes(t.notes || '')
+      setObjective(t.mission || '')
+      setNotes(t.notes_delta?.text || '')
     } catch (error) {
       console.error(error)
     } finally {
@@ -68,22 +68,25 @@ export default function EditTrainingPage() {
     setSaving(true)
     setError('')
     try {
+      const mappedLocationType = locationType === 'Online' ? 'online' : 'offline'
+      const mappedStructure = structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
+
       const res = await fetch(`/api/trainings/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           instructor,
-          locationType,
-          structure,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          duration,
-          unit,
-          category,
+          location_type: mappedLocationType,
+          structure: mappedStructure,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          duration_value: duration ? parseInt(duration) : null,
+          duration_unit: unit.toLowerCase(),
+          category: category.toLowerCase(),
           vision,
-          objective,
-          notes,
+          mission: objective,
+          notes_delta: notes ? { text: notes } : null,
         }),
       })
       if (!res.ok) {

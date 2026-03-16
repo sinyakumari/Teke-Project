@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -15,6 +16,7 @@ export default function RegisterPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registered, setRegistered] = useState(false)
 
   const isFormValid = name && email && password && confirmPassword && agreedToTerms
 
@@ -31,22 +33,50 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+      const supabase = createClient()
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Registration failed')
+      if (error) {
+        setError(error.message)
         return
       }
-      router.push('/home')
+      setRegistered(true)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (registered) {
+    return (
+      <div className="min-h-screen bg-[#f2f2f7] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-5">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17L4 12" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-[#1a1f2e] mb-2">Check your email!</h1>
+          <p className="text-gray-500 text-sm mb-8">
+            We sent a confirmation link to{' '}
+            <span className="font-semibold text-[#1a1f2e]">{email}</span>.
+            {' '}Please confirm your email before logging in.
+          </p>
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full bg-[#1a1f2e] text-white rounded-2xl py-3.5 font-semibold text-base hover:bg-[#2d3548] transition-colors"
+          >
+            Back to Login
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -4,25 +4,25 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 
 interface Training {
-  _id: string
+  id: string
   title: string
 }
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
-  trainingId?: { _id: string; title: string }
-  blockedBy?: { _id: string; name: string }[]
+  training_id?: string
+  blocked_by_task_id?: string
 }
 
 const statusOptions = [
-  { label: 'Pending', color: 'bg-gray-100 text-gray-600 border-gray-200' },
-  { label: 'In Progress', color: 'bg-blue-100 text-blue-600 border-blue-200' },
-  { label: 'Complete', color: 'bg-green-100 text-green-600 border-green-200' },
-  { label: 'Delayed', color: 'bg-orange-100 text-orange-600 border-orange-200' },
-  { label: 'Canceled', color: 'bg-red-100 text-red-500 border-red-200' },
+  { value: 'pending', label: 'Pending', color: 'bg-gray-100 text-gray-600 border-gray-200' },
+  { value: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-600 border-blue-200' },
+  { value: 'complete', label: 'Complete', color: 'bg-green-100 text-green-600 border-green-200' },
+  { value: 'delayed', label: 'Delayed', color: 'bg-orange-100 text-orange-600 border-orange-200' },
+  { value: 'canceled', label: 'Canceled', color: 'bg-red-100 text-red-500 border-red-200' },
 ]
 
 export default function EditTaskPage() {
@@ -38,9 +38,9 @@ export default function EditTaskPage() {
   const [showBlockedDropdown, setShowBlockedDropdown] = useState(false)
 
   const [taskName, setTaskName] = useState('')
-  const [status, setStatus] = useState('Pending')
+  const [status, setStatus] = useState('pending')
   const [trainingId, setTrainingId] = useState('')
-  const [blockedBy, setBlockedBy] = useState<string[]>([])
+  const [blockedBy, setBlockedBy] = useState<string>('')
   const [deadline, setDeadline] = useState('')
 
   useEffect(() => {
@@ -58,17 +58,17 @@ export default function EditTaskPage() {
 
       const task = taskData.task
       setTaskName(task.name || '')
-      setStatus(task.status || 'Pending')
-      setTrainingId(task.trainingId?._id || '')
-      setBlockedBy(task.blockedBy?.map((b: { _id: string }) => b._id) || [])
+      setStatus(task.status || 'pending')
+      setTrainingId(task.training_id || '')
+      setBlockedBy(task.blocked_by_task_id || '')
       setDeadline(task.deadline ? task.deadline.split('T')[0] : '')
       setTrainings(trainingsData.trainings || [])
 
       // fetch tasks for blocked by dropdown
-      if (task.trainingId?._id) {
-        const tasksRes = await fetch(`/api/tasks?trainingId=${task.trainingId._id}`)
+      if (task.training_id) {
+        const tasksRes = await fetch(`/api/tasks?training_id=${task.training_id}`)
         const tasksData = await tasksRes.json()
-        setAllTasks((tasksData.tasks || []).filter((t: Task) => t._id !== id))
+        setAllTasks((tasksData.tasks || []).filter((t: Task) => t.id !== id))
       }
     } catch (error) {
       console.error(error)
@@ -79,20 +79,14 @@ export default function EditTaskPage() {
 
   async function handleTrainingChange(tId: string) {
     setTrainingId(tId)
-    setBlockedBy([])
+    setBlockedBy('')
     if (tId) {
-      const res = await fetch(`/api/tasks?trainingId=${tId}`)
+      const res = await fetch(`/api/tasks?training_id=${tId}`)
       const data = await res.json()
-      setAllTasks((data.tasks || []).filter((t: Task) => t._id !== id))
+      setAllTasks((data.tasks || []).filter((t: Task) => t.id !== id))
     } else {
       setAllTasks([])
     }
-  }
-
-  function toggleBlockedBy(taskId: string) {
-    setBlockedBy((prev) =>
-      prev.includes(taskId) ? prev.filter((i) => i !== taskId) : [...prev, taskId]
-    )
   }
 
   async function handleSave() {
@@ -108,10 +102,10 @@ export default function EditTaskPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: taskName,
-          status,
-          trainingId: trainingId || undefined,
-          blockedBy,
-          deadline: deadline || undefined,
+          status: status,
+          training_id: trainingId || null,
+          blocked_by_task_id: blockedBy || null,
+          deadline: deadline || null,
         }),
       })
       if (!res.ok) {
@@ -127,9 +121,7 @@ export default function EditTaskPage() {
     }
   }
 
-  const selectedBlockedNames = allTasks
-    .filter((t) => blockedBy.includes(t._id))
-    .map((t) => t.name)
+  const selectedBlockedName = allTasks.find((t) => t.id === blockedBy)?.name
 
   if (loading) {
     return (
@@ -185,15 +177,15 @@ export default function EditTaskPage() {
             <div className="flex flex-wrap gap-2">
               {statusOptions.map((s) => (
                 <button
-                  key={s.label}
-                  onClick={() => setStatus(s.label)}
+                  key={s.value}
+                  onClick={() => setStatus(s.value)}
                   className={`px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all ${
-                    status === s.label
+                    status === s.value
                       ? s.color + ' border-current'
                       : 'bg-white text-gray-400 border-gray-200'
                   }`}
                 >
-                  {status === s.label && '✓ '}{s.label}
+                  {status === s.value && '✓ '}{s.label}
                 </button>
               ))}
             </div>
@@ -210,7 +202,7 @@ export default function EditTaskPage() {
               >
                 <option value="">Select a training</option>
                 {trainings.map((t) => (
-                  <option key={t._id} value={t._id}>{t.title}</option>
+                  <option key={t.id} value={t.id}>{t.title}</option>
                 ))}
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -224,7 +216,7 @@ export default function EditTaskPage() {
           {/* Blocked By */}
           <div className="mb-5">
             <label className="text-sm font-semibold text-[#1a1f2e] mb-1 block">Blocked By</label>
-            <p className="text-xs text-gray-400 mb-2">This task cannot start until selected tasks are complete.</p>
+            <p className="text-xs text-gray-400 mb-2">This task cannot start until selected task is complete.</p>
             <div className="relative">
               <button
                 onClick={() => setShowBlockedDropdown(!showBlockedDropdown)}
@@ -234,35 +226,41 @@ export default function EditTaskPage() {
                   <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/>
                   <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
-                {selectedBlockedNames.length > 0 ? (
-                  <span className="text-[#1a1f2e]">{selectedBlockedNames.join(', ')}</span>
+                {selectedBlockedName ? (
+                  <span className="text-[#1a1f2e]">{selectedBlockedName}</span>
                 ) : (
                   <span className="text-gray-400">No prerequisites — tap to add</span>
                 )}
               </button>
 
-              {showBlockedDropdown && allTasks.length > 0 && (
+              {showBlockedDropdown && (
                 <div className="absolute top-full left-0 right-0 bg-white rounded-2xl shadow-lg border border-gray-100 mt-1 z-10 overflow-hidden">
-                  {allTasks.map((task) => (
-                    <button
-                      key={task._id}
-                      onClick={() => toggleBlockedBy(task._id)}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-sm text-[#1a1f2e] border-b border-gray-50 last:border-0"
-                    >
-                      <span>{task.name}</span>
-                      {blockedBy.includes(task._id) && (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M20 6L9 17L4 12" stroke="#1a1f2e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {showBlockedDropdown && allTasks.length === 0 && trainingId && (
-                <div className="absolute top-full left-0 right-0 bg-white rounded-2xl shadow-lg border border-gray-100 mt-1 z-10 p-4">
-                  <p className="text-sm text-gray-400 text-center">No other tasks in this training</p>
+                  <button
+                    onClick={() => { setBlockedBy(''); setShowBlockedDropdown(false); }}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-semibold border-b border-gray-50 text-gray-400"
+                  >
+                    None (No Blocker)
+                  </button>
+                  {allTasks.length > 0 ? (
+                    allTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => { setBlockedBy(task.id); setShowBlockedDropdown(false); }}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-sm text-[#1a1f2e] border-b border-gray-50 last:border-0"
+                      >
+                        <span>{task.name}</span>
+                        {blockedBy === task.id && (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 6L9 17L4 12" stroke="#1a1f2e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                    ))
+                  ) : trainingId && (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-gray-400">No other tasks in this training</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

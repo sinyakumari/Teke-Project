@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
-  blockedBy?: { _id: string; name: string }[]
-  trainingId?: { _id: string; title: string }
+  blocked_by_task_id?: string
+  training?: { id: string; title: string }
 }
 
 interface TaskTableProps {
@@ -25,19 +25,19 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
     e.stopPropagation()
     if (updatingId) return
 
-    const isComplete = task.status === 'Complete'
-    const newStatus = isComplete ? 'Pending' : 'Complete'
-    setUpdatingId(task._id)
+    const isComplete = task.status === 'complete'
+    const newStatus = isComplete ? 'pending' : 'complete'
+    setUpdatingId(task.id)
     
     try {
-      const res = await fetch(`/api/tasks/${task._id}`, {
+      const res = await fetch(`/api/tasks/${task.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
       
       if (res.ok) {
-        onStatusChange(task._id, newStatus)
+        onStatusChange(task.id, newStatus)
       }
     } catch (error) {
       console.error('Error toggling task status:', error)
@@ -61,17 +61,17 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
           </thead>
           <tbody className="divide-y divide-slate-50">
             {tasks.map((task) => {
-              const isComplete = task.status === 'Complete'
+              const isComplete = task.status === 'complete'
               return (
                 <tr 
-                  key={task._id}
-                  onClick={() => onTaskClick(task._id)}
+                  key={task.id}
+                  onClick={() => onTaskClick(task.id)}
                   className="hover:bg-slate-50/50 cursor-pointer transition-colors group"
                 >
                   <td className="px-6 py-4 text-center">
                     <button
                       onClick={(e) => toggleStatus(e, task)}
-                      disabled={updatingId === task._id}
+                      disabled={updatingId === task.id}
                       className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all mx-auto ${
                         isComplete
                           ? 'bg-[#1a1f2e] border-[#1a1f2e]'
@@ -83,7 +83,7 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
                           <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       )}
-                      {updatingId === task._id && (
+                      {updatingId === task.id && (
                         <div className="w-2 h-2 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
                       )}
                     </button>
@@ -94,9 +94,9 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
                     </span>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    {task.trainingId ? (
+                    {task.training ? (
                       <span className="text-[11px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase tracking-tight">
-                        {task.trainingId.title}
+                        {task.training.title}
                       </span>
                     ) : (
                       <span className="text-[11px] font-bold text-slate-300">N/A</span>

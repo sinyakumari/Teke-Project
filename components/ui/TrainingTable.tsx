@@ -3,26 +3,26 @@
 import { formatDateRange } from '@/lib/utils'
 
 interface Training {
-  _id: string
+  id: string
   title: string
   instructor: string
-  locationType: string
-  locationName?: string
-  startDate?: string
-  endDate?: string
+  location_type: string
+  location_name?: string
+  start_date?: string
+  end_date?: string
   category: string
-  status: string
+  is_archived: boolean
 }
 
 interface TrainingTableProps {
   trainings: Training[]
-  taskCounts: { trainingId: string; total: number; completed: number }[]
+  taskCounts: { training_id: string; total: number; completed: number }[]
   onTrainingClick: (id: string) => void
 }
 
 export default function TrainingTable({ trainings, taskCounts, onTrainingClick }: TrainingTableProps) {
-  function getProgress(trainingId: string) {
-    const counts = taskCounts.find((t) => t.trainingId === trainingId) || { total: 0, completed: 0 }
+  function getProgress(training_id: string) {
+    const counts = taskCounts.find((t) => t.training_id === training_id) || { total: 0, completed: 0 }
     const percentage = counts.total > 0 ? (counts.completed / counts.total) * 100 : 0
     return { ...counts, percentage }
   }
@@ -42,11 +42,11 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick }
           </thead>
           <tbody className="divide-y divide-slate-50">
             {trainings.map((training) => {
-              const progress = getProgress(training._id)
+              const progress = getProgress(training.id)
               return (
                 <tr 
-                  key={training._id}
-                  onClick={() => onTrainingClick(training._id)}
+                  key={training.id}
+                  onClick={() => onTrainingClick(training.id)}
                   className="hover:bg-slate-50/50 cursor-pointer transition-colors group"
                 >
                   <td className="px-6 py-4">
@@ -71,7 +71,7 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick }
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-[11px] font-bold text-slate-500 whitespace-nowrap">
-                        {formatDateRange(training.startDate, training.endDate)}
+                        {formatDateRange(training.start_date, training.end_date)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">

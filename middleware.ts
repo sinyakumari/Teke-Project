@@ -1,34 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-const protectedRoutes = ['/home', '/trainings', '/tasks', '/profile']
-const authRoutes = ['/login', '/register']
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
 
-export function middleware(req: NextRequest) {
-    const token = req.cookies.get('token')?.value
-    const { pathname } = req.nextUrl
-
-    const isProtected = protectedRoutes.some((route) =>
-        pathname.startsWith(route)
-    )
-    const isAuthRoute = authRoutes.some((route) =>
-        pathname.startsWith(route)
-    )
-
-    if (isProtected && !token) {
-        return NextResponse.redirect(new URL('/login', req.url))
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
     }
+  )
 
-    if (isAuthRoute && token) {
-        const decoded = verifyToken(token)
-        if (decoded) {
-            return NextResponse.redirect(new URL('/home', req.url))
-        }
-    }
+  const { data: { user } } = await supabase.auth.getUser()
 
-    return NextResponse.next()
+  const { pathname } = request.nextUrl
+
+  const protectedRoutes = ['/home', '/trainings', '/tasks', '/profile']
+  const authRoutes = ['/login', '/register']
+
+  const isProtected = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  )
+  const isAuthRoute = authRoutes.some((route) =>
+    pathname.startsWith(route)
+  )
+
+  if (isProtected && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (isAuthRoute && user) {
+    return NextResponse.redirect(new URL('/home', request.url))
+  }
+
+  return supabaseResponse
 }
 
 export const config = {
-    matcher: ['/home/:path*', '/trainings/:path*', '/tasks/:path*', '/profile/:path*', '/login', '/register'],
+  matcher: [
+    '/home/:path*',
+    '/trainings/:path*',
+    '/tasks/:path*',
+    '/profile/:path*',
+    '/login',
+    '/register',
+  ],
 }

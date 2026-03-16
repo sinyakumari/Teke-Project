@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
-  blockedBy?: { _id: string; name: string }[]
-  trainingId?: { _id: string; title: string }
+  blocked_by_task_id?: string
+  training?: { id: string; title: string }
 }
 
 interface TaskCardProps {
@@ -22,19 +22,19 @@ export default function TaskCard({ task, onClick, onStatusChange }: TaskCardProp
   const [isUpdating, setIsUpdating] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(task.status)
 
-  const isComplete = currentStatus === 'Complete'
-  const isBlocked = task.blockedBy && task.blockedBy.length > 0
-  const blockerName = isBlocked ? task.blockedBy![0].name : null
+  const isComplete = currentStatus === 'complete'
+  const isBlocked = !!task.blocked_by_task_id
+  const blockerName = 'Another task'
 
   async function toggleStatus(e: React.MouseEvent) {
     e.stopPropagation()
     if (isUpdating) return
 
-    const newStatus = isComplete ? 'Pending' : 'Complete'
+    const newStatus = isComplete ? 'pending' : 'complete'
     setIsUpdating(true)
     
     try {
-      const res = await fetch(`/api/tasks/${task._id}`, {
+      const res = await fetch(`/api/tasks/${task.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -87,11 +87,11 @@ export default function TaskCard({ task, onClick, onStatusChange }: TaskCardProp
           </h3>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            {task.trainingId && (
+            {task.training && (
               <div className="flex items-center gap-1.5 bg-indigo-50 px-2.5 py-1 rounded-lg">
                 <span className="text-indigo-600 text-[14px] material-symbols-outlined font-black">school</span>
                 <span className="text-[11px] font-black text-indigo-600 tracking-tight">
-                  {task.trainingId.title}
+                  {task.training.title}
                 </span>
               </div>
             )}
@@ -111,7 +111,7 @@ export default function TaskCard({ task, onClick, onStatusChange }: TaskCardProp
              <span className={`text-[11px] font-black ${
                isComplete ? 'text-green-600' : 'text-orange-500'
              }`}>
-               {isComplete ? 'Complete' : 'Pending'}
+               {isComplete ? 'complete' : 'pending'}
              </span>
           </div>
         </div>

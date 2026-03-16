@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,17 +21,21 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Login failed')
+      if (error) {
+        if (error.message.toLowerCase().includes('email not confirmed')) {
+          setError('Please confirm your email first. Check your inbox for the confirmation link.')
+        } else {
+          setError(error.message)
+        }
         return
       }
       router.push('/home')
+      router.refresh()
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

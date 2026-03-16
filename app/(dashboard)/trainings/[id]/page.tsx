@@ -7,23 +7,23 @@ import SegmentedControl from '@/components/ui/SegmentedControl'
 import TaskCard from '@/components/ui/TaskCard'
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
 }
 
 interface Training {
-  _id: string
+  id: string
   title: string
   instructor?: string
   description?: string
   duration?: string
   lessons?: string[]
-  status?: string
+  is_archived: boolean
   pdfs?: { name: string; url: string }[]
-  startDate?: string
-  endDate?: string
+  start_date?: string
+  end_date?: string
 }
 
 export default function TrainingDetailPage() {
@@ -46,7 +46,7 @@ export default function TrainingDetailPage() {
     try {
       const [trainingRes, tasksRes] = await Promise.all([
         fetch(`/api/trainings/${id}`),
-        fetch(`/api/tasks?trainingId=${id}`),
+        fetch(`/api/tasks?training_id=${id}`),
       ])
       const trainingData = await trainingRes.json()
       const tasksData = await tasksRes.json()
@@ -62,14 +62,14 @@ export default function TrainingDetailPage() {
   async function handleArchive() {
     setActionLoading(true)
     try {
-      const newStatus = training?.status === 'active' ? 'archived' : 'active'
+      const newArchived = !training?.is_archived
       const res = await fetch(`/api/trainings/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ is_archived: newArchived }),
       })
       if (res.ok) {
-        setTraining(prev => prev ? { ...prev, status: newStatus } : null)
+        setTraining(prev => prev ? { ...prev, is_archived: newArchived } : null)
       }
     } catch (error) {
       console.error('Error archiving training:', error)
@@ -112,7 +112,7 @@ export default function TrainingDetailPage() {
     )
   }
 
-  const completedCount = tasks.filter(t => t.status === 'Complete').length
+  const completedCount = tasks.filter(t => t.status === 'complete').length
   const progress = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0
 
   return (
@@ -159,9 +159,9 @@ export default function TrainingDetailPage() {
                   <span className="text-2xl">📚</span>
                 </div>
                 <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase ${
-                  training.status === 'active' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'
+                  !training.is_archived ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'
                 }`}>
-                  {training.status}
+                  {training.is_archived ? 'archived' : 'active'}
                 </div>
               </div>
 
@@ -193,7 +193,7 @@ export default function TrainingDetailPage() {
                 <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Completed</p>
                   <p className="text-lg font-bold text-green-600">
-                    {tasks.filter(t => t.status === 'Complete').length}
+                    {tasks.filter(t => t.status === 'complete').length}
                   </p>
                 </div>
               </div>
@@ -252,9 +252,9 @@ export default function TrainingDetailPage() {
                   className="w-full py-4 bg-white text-[#1a1f2e] font-bold rounded-2xl border-2 border-[#1a1f2e] hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-[0.98]"
                 >
                   <span className="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform">
-                    {training.status === 'active' ? 'archive' : 'unarchive'}
+                    {training.is_archived ? 'unarchive' : 'archive'}
                   </span>
-                  {training.status === 'active' ? 'Archive Training' : 'Restore Training'}
+                  {!training.is_archived ? 'Archive Training' : 'Restore Training'}
                 </button>
               </div>
             )}
@@ -264,7 +264,7 @@ export default function TrainingDetailPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-[#1a1f2e]">Course Tasks</h2>
                   <button
-                    onClick={() => router.push(`/tasks/new?trainingId=${id}`)}
+                    onClick={() => router.push(`/tasks/new?training_id=${id}`)}
                     className="text-indigo-600 text-sm font-bold hover:underline"
                   >
                     + Add Task
@@ -278,7 +278,7 @@ export default function TrainingDetailPage() {
                     </div>
                     <p className="text-slate-500 font-bold mb-4">No tasks added yet</p>
                     <button
-                      onClick={() => router.push(`/tasks/new?trainingId=${id}`)}
+                      onClick={() => router.push(`/tasks/new?training_id=${id}`)}
                       className="bg-[#1a1f2e] text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm"
                     >
                       Create First Task
@@ -288,12 +288,13 @@ export default function TrainingDetailPage() {
                   <div className="flex flex-col gap-3">
                     {tasks.map((task) => (
                       <TaskCard
-                        key={task._id}
+                        key={task.id}
                         task={{
                           ...task,
-                          trainingId: { _id: id as string, title: training.title }
+                          training_id: id,
+                          training: { id, title: training.title }
                         }}
-                        onClick={() => router.push(`/tasks/${task._id}`)}
+                        onClick={() => router.push(`/tasks/${task.id}`)}
                       />
                     ))}
                   </div>

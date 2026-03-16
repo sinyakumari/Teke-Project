@@ -7,6 +7,7 @@ import StatCard from '@/components/ui/StatCard'
 import TaskCard from '@/components/ui/TaskCard'
 import { getGreeting } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 interface User {
   name: string
@@ -14,16 +15,18 @@ interface User {
 }
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
-  blockedBy?: { _id: string; name: string }[]
-  trainingId?: { _id: string; title: string }
+  blocked_by_task_id?: string
+  training_id?: string
+  training?: { id: string; title: string }
 }
 
 export default function HomePage() {
   const router = useRouter()
+  const supabase = createClient()
   const [user, setUser] = useState<User | null>(null)
   const [stats, setStats] = useState({
     activeTrainings: 0,
@@ -51,20 +54,31 @@ export default function HomePage() {
 
   async function fetchData() {
     try {
-      const [userRes, trainingsRes, tasksRes] = await Promise.all([
-        fetch('/api/user'),
-        fetch('/api/trainings?status=active'),
+      // 1. Get User from Supabase
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser()
+      
+      if (!supabaseUser) {
+        router.push('/login')
+        return
+      }
+
+      setUser({
+        name: supabaseUser.user_metadata?.name || 'User',
+        email: supabaseUser.email || ''
+      })
+
+      // 2. Fetch Data from migrated API Routes
+      const [trainingsRes, tasksRes] = await Promise.all([
+        fetch('/api/trainings?is_archived=false'),
         fetch('/api/tasks'),
       ])
 
-      const userData = await userRes.json()
       const trainingsData = await trainingsRes.json()
       const tasksData = await tasksRes.json()
 
-      setUser(userData.user)
-      
       const allTasks: Task[] = tasksData.tasks || []
-      const completedTotal = allTasks.filter(t => t.status === 'Complete').length
+      // Status values in Supabase are lowercase
+      const completedTotal = allTasks.filter(t => t.status === 'complete').length
 
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
@@ -96,8 +110,8 @@ export default function HomePage() {
         return d >= startOfWeek && d <= endOfWeek
       })
       
-      const weekCompleted = weekTasksDue.filter(t => t.status === 'Complete').length
-      const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'Complete').length
+      const weekCompleted = weekTasksDue.filter(t => t.status === 'complete').length
+      const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'complete').length
 
       setStats({
         activeTrainings: trainingsData.trainings?.length || 0,
@@ -226,10 +240,10 @@ export default function HomePage() {
                   </div>
                 ) : (
                   todayTasks.slice(0, 2).map((task) => (
-                    <div key={task._id} className="h-[140px]">
+                    <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
-                          onClick={() => router.push(`/tasks/${task._id}`)}
+                          onClick={() => router.push(`/tasks/${task.id}`)}
                           onStatusChange={() => fetchData()}
                         />
                     </div>
@@ -261,10 +275,10 @@ export default function HomePage() {
                   <p className="text-slate-300 font-black text-xs uppercase tracking-widest col-span-full">No other tasks this week</p>
                 ) : (
                   weekTasks.slice(0, 2).map((task) => (
-                    <div key={task._id} className="h-[140px]">
+                    <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
-                          onClick={() => router.push(`/tasks/${task._id}`)}
+                          onClick={() => router.push(`/tasks/${task.id}`)}
                           onStatusChange={() => fetchData()}
                         />
                     </div>

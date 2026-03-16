@@ -1,28 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Training {
-  _id: string
+  id: string
   title: string
 }
 
 interface Task {
-  _id: string
+  id: string
   name: string
 }
 
 export default function NewTaskPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialTrainingId = searchParams.get('training_id')
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [trainings, setTrainings] = useState<Training[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
 
   const [taskName, setTaskName] = useState('')
-  const [trainingId, setTrainingId] = useState('')
-  const [blockedBy, setBlockedBy] = useState<string[]>([])
+  const [trainingId, setTrainingId] = useState(initialTrainingId || '')
+  const [blockedBy, setBlockedBy] = useState<string>('')
   const [deadline, setDeadline] = useState('')
   const [showBlockedDropdown, setShowBlockedDropdown] = useState(false)
 
@@ -45,10 +48,6 @@ export default function NewTaskPage() {
         setError('Please select a training')
         return
       }
-    }
-    if (currentStep === 2 && !deadline) {
-      setError('Deadline is required')
-      return
     }
     setError('')
     setCurrentStep((prev) => Math.min(prev + 1, steps.length))
@@ -80,20 +79,12 @@ export default function NewTaskPage() {
 
   async function fetchTasks(tId: string) {
     try {
-      const res = await fetch(`/api/tasks?trainingId=${tId}`)
+      const res = await fetch(`/api/tasks?training_id=${tId}`)
       const data = await res.json()
       setTasks(data.tasks || [])
     } catch (error) {
       console.error('Error fetching tasks:', error)
     }
-  }
-
-  function toggleBlockedBy(taskId: string) {
-    setBlockedBy((prev) =>
-      prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId]
-    )
   }
 
   async function handleCreate() {
@@ -107,11 +98,6 @@ export default function NewTaskPage() {
       setCurrentStep(1)
       return
     }
-    if (!deadline) {
-      setError('Deadline is required')
-      setCurrentStep(2)
-      return
-    }
 
     setLoading(true)
     setError('')
@@ -122,10 +108,10 @@ export default function NewTaskPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: taskName,
-          trainingId,
-          blockedBy,
-          deadline,
-          source: 'manual',
+          training_id: trainingId,
+          blocked_by_task_id: blockedBy || null,
+          deadline: deadline || null,
+          status: 'pending',
         }),
       })
 
@@ -143,9 +129,7 @@ export default function NewTaskPage() {
     }
   }
 
-  const selectedBlockedNames = tasks
-    .filter((t) => blockedBy.includes(t._id))
-    .map((t) => t.name)
+  const selectedBlockedName = tasks.find((t) => t.id === blockedBy)?.name
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
@@ -252,7 +236,7 @@ export default function NewTaskPage() {
                         >
                           <option value="">Choose a Training Project...</option>
                           {trainings.map((t) => (
-                            <option key={t._id} value={t._id}>{t.title}</option>
+                            <option key={t.id} value={t.id}>{t.title}</option>
                           ))}
                         </select>
                         <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within:text-[#1a1f2e]">
@@ -275,20 +259,13 @@ export default function NewTaskPage() {
 
                   <div className="grid grid-cols-2 gap-4 mt-1">
                     <div className="space-y-4">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Deadline <span className="text-red-500">*</span></label>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block">Deadline</label>
                       <input
                         type="date"
                         value={deadline}
                         onChange={(e) => setDeadline(e.target.value)}
                         className="w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-3.5 text-sm font-bold text-[#1a1f2e] outline-none focus:border-[#1a1f2e] transition-all shadow-sm"
                       />
-                      <div className="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
-                        <p className="text-[9px] text-indigo-400 font-bold uppercase mb-0.5 flex items-center gap-2">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                          Quick Tip
-                        </p>
-                        <p className="text-[11px] text-indigo-700 font-medium">Adding a realistic deadline helps with focus.</p>
-                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -304,8 +281,8 @@ export default function NewTaskPage() {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-gray-300 group-hover:text-[#1a1f2e] transition-colors">
                               <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
                             </svg>
-                            <span className={`font-bold truncate ${selectedBlockedNames.length > 0 ? 'text-[#1a1f2e]' : 'text-gray-300'}`}>
-                              {selectedBlockedNames.length > 0 ? selectedBlockedNames.join(', ') : 'Add Prerequisites...'}
+                            <span className={`font-bold truncate ${selectedBlockedName ? 'text-[#1a1f2e]' : 'text-gray-300'}`}>
+                              {selectedBlockedName || 'Add Prerequisites...'}
                             </span>
                           </div>
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={`transition-transform duration-300 ${showBlockedDropdown ? 'rotate-180 text-[#1a1f2e]' : 'text-gray-300'}`}>
@@ -315,15 +292,21 @@ export default function NewTaskPage() {
 
                         {showBlockedDropdown && (
                           <div className="absolute top-full left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 mt-2 z-50 max-h-[220px] overflow-y-auto overflow-x-hidden animate-in slide-in-from-top-2">
+                            <button
+                              onClick={() => { setBlockedBy(''); setShowBlockedDropdown(false); }}
+                              className="w-full text-left px-6 py-4 hover:bg-gray-50 text-sm font-semibold border-b border-gray-50 text-gray-400"
+                            >
+                              None (No Blocker)
+                            </button>
                             {tasks.length > 0 ? (
                               tasks.map((task) => (
                                 <button
-                                  key={task._id}
-                                  onClick={() => toggleBlockedBy(task._id)}
+                                  key={task.id}
+                                  onClick={() => { setBlockedBy(task.id); setShowBlockedDropdown(false); }}
                                   className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 text-sm font-semibold border-b border-gray-50 last:border-0 transition-colors"
                                 >
                                   <span className="text-[#1a1f2e]">{task.name}</span>
-                                  {blockedBy.includes(task._id) && (
+                                  {blockedBy === task.id && (
                                     <div className="bg-[#1a1f2e] text-white p-1 rounded-md">
                                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
                                     </div>
@@ -353,7 +336,6 @@ export default function NewTaskPage() {
                   </div>
 
                   <div className="max-w-3xl mx-auto space-y-2">
-offset: true
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-[#1a1f2e] p-5 rounded-[1.5rem] text-white shadow-xl flex flex-col justify-center">
                         <p className="text-[9px] text-white/40 font-bold uppercase tracking-[0.2em] mb-1">Action Name</p>
@@ -363,7 +345,7 @@ offset: true
                       <div className="space-y-3">
                         <div className="bg-gray-50 p-3.5 rounded-[1.2rem] border border-gray-100 shadow-sm">
                           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Project</p>
-                          <p className="font-bold text-[#1a1f2e] text-xs truncate">{trainings.find(t => t._id === trainingId)?.title || '—'}</p>
+                          <p className="font-bold text-[#1a1f2e] text-xs truncate">{trainings.find(t => t.id === trainingId)?.title || '—'}</p>
                         </div>
                         <div className="bg-gray-50 p-3.5 rounded-[1.2rem] border border-gray-100 shadow-sm">
                           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Deadline</p>
@@ -373,15 +355,11 @@ offset: true
 
                       <div className="col-span-2 bg-gray-50 p-4 rounded-[1.2rem] border border-gray-100 shadow-sm">
                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1.5">Dependencies</p>
-                        {selectedBlockedNames.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {selectedBlockedNames.map((name, i) => (
-                              <span key={i} className="bg-white border border-gray-200 px-2 py-1 rounded-lg text-[10px] font-bold text-[#1a1f2e] shadow-sm flex items-center gap-1.5">
-                                <span className="w-1 h-1 bg-blue-500 rounded-full" />
-                                {name}
-                              </span>
-                            ))}
-                          </div>
+                        {selectedBlockedName ? (
+                          <span className="bg-white border border-gray-200 px-2 py-1 rounded-lg text-[10px] font-bold text-[#1a1f2e] shadow-sm flex items-center gap-1.5">
+                            <span className="w-1 h-1 bg-blue-500 rounded-full" />
+                            {selectedBlockedName}
+                          </span>
                         ) : (
                           <p className="text-[10px] font-semibold text-gray-400 italic">No prerequisites — Ready for action.</p>
                         )}

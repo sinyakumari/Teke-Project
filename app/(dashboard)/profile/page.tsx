@@ -5,22 +5,21 @@ import { useRouter } from 'next/navigation'
 import Toggle from '@/components/ui/Toggle'
 
 interface Training {
-  _id: string
+  id: string
   title: string
   instructor: string
-  startDate?: string
-  status: 'active' | 'archived'
+  start_date?: string
+  is_archived: boolean
 }
 
 interface User {
+  id: string
   name: string
   email: string
   profilePicture?: string
   phone?: string
   address?: string
   bio?: string
-  lastLogin?: string
-  accountStatus?: string
   appLock?: boolean
   reviewReminders?: boolean
 }
@@ -377,7 +376,7 @@ export default function ProfilePage() {
                                 </div>
                             ) : (
                                 trainings.slice(0, 3).map((t) => (
-                                    <div key={t._id} className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all group cursor-pointer" onClick={() => router.push(`/trainings/${t._id}`)}>
+                                    <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all group cursor-pointer" onClick={() => router.push(`/trainings/${t.id}`)}>
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center text-[#1a1f2e]">
                                                 <span className="material-symbols-outlined text-[18px]">workspace_premium</span>

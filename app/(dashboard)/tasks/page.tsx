@@ -6,21 +6,22 @@ import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
 
 interface Task {
-  _id: string
+  id: string
   name: string
   status: string
   deadline?: string
-  blockedBy?: { _id: string; name: string }[]
-  trainingId?: { _id: string; title: string }
+  blocked_by_task_id?: string
+  training_id?: string
+  training?: { id: string; title: string }
 }
 
 const filterOptions = [
   'All',
-  'Pending',
-  'In Progress',
-  'Complete',
-  'Delayed',
-  'Canceled',
+  'pending',
+  'in_progress',
+  'complete',
+  'delayed',
+  'canceled',
 ]
 
 export default function TasksPage() {
@@ -48,7 +49,7 @@ export default function TasksPage() {
   }
 
   function handleStatusChange(id: string, newStatus: string) {
-    setTasks(prev => prev.map(t => t._id === id ? { ...t, status: newStatus } : t))
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t))
   }
 
   const filteredTasks = tasks.filter((task) => {
@@ -148,7 +149,7 @@ export default function TasksPage() {
                     : 'bg-white text-slate-400 border border-slate-200'
                 }`}
               >
-                {filter}
+                {filter === 'All' ? filter : filter.replace('_', ' ').toUpperCase()}
               </button>
             ))}
           </div>
@@ -168,7 +169,7 @@ export default function TasksPage() {
                   <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
                     {activeFilter === 'All'
                       ? 'Create your first task to get started'
-                      : `No ${activeFilter} tasks`}
+                      : `No ${activeFilter.replace('_', ' ')} tasks`}
                   </p>
               </div>
             </div>
@@ -191,9 +192,9 @@ export default function TasksPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {todayTasks.map((task) => (
                       <TaskCard
-                        key={task._id}
+                        key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task._id}`)}
+                        onClick={() => router.push(`/tasks/${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}
@@ -212,9 +213,9 @@ export default function TasksPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {thisWeekTasks.map((task) => (
                       <TaskCard
-                        key={task._id}
+                        key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task._id}`)}
+                        onClick={() => router.push(`/tasks/${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}
@@ -233,9 +234,9 @@ export default function TasksPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {otherTasks.map((task) => (
                       <TaskCard
-                        key={task._id}
+                        key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task._id}`)}
+                        onClick={() => router.push(`/tasks/${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}
@@ -254,9 +255,9 @@ export default function TasksPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {noDeadlineTasks.map((task) => (
                       <TaskCard
-                        key={task._id}
+                        key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task._id}`)}
+                        onClick={() => router.push(`/tasks/${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}

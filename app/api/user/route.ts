@@ -1,77 +1,110 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
-import User from '@/models/User'
-import { verifyToken } from '@/lib/auth'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-export async function GET(req: NextRequest) {
-    try {
-        await connectDB()
+export async function GET() {
+  try {
+    const supabase = await createServerSupabaseClient()
 
-        const token = req.cookies.get('token')?.value
-        if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const decoded = verifyToken(token)
-        if (!decoded) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-        }
-
-        const user = await User.findById(decoded.userId).select('-password')
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
-
-        return NextResponse.json({ user }, { status: 200 })
-    } catch (error) {
-        console.error('Get user error:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { data: settings } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.user_metadata?.name || '',
+        email: user.email,
+        profilePicture: user.user_metadata?.profile_picture || '',
+        phone: user.user_metadata?.phone || '',
+        address: user.user_metadata?.address || '',
+        bio: user.user_metadata?.bio || '',
+        appLock: settings?.app_lock ?? false,
+        reviewReminders: settings?.notifications_enabled ?? true,
+      }
+    }, { status: 200 })
+
+  } catch (error) {
+    console.error('Get user error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 export async function PUT(req: NextRequest) {
-    try {
-        await connectDB()
+  try {
+    const supabase = await createServerSupabaseClient()
 
-        const token = req.cookies.get('token')?.value
-        if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const decoded = verifyToken(token)
-        if (!decoded) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-        }
-
-        const { name, email, profilePicture, appLock, reviewReminders, phone, address, bio } = await req.json()
-
-        const updateData: any = {}
-        if (name !== undefined) updateData.name = name
-        if (email !== undefined) updateData.email = email
-        if (profilePicture !== undefined) {
-             updateData.profilePicture = profilePicture
-        }
-        if (appLock !== undefined) updateData.appLock = appLock
-        if (reviewReminders !== undefined) updateData.reviewReminders = reviewReminders
-        if (phone !== undefined) updateData.phone = phone
-        if (address !== undefined) updateData.address = address
-        if (bio !== undefined) updateData.bio = bio
-
-        const user = await User.findByIdAndUpdate(
-            decoded.userId,
-            updateData,
-            { new: true }
-        ).select('-password')
-
-        return NextResponse.json({ user }, { status: 200 })
-    } catch (error) {
-        console.error('Update user error:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-}
+
+    const body = await req.json()
+    const { name, email, profilePicture, phone, address, bio, appLock, reviewReminders } = body
+
+    // Update info in Supabase Auth Metadata
+    if (name || email || profilePicture || phone || address || bio) {
+      const { error } = await supabase.auth.updateUser({
+        ...(email && { email }),
+        data: {
+          ...(name && { name }),
+          ...(profilePicture && { profile_picture: profilePicture }),
+          ...(phone && { phone }),
+          ...(address && { address }),
+          ...(bio && { bio }),
+        }
+      })
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+    }
+
+    // Update settings in user_settings table
+    if (appLock !== undefined || reviewReminders !== undefined) {
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          ...(appLock !== undefined && { app_lock: appLock }),
+          ...(reviewReminders !== undefined && { notifications_enabled: reviewReminders }),
+          updated_at: new Date().toISOString(),
+        })
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+    }
+
+    // Fetch updated user to return
+    const { data: updatedSettings } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    return NextResponse.json({
+      message: 'Updated successfully',
+      user: {
+        id: user.id,
+        name: body.name || user.user_metadata?.name || '',
+        email: body.email || user.email,
+        profilePicture: body.profilePicture || user.user_metadata?.profile_picture || '',
+        phone: body.phone || user.user_metadata?.phone || '',
+        address: body.address || user.user_metadata?.address || '',
+        bio: body.bio || user.user_metadata?.bio || '',
+        appLock: updatedSettings?.app_lock ?? false,
+        reviewReminders: updatedSettings?.notifications_enabled ?? true,
+      }
+    }, { status: 200 })
+
+  } catch (error) {
+    console.error('Update user error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

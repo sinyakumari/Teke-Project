@@ -6,19 +6,19 @@ import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
 
 interface Training {
-  _id: string
+  id: string
   title: string
   instructor: string
-  locationType: string
-  locationName?: string
-  startDate?: string
-  endDate?: string
+  location_type: string
+  location_name?: string
+  start_date?: string
+  end_date?: string
   category: string
-  status: string
+  is_archived: boolean
 }
 
 interface TaskCount {
-  trainingId: string
+  training_id: string
   total: number
   completed: number
 }
@@ -38,27 +38,30 @@ export default function TrainingsPage() {
   async function fetchTrainings() {
     setLoading(true)
     try {
+      // Supabase uses is_archived boolean
+      const isArchived = activeTab === 'archived'
       const [trainingsRes, tasksRes] = await Promise.all([
-        fetch(`/api/trainings?status=${activeTab}`),
+        fetch(`/api/trainings?is_archived=${isArchived}`),
         fetch('/api/tasks'),
       ])
 
       const trainingsData = await trainingsRes.json()
       const tasksData = await tasksRes.json()
 
-      setTrainings(trainingsData.trainings || [])
+      const currentTrainings = trainingsData.trainings || []
+      setTrainings(currentTrainings)
 
-      const counts: TaskCount[] = (trainingsData.trainings || []).map(
+      const counts: TaskCount[] = currentTrainings.map(
         (t: Training) => {
           const trainingTasks = (tasksData.tasks || []).filter(
-            (task: { trainingId: { _id: string } }) =>
-              task.trainingId?._id === t._id
+            (task: { training_id: string }) =>
+              task.training_id === t.id
           )
           const completed = trainingTasks.filter(
-            (task: { status: string }) => task.status === 'Complete'
+            (task: { status: string }) => task.status === 'complete'
           ).length
           return {
-            trainingId: t._id,
+            training_id: t.id,
             total: trainingTasks.length,
             completed,
           }
@@ -73,8 +76,8 @@ export default function TrainingsPage() {
     }
   }
 
-  function getTaskCount(trainingId: string) {
-    return taskCounts.find((t) => t.trainingId === trainingId) || {
+  function getTaskCount(training_id: string) {
+    return taskCounts.find((t) => t.training_id === training_id) || {
       total: 0,
       completed: 0,
     }
@@ -185,14 +188,14 @@ export default function TrainingsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {trainings.map((training) => {
-                const counts = getTaskCount(training._id)
+                const counts = getTaskCount(training.id)
                 return (
                   <TrainingCard
-                    key={training._id}
+                    key={training.id}
                     training={training}
                     taskCount={counts.total}
                     completedCount={counts.completed}
-                    onClick={() => router.push(`/trainings/${training._id}`)}
+                    onClick={() => router.push(`/trainings/${training.id}`)}
                     onMenuClick={(e) => {
                       e.stopPropagation()
                     }}

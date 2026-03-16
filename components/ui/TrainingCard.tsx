@@ -3,15 +3,15 @@
 import { formatDateRange } from '@/lib/utils'
 
 interface Training {
-    _id: string
+    id: string
     title: string
     instructor: string
-    locationType: string
-    locationName?: string
-    startDate?: string
-    endDate?: string
+    location_type: string
+    location_name?: string
+    start_date?: string
+    end_date?: string
     category: string
-    status: string
+    is_archived: boolean
 }
 
 interface TrainingCardProps {
@@ -58,7 +58,7 @@ export default function TrainingCard({
             </div>
 
             <div className="flex items-center gap-1 text-gray-500 text-sm mb-1">
-                {training.locationType === 'Online' ? (
+                {training.location_type === 'online' ? (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                         <path d="M5 12.5C5 12.5 7 8 12 8C17 8 19 12.5 19 12.5C19 12.5 17 17 12 17C7 17 5 12.5 5 12.5Z" stroke="#6b7280" strokeWidth="2" />
                         <circle cx="12" cy="12.5" r="2.5" stroke="#6b7280" strokeWidth="2" />
@@ -70,7 +70,7 @@ export default function TrainingCard({
                     </svg>
                 )}
                 <span>
-                    {training.instructor || 'No instructor'} · {training.locationType}
+                    {training.instructor || 'No instructor'} · {training.location_type}
                 </span>
             </div>
 
@@ -79,7 +79,7 @@ export default function TrainingCard({
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="#6b7280" strokeWidth="2" />
                     <path d="M3 9H21M8 2V6M16 2V6" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" />
                 </svg>
-                <span>{formatDateRange(training.startDate, training.endDate)}</span>
+                <span>{formatDateRange(training.start_date, training.end_date)}</span>
             </div>
 
             <div className="flex items-center gap-2">

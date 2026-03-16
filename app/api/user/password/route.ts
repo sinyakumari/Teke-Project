@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import connectDB from '@/lib/mongodb'
-import User from '@/models/User'
-import { verifyToken } from '@/lib/auth'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function PUT(req: NextRequest) {
     try {
-        await connectDB()
+        const supabase = await createServerSupabaseClient()
 
-        const token = req.cookies.get('token')?.value
-        if (!token) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const decoded = verifyToken(token)
-        if (!decoded) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
         }
 
         const { currentPassword, newPassword } = await req.json()
@@ -24,21 +16,24 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: 'Current and new password are required' }, { status: 400 })
         }
 
-        const user = await User.findById(decoded.userId)
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        }
+        // Verify current password by attempting to sign in
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: user.email!,
+            password: currentPassword,
+        })
 
-        const isMatch = await bcrypt.compare(currentPassword, user.password)
-        if (!isMatch) {
+        if (signInError) {
             return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 })
         }
 
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(newPassword, salt)
+        // Update password
+        const { error: updateError } = await supabase.auth.updateUser({
+            password: newPassword,
+        })
 
-        user.password = hashedPassword
-        await user.save()
+        if (updateError) {
+            return NextResponse.json({ error: updateError.message }, { status: 400 })
+        }
 
         return NextResponse.json({ message: 'Password updated successfully' }, { status: 200 })
     } catch (error) {
