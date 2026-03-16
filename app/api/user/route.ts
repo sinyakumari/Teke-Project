@@ -46,11 +46,23 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
         }
 
-        const { name, email } = await req.json()
+        const { name, email, profilePicture, appLock, reviewReminders, phone, address, bio } = await req.json()
+
+        const updateData: any = {}
+        if (name !== undefined) updateData.name = name
+        if (email !== undefined) updateData.email = email
+        if (profilePicture !== undefined) {
+             updateData.profilePicture = profilePicture
+        }
+        if (appLock !== undefined) updateData.appLock = appLock
+        if (reviewReminders !== undefined) updateData.reviewReminders = reviewReminders
+        if (phone !== undefined) updateData.phone = phone
+        if (address !== undefined) updateData.address = address
+        if (bio !== undefined) updateData.bio = bio
 
         const user = await User.findByIdAndUpdate(
             decoded.userId,
-            { name, email },
+            updateData,
             { new: true }
         ).select('-password')
 

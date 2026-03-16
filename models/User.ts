@@ -4,6 +4,14 @@ export interface IUser extends Document {
     name: string
     email: string
     password: string
+    profilePicture?: string
+    phone?: string
+    address?: string
+    bio?: string
+    lastLogin?: Date
+    accountStatus?: string
+    appLock?: boolean
+    reviewReminders?: boolean
     createdAt: Date
 }
 
@@ -24,6 +32,38 @@ const UserSchema = new Schema<IUser>(
         password: {
             type: String,
             required: true,
+        },
+        profilePicture: {
+            type: String,
+            default: '',
+        },
+        phone: {
+            type: String,
+            default: '',
+        },
+        address: {
+            type: String,
+            default: '',
+        },
+        bio: {
+            type: String,
+            default: '',
+        },
+        lastLogin: {
+            type: Date,
+            default: Date.now,
+        },
+        accountStatus: {
+            type: String,
+            default: 'Active',
+        },
+        appLock: {
+            type: Boolean,
+            default: false,
+        },
+        reviewReminders: {
+            type: Boolean,
+            default: true,
         },
     },
     { timestamps: true }
