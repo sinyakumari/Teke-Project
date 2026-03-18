@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 
 export default function NewTrainingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('id')
+  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -22,6 +25,39 @@ export default function NewTrainingPage() {
   const [vision, setVision] = useState('')
   const [objective, setObjective] = useState('')
   const [notes, setNotes] = useState('')
+
+  useEffect(() => {
+    if (editId) {
+      fetchTrainingDetails(editId)
+    }
+  }, [editId])
+
+  async function fetchTrainingDetails(id: string) {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/trainings/${id}`)
+      if (!res.ok) throw new Error('Failed to fetch training')
+      const { training } = await res.json()
+      
+      setTitle(training.title || '')
+      setInstructor(training.instructor || '')
+      setLocationType(training.location_type === 'online' ? 'Online' : 'In Person')
+      setStructure(training.structure === 'multi-lesson' ? 'Multi-Lesson' : 'Single Session')
+      setStartDate(training.start_date || '')
+      setEndDate(training.end_date || '')
+      setDuration(training.duration_value?.toString() || '')
+      setUnit(training.duration_unit || '')
+      setCategory(training.category ? training.category.charAt(0).toUpperCase() + training.category.slice(1) : 'Tech')
+      setVision(training.vision || '')
+      setObjective(training.mission || '')
+      setNotes(training.notes_delta?.text || '')
+    } catch (err) {
+      setError('Failed to load training details')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1)
@@ -61,18 +97,21 @@ export default function NewTrainingPage() {
       const mappedLocationType = locationType === 'Online' ? 'online' : 'offline'
       const mappedStructure = structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
 
-      const res = await fetch('/api/trainings', {
-        method: 'POST',
+      const url = editId ? `/api/trainings/${editId}` : '/api/trainings';
+      const method = editId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           instructor,
           locationType: mappedLocationType,
           structure: mappedStructure,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          duration: duration ? Number(duration) : undefined,
-          unit: unit || undefined,
+          startDate: startDate || null,
+          endDate: endDate || null,
+          duration: duration ? duration.toString() : null,
+          unit: unit || null,
           category: category.toLowerCase(),
           vision,
           objective,
@@ -81,7 +120,7 @@ export default function NewTrainingPage() {
       })
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'Failed to create training')
+        setError(data.error || `Failed to ${editId ? 'update' : 'create'} training`)
         return
       }
       router.push('/trainings')
@@ -106,7 +145,7 @@ export default function NewTrainingPage() {
                 <path d="M18 6L6 18M6 6l12 12" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <h1 className="text-sm font-bold text-[#1a1f2e]">New Training</h1>
+            <h1 className="text-sm font-bold text-[#1a1f2e]">{editId ? 'Edit Training' : 'New Training'}</h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -485,7 +524,7 @@ export default function NewTrainingPage() {
                   disabled={loading}
                   className="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
                 >
-                  {loading ? 'Finalizing...' : 'Complete & Save ✓'}
+                  {loading ? 'Finalizing...' : editId ? 'Update & Save ✓' : 'Complete & Save ✓'}
                 </button>
               )}
             </div>

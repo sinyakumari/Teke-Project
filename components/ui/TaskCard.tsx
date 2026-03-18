@@ -15,10 +15,11 @@ interface Task {
 interface TaskCardProps {
   task: Task
   onClick: () => void
+  onEditClick?: (e: React.MouseEvent) => void
   onStatusChange?: (newStatus: string) => void
 }
 
-export default function TaskCard({ task, onClick, onStatusChange }: TaskCardProps) {
+export default function TaskCard({ task, onClick, onEditClick, onStatusChange }: TaskCardProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(task.status)
 
@@ -116,11 +117,26 @@ export default function TaskCard({ task, onClick, onStatusChange }: TaskCardProp
           </div>
         </div>
 
-        {isBlocked && (
-          <div className="absolute top-5 right-5 text-orange-400" title={`Blocked by ${blockerName}`}>
-            <span className="material-symbols-outlined text-[18px]">lock</span>
-          </div>
-        )}
+        <div className="flex flex-col items-center gap-2">
+          {isBlocked && (
+            <div className="text-orange-400" title={`Blocked by ${blockerName}`}>
+              <span className="material-symbols-outlined text-[18px]">lock</span>
+            </div>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditClick?.(e);
+            }}
+            className="p-1.5 hover:bg-gray-100 rounded-lg text-slate-400 hover:text-[#1a1f2e] transition-colors"
+            title="Edit Task"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -17,6 +17,7 @@ export default function NewTaskPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTrainingId = searchParams.get('training_id')
+  const editId = searchParams.get('id')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -28,6 +29,31 @@ export default function NewTaskPage() {
   const [blockedBy, setBlockedBy] = useState<string>('')
   const [deadline, setDeadline] = useState('')
   const [showBlockedDropdown, setShowBlockedDropdown] = useState(false)
+
+  useEffect(() => {
+    if (editId) {
+      fetchTaskDetails(editId)
+    }
+  }, [editId])
+
+  async function fetchTaskDetails(id: string) {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/tasks/${id}`)
+      if (!res.ok) throw new Error('Failed to fetch task')
+      const { task } = await res.json()
+      
+      setTaskName(task.name || '')
+      setTrainingId(task.training_id || '')
+      setBlockedBy(task.blocked_by_task_id || '')
+      setDeadline(task.deadline ? task.deadline.split('T')[0] : '')
+    } catch (err) {
+      setError('Failed to load task details')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1)
@@ -87,7 +113,7 @@ export default function NewTaskPage() {
     }
   }
 
-  async function handleCreate() {
+  async function handleSubmit() {
     if (!taskName.trim()) {
       setError('Task name is required')
       setCurrentStep(1)
@@ -103,21 +129,25 @@ export default function NewTaskPage() {
     setError('')
 
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
+      const url = editId ? `/api/tasks/${editId}` : '/api/tasks'
+      const method = editId ? 'PUT' : 'POST'
+      
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: taskName,
           training_id: trainingId,
           blocked_by_task_id: blockedBy || null,
           deadline: deadline || null,
-          status: 'pending',
+          // Only send status if creating new
+          ...(editId ? {} : { status: 'pending' }),
         }),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'Failed to create task')
+        setError(data.error || `Failed to ${editId ? 'update' : 'create'} task`)
         return
       }
 
@@ -145,7 +175,7 @@ export default function NewTaskPage() {
                 <path d="M18 6L6 18M6 6l12 12" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <h1 className="text-sm font-bold text-[#1a1f2e]">New Task</h1>
+            <h1 className="text-sm font-bold text-[#1a1f2e]">{editId ? 'Edit Task' : 'New Task'}</h1>
           </div>
         </div>
       </div>
@@ -395,11 +425,11 @@ export default function NewTaskPage() {
                 </button>
               ) : (
                 <button
-                  onClick={handleCreate}
+                  onClick={handleSubmit}
                   disabled={loading}
                   className="bg-blue-600 text-white px-10 py-3.5 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-2xl active:scale-95 flex items-center gap-3 disabled:opacity-70"
                 >
-                  {loading ? 'Processing...' : 'Create Task ✓'}
+                  {loading ? 'Processing...' : editId ? 'Update Task ✓' : 'Create Task ✓'}
                 </button>
               )}
             </div>

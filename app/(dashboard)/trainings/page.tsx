@@ -184,6 +184,7 @@ export default function TrainingsPage() {
                 trainings={trainings} 
                 taskCounts={taskCounts}
                 onTrainingClick={(id) => router.push(`/trainings/${id}`)}
+                onEditClick={(id) => router.push(`/trainings/new?id=${id}`)}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -196,6 +197,7 @@ export default function TrainingsPage() {
                     taskCount={counts.total}
                     completedCount={counts.completed}
                     onClick={() => router.push(`/trainings/${training.id}`)}
+                    onEditClick={() => router.push(`/trainings/new?id=${training.id}`)}
                     onMenuClick={(e) => {
                       e.stopPropagation()
                     }}

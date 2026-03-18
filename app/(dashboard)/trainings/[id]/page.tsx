@@ -11,6 +11,8 @@ interface Task {
   name: string
   status: string
   deadline?: string
+  training_id?: string
+  training?: { id: string; title: string }
 }
 
 interface Training {
@@ -139,7 +141,7 @@ export default function TrainingDetailPage() {
               </svg>
             </button>
             <button
-              onClick={() => router.push(`/trainings/${id}/edit`)}
+              onClick={() => router.push(`/trainings/new?id=${id}`)}
               className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-slate-100"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -291,9 +293,9 @@ export default function TrainingDetailPage() {
                         key={task.id}
                         task={{
                           ...task,
-                          training_id: id,
                           training: { id, title: training.title }
                         }}
+                        onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onClick={() => router.push(`/tasks/${task.id}`)}
                       />
                     ))}

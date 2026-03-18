@@ -243,6 +243,7 @@ export default function HomePage() {
                     <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
+                          onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                           onClick={() => router.push(`/tasks/${task.id}`)}
                           onStatusChange={() => fetchData()}
                         />
@@ -278,6 +279,7 @@ export default function HomePage() {
                     <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
+                          onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                           onClick={() => router.push(`/tasks/${task.id}`)}
                           onStatusChange={() => fetchData()}
                         />

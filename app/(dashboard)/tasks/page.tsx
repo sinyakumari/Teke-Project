@@ -177,6 +177,7 @@ export default function TasksPage() {
             <TaskTable 
                 tasks={filteredTasks} 
                 onTaskClick={(id) => router.push(`/tasks/${id}`)}
+                onEditClick={(id) => router.push(`/tasks/new?id=${id}`)}
                 onStatusChange={handleStatusChange}
             />
           ) : (
@@ -195,6 +196,7 @@ export default function TasksPage() {
                         key={task.id}
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
+                        onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}
@@ -216,6 +218,7 @@ export default function TasksPage() {
                         key={task.id}
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
+                        onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}
@@ -237,6 +240,7 @@ export default function TasksPage() {
                         key={task.id}
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
+                        onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}
@@ -258,6 +262,7 @@ export default function TasksPage() {
                         key={task.id}
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
+                        onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={() => fetchTasks()}
                       />
                     ))}

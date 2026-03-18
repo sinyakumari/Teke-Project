@@ -129,7 +129,7 @@ export default function TaskDetailPage() {
               </svg>
             </button>
             <button
-              onClick={() => router.push(`/tasks/${id}/edit`)}
+              onClick={() => router.push(`/tasks/new?id=${id}`)}
               className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-slate-100"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
