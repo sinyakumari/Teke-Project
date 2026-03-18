@@ -58,6 +58,18 @@ export default function HomePage() {
       const { data: { user: supabaseUser } } = await supabase.auth.getUser()
       
       if (!supabaseUser) {
+        const isDev = process.env.NODE_ENV === 'development';
+        const isMockAuth = document.cookie.includes('mock_auth=true');
+        
+        if (isDev && isMockAuth) {
+          setUser({
+            name: 'Demo User',
+            email: 'demo@example.com'
+          });
+          setLoading(false);
+          return;
+        }
+
         router.push('/login')
         return
       }

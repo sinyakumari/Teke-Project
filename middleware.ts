@@ -41,7 +41,13 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   )
 
+  const isDev = process.env.NODE_ENV === 'development';
+  const mockAuth = request.cookies.get('mock_auth');
+
   if (isProtected && !user) {
+    if (isDev && mockAuth?.value === 'true') {
+      return supabaseResponse;
+    }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
