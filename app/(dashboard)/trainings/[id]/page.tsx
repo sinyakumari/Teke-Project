@@ -265,12 +265,21 @@ export default function TrainingDetailPage() {
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-[#1a1f2e]">Course Tasks</h2>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => router.push(`/tasks/extract?training_id=${id}`)}
+                    className="text-slate-400 text-sm font-bold hover:text-[#1a1f2e] transition-colors flex items-center gap-1"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    PDF Extractor
+                  </button>
                   <button
                     onClick={() => router.push(`/tasks/new?training_id=${id}`)}
                     className="text-indigo-600 text-sm font-bold hover:underline"
                   >
                     + Add Task
                   </button>
+                </div>
                 </div>
 
                 {tasks.length === 0 ? (

@@ -332,7 +332,10 @@ export default function NewTrainingPage() {
                         </div>
                         <h3 className="text-sm font-bold text-[#1a1f2e] mb-1">Upload Syllabus PDF</h3>
                         <p className="text-[10px] text-gray-400 mb-4">Auto-extract learning tasks</p>
-                        <button className="bg-white border border-gray-200 text-[#1a1f2e] px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors">
+                        <button 
+                          onClick={() => router.push(`/tasks/extract${editId ? `?training_id=${editId}` : ''}`)}
+                          className="bg-white border border-gray-200 text-[#1a1f2e] px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors"
+                        >
                           Choose File
                         </button>
                       </div>

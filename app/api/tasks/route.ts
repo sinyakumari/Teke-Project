@@ -41,19 +41,22 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
+    const isBulk = Array.isArray(body)
+    const insertData = isBulk
+      ? body.map((t: any) => ({ ...t, user_id: user.id, status: t.status || 'pending' }))
+      : { ...body, user_id: user.id, status: body.status || 'pending' }
 
-    const { data: task, error } = await supabase
+    const { data: result, error } = await supabase
       .from('tasks')
-      .insert({ ...body, user_id: user.id })
+      .insert(insertData)
       .select()
-      .single()
 
     if (error) {
       console.error('Create task error:', error)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
     }
 
-    return NextResponse.json({ task }, { status: 201 })
+    return NextResponse.json({ task: isBulk ? result : result[0] }, { status: 201 })
   } catch (error) {
     console.error('Create task error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
