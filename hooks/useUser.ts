@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 interface User {
   name: string
   email: string
+  profilePicture?: string
 }
 
 export function useUser() {

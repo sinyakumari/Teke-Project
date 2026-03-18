@@ -171,7 +171,9 @@ export default function HomePage() {
                      {todayDate}
                   </p>
                </div>
-               <Avatar name={user?.name || '?'} size="md" />
+               <Link href="/profile" className="hover:scale-110 active:scale-95 transition-all cursor-pointer">
+                 <Avatar name={user?.name || '?'} size="md" />
+               </Link>
             </div>
           </div>
 
