@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Toggle from '@/components/ui/Toggle'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -475,6 +476,15 @@ export default function ProfilePage() {
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
                     placeholder="••••••••"
                   />
+                </div>
+                <div className="flex justify-end mt-1">
+                  <Link 
+                    href="/forgot-password" 
+                    title="Go to forgot password flow" 
+                    className="text-[10px] font-bold text-slate-400 hover:text-[#1a1f2e] transition-all uppercase tracking-widest"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
               </div>
               <button 
