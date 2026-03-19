@@ -23,6 +23,8 @@ interface Training {
   end_date?: string
   category: string
   is_archived: boolean
+  description?: string
+  pdfs?: { name: string; url: string }[]
 }
 
 interface Task {

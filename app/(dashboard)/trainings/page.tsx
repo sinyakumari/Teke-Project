@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
 import { useAppStore } from '@/store/useAppStore'
+import TrainingDrawer from '@/components/training/TrainingDrawer'
 
 
 interface Training {
@@ -29,6 +30,7 @@ export default function TrainingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
   const [view, setView] = useState<'grid' | 'table'>('grid')
+  const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null)
   
   const allTrainings = useAppStore((state) => state.trainings)
   const allTasks = useAppStore((state) => state.tasks)
@@ -156,7 +158,7 @@ export default function TrainingsPage() {
             <TrainingTable 
                 trainings={trainings} 
                 taskCounts={taskCounts}
-                onTrainingClick={(id) => router.push(`/trainings/${id}`)}
+                onTrainingClick={(id) => setSelectedTrainingId(id)}
                 onEditClick={(id) => router.push(`/trainings/new?id=${id}`)}
             />
           ) : (
@@ -169,7 +171,7 @@ export default function TrainingsPage() {
                     training={training}
                     taskCount={counts.total}
                     completedCount={counts.completed}
-                    onClick={() => router.push(`/trainings/${training.id}`)}
+                    onClick={() => setSelectedTrainingId(training.id)}
                     onEditClick={() => router.push(`/trainings/new?id=${training.id}`)}
                     onMenuClick={(e) => {
                       e.stopPropagation()
@@ -196,6 +198,12 @@ export default function TrainingsPage() {
           />
         </svg>
       </button>
+
+      {/* Slide-in Training Preview Drawer */}
+      <TrainingDrawer 
+        trainingId={selectedTrainingId} 
+        onClose={() => setSelectedTrainingId(null)} 
+      />
     </div>
   )
 }

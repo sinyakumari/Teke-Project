@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
 import { useAppStore } from '@/store/useAppStore'
+import TaskDrawer from '@/components/task/TaskDrawer'
 
 
 interface Task {
@@ -30,6 +31,7 @@ export default function TasksPage() {
   const router = useRouter()
   const [activeFilter, setActiveFilter] = useState('All')
   const [view, setView] = useState<'grid' | 'table'>('grid')
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const tasks = useAppStore((state) => state.tasks)
   const loading = useAppStore((state) => state.tasksLoading)
@@ -60,8 +62,6 @@ export default function TasksPage() {
       console.error('Error updating task status:', error)
     }
   }
-
-
 
   const filteredTasks = tasks.filter((task) => {
     if (activeFilter === 'All') return true
@@ -197,26 +197,27 @@ export default function TasksPage() {
           ) : view === 'table' ? (
             <TaskTable 
                 tasks={filteredTasks} 
-                onTaskClick={(id) => router.push(`/tasks/${id}`)}
+                onTaskClick={(id) => setSelectedTaskId(id)}
                 onEditClick={(id) => router.push(`/tasks/new?id=${id}`)}
                 onStatusChange={handleStatusChange}
             />
           ) : (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-5">
               {/* TODAY */}
               {todayTasks.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-3">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Today</p>
                     <div className="h-[1px] flex-1 bg-slate-200" />
                     <span className="bg-red-50 text-red-500 px-2 py-0.5 rounded-lg text-[10px] font-black">{todayTasks.length}</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {todayTasks.map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task.id}`)}
+                        compact={true}
+                        onClick={() => setSelectedTaskId(task.id)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
@@ -228,17 +229,18 @@ export default function TasksPage() {
               {/* THIS WEEK */}
               {thisWeekTasks.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-3">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">This Week</p>
                     <div className="h-[1px] flex-1 bg-slate-200" />
                     <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg text-[10px] font-black">{thisWeekTasks.length}</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {thisWeekTasks.map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task.id}`)}
+                        compact={true}
+                        onClick={() => setSelectedTaskId(task.id)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
@@ -250,17 +252,18 @@ export default function TasksPage() {
               {/* OTHER DEADLINES */}
               {otherTasks.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-3">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Other Deadlines</p>
                     <div className="h-[1px] flex-1 bg-slate-200" />
                     <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg text-[10px] font-black">{otherTasks.length}</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {otherTasks.map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task.id}`)}
+                        compact={true}
+                        onClick={() => setSelectedTaskId(task.id)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
@@ -272,17 +275,18 @@ export default function TasksPage() {
               {/* NO DEADLINE */}
               {noDeadlineTasks.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-3">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">No Deadline</p>
                     <div className="h-[1px] flex-1 bg-slate-200" />
                     <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg text-[10px] font-black">{noDeadlineTasks.length}</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {noDeadlineTasks.map((task) => (
                       <TaskCard
                         key={task.id}
                         task={task}
-                        onClick={() => router.push(`/tasks/${task.id}`)}
+                        compact={true}
+                        onClick={() => setSelectedTaskId(task.id)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                         onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
@@ -304,6 +308,12 @@ export default function TasksPage() {
           <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
         </svg>
       </button>
+
+      {/* Slide-in Task Preview Drawer */}
+      <TaskDrawer 
+        taskId={selectedTaskId} 
+        onClose={() => setSelectedTaskId(null)} 
+      />
     </div>
   )
-}
+}
