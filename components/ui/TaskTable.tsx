@@ -49,7 +49,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
@@ -96,9 +96,9 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                     </span>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    {task.training ? (
-                      <span className="text-[11px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase tracking-tight">
-                        {task.training.title}
+                    {task.training || (task as any).trainings ? (
+                      <span className="text-[13px] font-bold text-slate-700 pointer-events-none">
+                        {task.training?.title || (task as any).trainings?.title}
                       </span>
                     ) : (
                       <span className="text-[11px] font-bold text-slate-300">N/A</span>

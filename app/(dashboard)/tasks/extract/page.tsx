@@ -3,6 +3,7 @@
 import { useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import * as pdfjs from 'pdfjs-dist'
+import { useAppStore } from '@/store/useAppStore'
 
 // Set worker path
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -16,11 +17,13 @@ interface ExtractedTask {
 function ExtractorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const trainingId = searchParams.get('training_id')
+  const urlTrainingId = searchParams.get('training_id')
   
+  const trainings = useAppStore(state => state.trainings)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [file, setFile] = useState<File | null>(null)
+  const [selectedTrainingId, setSelectedTrainingId] = useState(urlTrainingId || '')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [tasks, setTasks] = useState<ExtractedTask[]>([])
@@ -75,18 +78,32 @@ function ExtractorContent() {
         }
         lines.push(currentLine.trim())
 
-        // Detection logic: Look for "TASK" (uppercase) or "Task" at the start
+        // Detection logic: Only look for lines strictly starting with "TASK" or "Task"
         lines.forEach((line) => {
           const trimmed = line.trim();
-          if (trimmed.includes('TASK') || trimmed.startsWith('Task')) {
-            // Strip leading numbers like (1), 1., 1) or bullets
-            const cleanedText = trimmed.replace(/^(\(\d+\)|\d+[\.)]|\d+\s+|[-•*])\s*/, '').trim();
+          
+          // First, strip leading numbers or bullets to see the raw sentence start
+          const noBulletText = trimmed.replace(/^(\(\d+\)|\d+[\.)]|\d+\s+|[-•*])\s*/, '').trim();
+          
+          // Strictly check if the line STARTS with "Task" or "TASK"
+          if (/^task\b/i.test(noBulletText)) {
             
-            foundTasks.push({
-              id: Math.random().toString(36).substr(2, 9),
-              text: cleanedText,
-              page: i
-            })
+            // Strip the "TASK :" or "Task - " prefix from the actual text using regex
+            let finalText = noBulletText.replace(/^task\s*[:-]?\s*/i, '').trim();
+            
+            // Strip anything inside parentheses () or square brackets []
+            finalText = finalText.replace(/\([^)]*\)/g, '').replace(/\[[^\]]*\]/g, '');
+            
+            // Cleanup double spaces from stripped content
+            finalText = finalText.replace(/\s{2,}/g, ' ').trim();
+            
+            if (finalText) {
+              foundTasks.push({
+                id: Math.random().toString(36).substr(2, 9),
+                text: finalText,
+                page: i
+              })
+            }
           }
         })
 
@@ -110,11 +127,17 @@ function ExtractorContent() {
     setLoading(true);
     setError('');
     try {
-      const tasksToCreate = tasks.map(t => ({
-        name: t.text,
-        training_id: trainingId,
-        status: 'pending'
-      }));
+      const tasksToCreate = tasks.map(t => {
+        const payload: any = {
+          name: t.text,
+          status: 'pending'
+        }
+        // Only attach training_id if it exists and is a valid string, preventing empty string UUID errors
+        if (selectedTrainingId && selectedTrainingId.trim() !== '') {
+          payload.training_id = selectedTrainingId
+        }
+        return payload
+      });
 
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -122,13 +145,16 @@ function ExtractorContent() {
         body: JSON.stringify(tasksToCreate)
       });
 
-      if (!res.ok) throw new Error('Failed to save tasks');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || 'Failed to save tasks');
+      }
 
-      router.push(trainingId ? `/trainings/${trainingId}` : '/tasks');
+      router.push(selectedTrainingId ? `/trainings/${selectedTrainingId}` : '/tasks');
       router.refresh();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Save error:', err);
-      setError('Failed to save extracted tasks to the database.');
+      setError(err?.message || 'Failed to save extracted tasks to the database.');
     } finally {
       setLoading(false);
     }
@@ -155,10 +181,27 @@ function ExtractorContent() {
           <div>
             <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">Task Extractor</h1>
             <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
-              {trainingId ? 'Extracting tasks for current training' : 'Upload PDF to auto-detect tasks'}
+              {urlTrainingId ? 'Extracting tasks for current training' : 'Upload PDF to auto-detect tasks'}
             </p>
           </div>
         </div>
+
+        {/* Training Selection (If coming from main tasks page) */}
+        {!urlTrainingId && (
+          <div className="mb-6">
+            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Training Course *</label>
+            <select
+              value={selectedTrainingId}
+              onChange={(e) => setSelectedTrainingId(e.target.value)}
+              className="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-[#1a1f2e] focus:border-[#1a1f2e] focus:ring-0 transition-all outline-none"
+            >
+              <option value="" disabled>Select a training to attach tasks to...</option>
+              {trainings.map(t => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Upload Area */}
         <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 mb-8">
@@ -202,9 +245,9 @@ function ExtractorContent() {
 
           <button
             onClick={extractTasks}
-            disabled={!file || loading}
+            disabled={!file || !selectedTrainingId || loading}
             className={`w-full mt-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
-              !file || loading 
+              !file || !selectedTrainingId || loading 
                 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
                 : 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 hover:scale-[1.01] active:scale-[0.99]'
             }`}

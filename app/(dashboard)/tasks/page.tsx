@@ -105,9 +105,9 @@ export default function TasksPage() {
         <div className="max-w-7xl mx-auto">
 
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">Tasks</h1>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight shrink-0">Tasks</h1>
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* View Toggle */}
               <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
                  <button 
@@ -136,24 +136,28 @@ export default function TasksPage() {
                  </button>
               </div>
 
+              {/* Task Extractor - icon only on mobile */}
               <button
                 onClick={() => router.push('/tasks/extract')}
-                className="bg-white border border-slate-200 text-[#1a1f2e] px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 hover:bg-slate-50 transition-all"
+                className="bg-white border border-slate-200 text-[#1a1f2e] p-2 sm:px-4 sm:py-2 rounded-xl font-black flex items-center gap-2 hover:bg-slate-50 transition-all min-h-[40px]"
+                title="Task Extractor"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                 </svg>
-                Task Extractor
+                <span className="hidden sm:inline text-sm">Task Extractor</span>
               </button>
 
+              {/* New Task - icon only on mobile */}
               <button
                 onClick={() => router.push('/tasks/new')}
-                className="bg-[#1a1f2e] text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="bg-[#1a1f2e] text-white p-2 sm:px-4 sm:py-2 rounded-xl font-black flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[40px]"
+                title="New Task"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                   <path d="M12 5V19M5 12H19"/>
                 </svg>
-                New Task
+                <span className="hidden sm:inline text-sm">New Task</span>
               </button>
             </div>
           </div>

@@ -267,26 +267,26 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
              )}
           </div>
         </div>
+      </div>
 
-        {/* Delete Modal Overlay */}
-        {showDeleteConfirm && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
-                <span className="material-symbols-outlined text-3xl">delete_forever</span>
-              </div>
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-black text-slate-900">Delete Task?</h3>
-                <p className="text-xs text-slate-500 font-bold leading-relaxed">This action will permanently remove this task from your training roadmap.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                 <button onClick={() => setShowDeleteConfirm(false)} className="py-4 bg-white border-2 border-slate-100 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-2xl">Cancel</button>
-                 <button onClick={handleDelete} className="py-4 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-red-100">Delete</button>
-              </div>
+      {/* Delete Modal Overlay - Centered on Screen */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <span className="material-symbols-outlined text-3xl">delete_forever</span>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-black text-slate-900">Delete Task?</h3>
+              <p className="text-xs text-slate-500 font-bold leading-relaxed px-2">This action will permanently remove this task from your training roadmap.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-white border-2 border-slate-100 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">Cancel</button>
+               <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-red-100 hover:bg-red-600 transition-colors active:scale-95">Delete</button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   )
 }

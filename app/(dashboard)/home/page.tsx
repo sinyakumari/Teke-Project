@@ -109,20 +109,20 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Exact Header Layout */}
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                 <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">
+          <div className="flex items-start justify-between mb-4 gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                 <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight">
                     {greeting}, {user?.name}
                  </h1>
-                 <span className="text-3xl">👋</span>
+                 <span className="text-2xl sm:text-3xl">👋</span>
               </div>
               <p className="text-[#10b981] text-sm font-black">
                 {todayTasks.length} task(s) due today
               </p>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
                <div className="hidden lg:block text-right">
                   <p className="text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-1">
                     {dayName}

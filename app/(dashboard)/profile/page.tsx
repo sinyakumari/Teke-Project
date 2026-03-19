@@ -194,18 +194,18 @@ export default function ProfilePage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      {/* 1. Header Section - Reduced py-2 */}
-      <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-4">
+      {/* 1. Header Section */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-2 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button 
             onClick={() => router.back()}
-            className="text-[#1a1f2e] hover:bg-slate-50 p-2 rounded-full transition"
+            className="text-[#1a1f2e] hover:bg-slate-50 p-2 rounded-full transition shrink-0"
           >
             <span className="material-symbols-outlined text-[22px]">arrow_back</span>
           </button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-[#1a1f2e]">Profile Dashboard</h1>
-            <div className="flex items-center gap-1.5 ml-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-[#1a1f2e] truncate">Profile Dashboard</h1>
+            <div className="hidden sm:flex items-center gap-1.5 ml-1">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Online</span>
             </div>
@@ -213,10 +213,10 @@ export default function ProfilePage() {
         </div>
         <button 
           onClick={handleLogout}
-          className="text-xs font-bold text-red-500 hover:text-red-600 transition flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl"
+          className="text-xs font-bold text-red-500 hover:text-red-600 transition flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 hover:bg-red-50 rounded-xl shrink-0"
         >
           <span className="material-symbols-outlined text-[16px]">logout</span>
-          Sign Out
+          <span className="hidden sm:inline">Sign Out</span>
         </button>
       </div>
 
@@ -228,7 +228,7 @@ export default function ProfilePage() {
             
             {/* 2. Left Column: Profile Card */}
             <div className="lg:w-[320px] shrink-0">
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col items-center sticky top-20">
+                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col items-center lg:sticky lg:top-20">
                     <div className="relative mb-6">
                         <div className="w-32 h-32 rounded-full bg-[#1a1f2e] text-white flex items-center justify-center text-4xl font-bold overflow-hidden shadow-xl border-4 border-white">
                             {uploadingImage ? (

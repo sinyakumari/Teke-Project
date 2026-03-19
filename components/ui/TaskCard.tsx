@@ -86,8 +86,8 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
         </button>
 
         <div className="flex-1 min-w-0">
-          <h3 className={`font-black truncate transition-colors ${
-            compact ? 'text-sm mb-1.5' : 'text-lg mb-2'
+          <h3 className={`font-extrabold truncate transition-colors ${
+            compact ? 'text-[14px] mb-1.5' : 'text-[17px] mb-2'
           } ${
             isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
           }`}>

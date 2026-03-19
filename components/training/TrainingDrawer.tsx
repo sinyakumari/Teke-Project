@@ -237,14 +237,22 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                </div>
              )}
 
-             {activeTab === 'Tasks' && (
-               <div className="space-y-2">
-                  <div className="flex items-center justify-between mb-4">
+              {activeTab === 'Tasks' && (
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Full Task List</h3>
                     <span className="text-[10px] font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm">
                       {relatedTasks.length} ITEMS
                     </span>
                   </div>
+
+                  <button 
+                    onClick={() => router.push(`/tasks/extract?training_id=${trainingId}`)}
+                    className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-2xl border-2 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 transition-colors font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                    Auto-Extract from Syllabus
+                  </button>
                   {relatedTasks.length === 0 ? (
                     <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center shadow-inner">
                       <span className="text-4xl block mb-4">📋</span>
