@@ -28,6 +28,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
     [trainings, trainingId]
   )
 
+  const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
+
   const relatedTasks = useMemo(() => 
     allTasks.filter(task => task.training_id === trainingId),
     [allTasks, trainingId]
@@ -104,14 +106,14 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-100"
+        className="fixed inset-0 z-[110] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-100"
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
       <div 
-        className="fixed top-0 right-0 h-full z-[101] bg-[#f9fafb] shadow-2xl transition-transform duration-300 ease-out flex flex-col
-          w-full sm:w-[520px] translate-x-0"
+        className="fixed top-0 right-0 h-full z-[111] bg-[#f9fafb] shadow-2xl transition-transform duration-300 ease-out flex flex-col
+          w-full sm:w-[500px] translate-x-0"
       >
         {/* Header */}
         <div className="p-6 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
@@ -228,10 +230,14 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                       {actionLoading ? '...' : training.is_archived ? 'Restore' : 'Archive'}
                     </button>
                     <button 
-                      onClick={() => router.push(`/tasks/new?training_id=${trainingId}`)}
-                      className="px-6 py-3.5 bg-[#1a1f2e] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      onClick={() => openTaskDrawer('new', trainingId)}
+                      className="px-6 py-3.5 bg-[#1a1f2e] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                     >
-                      Add New Task
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      <span>Add New Task</span>
                     </button>
                  </div>
                </div>
@@ -270,6 +276,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                             ...task,
                             training: { id: training.id, title: training.title }
                           }}
+                          onClick={() => openTaskDrawer(task.id)}
+                          onEditClick={() => openTaskDrawer(task.id)}
                         />
                       ))}
                     </div>

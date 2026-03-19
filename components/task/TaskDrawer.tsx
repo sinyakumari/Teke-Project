@@ -1,56 +1,191 @@
 'use client'
 
 import React, { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/store/useAppStore'
 import SegmentedControl from '@/components/ui/SegmentedControl'
-import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
 
 interface TaskDrawerProps {
   taskId: string | null
   onClose: () => void
 }
 
+const AVAILABLE_STATUSES = [
+  'pending',
+  'in_progress',
+  'complete',
+  'delayed',
+  'canceled',
+]
+
+const PRIORITY_OPTIONS = ['Low', 'Medium', 'High']
+
 export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
-  const router = useRouter()
   const tasks = useAppStore((state) => state.tasks)
+  const trainings = useAppStore((state) => state.trainings)
   const updateTaskInStore = useAppStore((state) => state.updateTask)
+  const addTaskInStore = useAppStore((state) => state.addTask)
   const deleteTaskInStore = useAppStore((state) => state.deleteTask)
   
-  const [activeTab, setActiveTab] = useState<'Details' | 'Notes' | 'Dependencies'>('Details')
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-
-  // 1. Data Selection
+  const isCreateMode = taskId === 'new'
   const task = useMemo(() => 
-    tasks.find(t => t.id === taskId), 
-    [tasks, taskId]
+    isCreateMode ? null : tasks.find(t => t.id === taskId), 
+    [tasks, taskId, isCreateMode]
   )
 
-  // 2. Handlers
-  async function handleStatusToggle() {
-    if (!task) return
-    const newStatus = task.status === 'complete' ? 'pending' : 'complete'
-    setActionLoading(true)
+  // Local state for editing
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [status, setStatus] = useState('pending')
+  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium')
+  const [deadline, setDeadline] = useState('')
+  const [trainingId, setTrainingId] = useState('')
+  const [blockedBy, setBlockedBy] = useState('')
+  const [notes, setNotes] = useState('')
+  const [attachments, setAttachments] = useState<{ name: string; url: string; type: string }[]>([])
+  const [uploading, setUploading] = useState(false)
+  
+  const [activeTab, setActiveTab] = useState<'Details' | 'Notes' | 'Dependencies' | 'Files'>('Details')
+  const [loading, setLoading] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const activeTrainingId = useAppStore((state) => state.activeTrainingId)
+  
+  // Initialize state when task or mode changes
+  useEffect(() => {
+    if (isCreateMode) {
+      setName('')
+      setDescription('')
+      setStatus('pending')
+      setPriority('Medium')
+      setDeadline('')
+      setTrainingId(activeTrainingId || '')
+      setBlockedBy('')
+      setNotes('')
+      setAttachments([])
+      setHasChanges(false)
+    } else if (task) {
+      setName(task.name || '')
+      setDescription(task.description || '')
+      setStatus(task.status || 'pending')
+      setPriority(task.priority || 'Medium')
+      setDeadline(task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : '')
+      setTrainingId(task.training_id || '')
+      setBlockedBy(task.blocked_by_task_id || '')
+      setNotes(task.notes || '')
+      setAttachments(task.attachments || [])
+      setHasChanges(false)
+    }
+  }, [task, isCreateMode])
+
+  // Track changes
+  useEffect(() => {
+    if (isCreateMode) {
+      setHasChanges(!!name)
+    } else if (task) {
+      const changed = 
+        name !== task.name ||
+        description !== (task.description || '') ||
+        status !== task.status ||
+        priority !== (task.priority || 'Medium') ||
+        deadline !== (task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : '') ||
+        trainingId !== (task.training_id || '') ||
+        blockedBy !== (task.blocked_by_task_id || '') ||
+        attachments !== (task.attachments || []) ||
+        notes !== (task.notes || '')
+      setHasChanges(changed)
+    }
+  }, [name, description, status, priority, deadline, trainingId, blockedBy, notes, attachments, task, isCreateMode])
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      if (res.ok) {
-        updateTaskInStore({ ...task, status: newStatus })
+      const supabase = createClient()
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `tasks/${taskId || 'new'}/${fileName}`
+
+      const { data, error } = await supabase.storage
+        .from('task-attachments')
+        .upload(filePath, file)
+
+      if (error) throw error
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('task-attachments')
+        .getPublicUrl(data.path)
+
+      const newAttachment = {
+        name: file.name,
+        url: publicUrl,
+        type: file.type
+      }
+
+      setAttachments(prev => [...prev, newAttachment])
+      setHasChanges(true)
+    } catch (error) {
+      console.error('Upload failed:', error)
+      alert('File upload failed. Please try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleSave() {
+    if (!name) return
+    setLoading(true)
+    try {
+      const payload = {
+        name,
+        description,
+        status,
+        priority,
+        deadline: deadline || null,
+        training_id: trainingId || null,
+        blocked_by_task_id: blockedBy || null,
+        notes,
+        attachments
+      }
+
+      if (isCreateMode) {
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json()
+        if (res.ok) {
+          addTaskInStore(data.task)
+          onClose()
+        }
+      } else if (taskId) {
+        const res = await fetch(`/api/tasks/${taskId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json()
+        if (res.ok) {
+          updateTaskInStore(data.task)
+          onClose()
+        }
       }
     } catch (error) {
-      console.error('Error updating status:', error)
+      console.error('Save error:', error)
     } finally {
-      setActionLoading(false)
+      setLoading(false)
     }
   }
 
   async function handleDelete() {
-    if (!taskId) return
-    setActionLoading(true)
+    if (!taskId || isCreateMode) return
+    setLoading(true)
     try {
       const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
       if (res.ok) {
@@ -58,14 +193,14 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         onClose()
       }
     } catch (error) {
-      console.error('Error deleting task:', error)
+      console.error('Delete error:', error)
     } finally {
-      setActionLoading(false)
+      setLoading(false)
       setShowDeleteConfirm(false)
     }
   }
 
-  // 3. Accessibility
+  // Handle outside clicks and ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -83,7 +218,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     }
   }, [taskId, onClose, showDeleteConfirm])
 
-  if (!taskId || !task) return null
+  if (!taskId) return null
 
   const statusColors: Record<string, string> = {
     'pending': 'bg-slate-100 text-slate-500',
@@ -97,192 +232,246 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-100"
+        className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-100"
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
       <div 
-        className="fixed top-0 right-0 h-full z-[101] bg-[#f9fafb] shadow-2xl transition-transform duration-300 ease-out flex flex-col
-          w-full sm:w-[500px] translate-x-0"
+        className="fixed top-0 right-0 h-full z-[151] bg-[#f9fafb] shadow-2xl transition-transform duration-300 ease-out flex flex-col
+          w-full sm:w-[480px] translate-x-0"
       >
-        {/* Header */}
-        <div className="p-6 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
-          <div className="flex-1 min-w-0 pr-4">
-             <div className="flex items-center gap-2 mb-1">
-                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${statusColors[task.status]}`}>
-                  {task.status.replace('_', ' ')}
-                </span>
+        {/* Hidden File Input */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          onChange={handleFileUpload}
+        />
+
+        {/* Header - More Compact */}
+        <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 min-h-[64px]">
+          <div className="flex-1 min-w-0 pr-2">
+             <input 
+               value={name}
+               onChange={(e) => setName(e.target.value)}
+               placeholder="Task Name"
+               className="text-[17px] font-black text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300"
+             />
+             <div className="flex items-center gap-1.5 mt-0.5">
+               <div className="relative group">
+                 <select 
+                   value={status}
+                   onChange={(e) => setStatus(e.target.value)}
+                   className={`text-[9px] font-black uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
+                 >
+                   {AVAILABLE_STATUSES.map(s => (
+                     <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
+                   ))}
+                 </select>
+                 <span className="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 text-[12px] pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                   expand_more
+                 </span>
+               </div>
              </div>
-             <h2 className="text-xl font-black text-[#1a1f2e] truncate leading-tight">
-               {task.name}
-             </h2>
           </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setShowDeleteConfirm(true)}
-              className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-all border border-slate-100"
-              title="Delete Task"
-            >
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
-              </svg>
-            </button>
-            <button 
-              onClick={() => router.push(`/tasks/new?id=${taskId}`)}
-              className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-100"
-              title="Edit Task"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.4142 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
+          <div className="flex items-center gap-1.5">
+            {!isCreateMode && (
+              <button 
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-all border border-slate-100"
+              >
+                 <span className="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+            )}
             <button 
               onClick={onClose}
-              className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all border border-slate-100"
+              className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all border border-slate-100"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
+              <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide p-6 space-y-6 pb-12">
+        {/* Scrollable Content - More Compact */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-3 space-y-3 pb-32">
           
-          {/* Main Action Card */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-5">
-             {/* Details Grid */}
-             <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Priority</p>
-                   <p className={`text-sm font-black ${(task as any).priority === 'High' ? 'text-red-500' : (task as any).priority === 'Medium' ? 'text-orange-500' : 'text-blue-500'}`}>
-                     {(task as any).priority || 'Medium'}
-                   </p>
-                </div>
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Deadline</p>
-                   <p className="text-sm font-black text-[#1a1f2e]">
-                     {task.deadline ? new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No Date'}
-                   </p>
-                </div>
-             </div>
-
-             <button
-               onClick={handleStatusToggle}
-               disabled={actionLoading}
-               className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${
-                 task.status === 'complete'
-                   ? 'bg-slate-100 text-slate-500'
-                   : 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200'
-               }`}
-             >
-               <span className="material-symbols-outlined text-[18px]">
-                 {task.status === 'complete' ? 'undo' : 'check_circle'}
-               </span>
-               {task.status === 'complete' ? 'Mark Incomplete' : 'Mark Complete'}
-             </button>
-
-             {task.training && (
-               <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-[18px]">school</span>
-                    <p className="text-xs font-bold text-slate-500">Related Training</p>
-                  </div>
-                  <p className="text-xs font-black text-indigo-600 truncate max-w-[180px] text-right">{task.training.title}</p>
-               </div>
-             )}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm flex flex-col">
+              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[11px]">flag</span> Priority
+              </label>
+              <div className="flex gap-1 justify-between">
+                {PRIORITY_OPTIONS.map((opt) => (
+                  <button 
+                    key={opt}
+                    onClick={() => setPriority(opt as any)}
+                    className={`flex-1 py-1 rounded-lg text-[9px] font-black transition-all ${
+                      priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
+              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[11px]">calendar_today</span> Deadline
+              </label>
+              <input 
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full text-xs font-black text-[#1a1f2e] bg-transparent outline-none cursor-pointer"
+              />
+            </div>
           </div>
 
-          <div className="bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
+             <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+               <span className="material-symbols-outlined text-[11px]">school</span> Linked Training
+             </label>
+             <select 
+               value={trainingId}
+               onChange={(e) => setTrainingId(e.target.value)}
+               className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+             >
+               <option value="">NO TRAINING</option>
+               {trainings.map(t => (
+                 <option key={t.id} value={t.id}>{t.title.toUpperCase()}</option>
+               ))}
+             </select>
+          </div>
+
+          <div className="bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
             <SegmentedControl
               options={[
                 { label: 'Details', value: 'Details' },
-                { label: 'Notes', value: 'Notes' },
-                { label: 'Dependencies', value: 'Dependencies' }
+                { label: 'Files', value: 'Notes' },
+                { label: 'Blocking', value: 'Dependencies' }
               ]}
-              value={activeTab}
+              value={activeTab === 'Files' ? 'Notes' : activeTab}
               onChange={(v) => setActiveTab(v as any)}
             />
           </div>
 
-          {/* Tab Content */}
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 min-h-[200px]">
+          <div className="min-h-[180px]">
              {activeTab === 'Details' && (
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</h3>
-                    <p className="text-[10px] font-bold text-slate-400 italic">Deadline: {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'N/A'}</p>
-                  </div>
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                     <p className="text-sm text-slate-600 leading-relaxed">
-                       {(task as any).description || 'No detailed description provided for this task.'}
-                     </p>
-                  </div>
+               <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                  <textarea 
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Add detailed description..."
+                    className="w-full min-h-[100px] text-xs font-bold text-slate-600 leading-relaxed outline-none resize-none bg-transparent"
+                  />
                </div>
              )}
 
-             {activeTab === 'Notes' && (
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Personal Notes</h3>
-                  </div>
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm min-h-[120px]">
-                     { (task as any).notes ? (
-                       <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{(task as any).notes}</p>
-                     ) : (
-                       <div className="flex flex-col items-center justify-center py-4 text-slate-300">
-                          <span className="material-symbols-outlined text-3xl mb-2">stylus_note</span>
-                          <p className="text-[10px] font-black uppercase tracking-widest">No notes yet</p>
-                       </div>
-                     )}
+             {(activeTab === 'Notes' || activeTab === 'Files') && (
+               <div className="space-y-3">
+                  {/* Attachments Section Only */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1 mb-1">
+                      <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">ATTACHMENTS (PDF, IMG, VIDEO)</h3>
+                      <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className={`text-[9px] font-black text-indigo-500 hover:translate-y-[-1px] transition-transform ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {uploading ? 'UPLOADING...' : 'ADD FILE'}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                       {attachments.length > 0 ? attachments.map((file, i) => (
+                         <a 
+                           key={i} 
+                           href={file.url} 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm group hover:border-indigo-200 transition-all block"
+                         >
+                            {file.type.startsWith('image/') ? (
+                              <img src={file.url} alt={file.name} className="w-full h-20 object-cover rounded-xl mb-1.5" />
+                            ) : (
+                              <div className="w-full h-20 bg-slate-50 rounded-xl mb-1.5 flex flex-col items-center justify-center">
+                                 <span className="material-symbols-outlined text-slate-300 text-xl">
+                                   {file.type.includes('pdf') ? 'picture_as_pdf' : 'video_library'}
+                                 </span>
+                              </div>
+                            )}
+                            <p className="text-[9px] font-black text-slate-700 truncate px-1 uppercase tracking-tight">{file.name}</p>
+                         </a>
+                       )) : (
+                         <div className="col-span-2 bg-slate-50 border border-dashed border-slate-200 rounded-[1.5rem] py-6 flex flex-col items-center justify-center text-slate-300">
+                            <span className="material-symbols-outlined text-2xl mb-1">upload_file</span>
+                            <p className="text-[8px] font-black uppercase tracking-widest">No attachments</p>
+                         </div>
+                       )}
+                    </div>
                   </div>
                </div>
              )}
 
              {activeTab === 'Dependencies' && (
-               <div className="space-y-4">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Blocked By</h3>
-                  {task.blocked_by_task_id ? (
-                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group cursor-pointer hover:border-orange-200 transition-all">
-                        <div className="flex items-center gap-3">
-                           <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
-                              <span className="material-symbols-outlined text-[18px]">lock</span>
-                           </div>
-                           <p className="text-xs font-black text-slate-700">Blocked by Task ID: {task.blocked_by_task_id}</p>
-                        </div>
-                        <span className="material-symbols-outlined text-slate-300 group-hover:translate-x-1 transition-transform">chevron_right</span>
-                     </div>
-                  ) : (
-                    <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm text-center">
-                       <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-500 mx-auto mb-3">
-                          <span className="material-symbols-outlined">check_circle</span>
-                       </div>
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest italic">No blocking dependencies</p>
-                    </div>
-                  )}
+               <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[11px]">lock</span> Blocked By
+                  </label>
+                  <select 
+                    value={blockedBy}
+                    onChange={(e) => setBlockedBy(e.target.value)}
+                    className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="">NOT BLOCKED</option>
+                    {tasks.filter(t => t.id !== taskId).map(t => (
+                      <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
+                    ))}
+                  </select>
+                  <p className="text-[9px] text-slate-400 font-bold italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
+                    If this task depends on another, it will be marked as &apos;Blocked&apos; in the system until the dependency is completed.
+                  </p>
                </div>
              )}
           </div>
         </div>
+
+        {/* Fixed Footer Action - Most Compact */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3 z-20 min-h-[72px]">
+           <button 
+             onClick={onClose}
+             className="px-5 py-3 rounded-2xl text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
+           >
+             Cancel
+           </button>
+           <button 
+             onClick={handleSave}
+             disabled={!hasChanges || loading || !name}
+             className={`flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+               hasChanges && !loading && name
+                 ? 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 active:scale-[0.98]'
+                 : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+             }`}
+           >
+             {loading ? 'Saving...' : isCreateMode ? 'Create Task' : 'Save Changes'}
+           </button>
+        </div>
       </div>
 
-      {/* Delete Modal Overlay - Centered on Screen */}
+      {/* Delete Confirmation Overlay */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl space-y-6">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
               <span className="material-symbols-outlined text-3xl">delete_forever</span>
             </div>
             <div className="text-center space-y-2">
               <h3 className="text-lg font-black text-slate-900">Delete Task?</h3>
-              <p className="text-xs text-slate-500 font-bold leading-relaxed px-2">This action will permanently remove this task from your training roadmap.</p>
+              <p className="text-xs text-slate-500 font-bold px-2 leading-relaxed">This will permanently remove the task.</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-white border-2 border-slate-100 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">Cancel</button>
-               <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-red-100 hover:bg-red-600 transition-colors active:scale-95">Delete</button>
+            <div className="grid grid-cols-2 gap-3">
+               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl">Cancel</button>
+               <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl">Delete</button>
             </div>
           </div>
         </div>

@@ -1,8 +1,15 @@
+'use client'
+
 import SidebarNav from '@/components/ui/SidebarLink'
 import MobileNav from '@/components/ui/BottomNav'
 import { SyncStore } from '@/components/SyncStore'
+import TaskDrawer from '@/components/task/TaskDrawer'
+import { useAppStore } from '@/store/useAppStore'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const activeTaskId = useAppStore((state) => state.activeTaskId)
+  const closeTaskDrawer = useAppStore((state) => state.closeTaskDrawer)
+
   return (
     <SyncStore>
       <div className="h-screen bg-[#f2f2f7] flex transition-all duration-300 overflow-hidden">
@@ -23,7 +30,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <MobileNav />
           </div>
         </div>
+
+        {/* Global Task Drawer */}
+        <TaskDrawer 
+          taskId={activeTaskId} 
+          onClose={closeTaskDrawer} 
+        />
       </div>
     </SyncStore>
   )
-}
+}

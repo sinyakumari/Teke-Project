@@ -91,6 +91,8 @@ export default function HomePage() {
   const weekTasks = weekList
 
 
+  const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -205,8 +207,8 @@ export default function HomePage() {
                     <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
-                          onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
-                          onClick={() => router.push(`/tasks/${task.id}`)}
+                          onEditClick={() => openTaskDrawer(task.id)}
+                          onClick={() => openTaskDrawer(task.id)}
                           onStatusChange={() => fetchTasks()}
                         />
                     </div>
@@ -241,8 +243,8 @@ export default function HomePage() {
                     <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
-                          onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
-                          onClick={() => router.push(`/tasks/${task.id}`)}
+                          onEditClick={() => openTaskDrawer(task.id)}
+                          onClick={() => openTaskDrawer(task.id)}
                           onStatusChange={() => fetchTasks()}
                         />
                     </div>

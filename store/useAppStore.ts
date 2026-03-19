@@ -31,10 +31,14 @@ interface Task {
   id: string
   name: string
   status: string
+  description?: string
+  notes?: string
+  priority?: 'Low' | 'Medium' | 'High'
   deadline?: string
   blocked_by_task_id?: string
   training_id?: string
   training?: { id: string; title: string }
+  attachments?: { name: string; url: string; type: string }[]
 }
 
 interface AppState {
@@ -62,6 +66,13 @@ interface AppState {
   addTask: (task: Task) => void
   updateTask: (task: Task) => void
   deleteTask: (id: string) => void
+
+  // UI State
+  activeTaskId: string | null
+  activeTrainingId: string | null
+  isTaskDrawerOpen: boolean
+  openTaskDrawer: (id: string | 'new', trainingId?: string) => void
+  closeTaskDrawer: () => void
 
   // Global Sync
   isInitialized: boolean
@@ -121,7 +132,11 @@ export const useAppStore = create<AppState>()(
           const res = await fetch('/api/tasks')
           if (!res.ok) throw new Error('Failed to fetch tasks')
           const data = await res.json()
-          set({ tasks: data.tasks || [], tasksLoading: false }, false, 'tasks/fetch_success')
+          const mappedTasks = (data.tasks || []).map((t: any) => ({
+            ...t,
+            training: Array.isArray(t.trainings) ? t.trainings[0] : (t.trainings || t.training)
+          }))
+          set({ tasks: mappedTasks, tasksLoading: false }, false, 'tasks/fetch_success')
         } catch (error: any) {
           set({ tasksError: error.message, tasksLoading: false }, false, 'tasks/fetch_error')
         }
@@ -133,6 +148,21 @@ export const useAppStore = create<AppState>()(
       deleteTask: (id) => set((state) => ({
         tasks: state.tasks.filter(t => t.id !== id)
       }), false, 'tasks/delete'),
+
+      // UI State
+      activeTaskId: null,
+      activeTrainingId: null,
+      isTaskDrawerOpen: false,
+      openTaskDrawer: (id, trainingId) => set({ 
+        activeTaskId: id, 
+        isTaskDrawerOpen: true,
+        activeTrainingId: trainingId || null
+      }, false, 'ui/openTaskDrawer'),
+      closeTaskDrawer: () => set({ 
+        activeTaskId: null, 
+        isTaskDrawerOpen: false,
+        activeTrainingId: null
+      }, false, 'ui/closeTaskDrawer'),
 
       // Global Sync
       isInitialized: false,
