@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase'
 interface User {
   name: string
   email: string
+  profilePicture?: string
 }
 
 interface Task {
@@ -63,8 +64,9 @@ export default function HomePage() {
       }
 
       setUser({
-        name: supabaseUser.user_metadata?.name || 'User',
-        email: supabaseUser.email || ''
+        name: supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.full_name || 'User',
+        email: supabaseUser.email || '',
+        profilePicture: supabaseUser.user_metadata?.profile_picture || supabaseUser.user_metadata?.avatar_url || ''
       })
 
       // 2. Fetch Data from migrated API Routes
@@ -172,7 +174,7 @@ export default function HomePage() {
                   </p>
                </div>
                <Link href="/profile" className="hover:scale-110 active:scale-95 transition-all cursor-pointer">
-                 <Avatar name={user?.name || '?'} size="md" />
+                 <Avatar name={user?.name || '?'} src={user?.profilePicture} size="md" />
                </Link>
             </div>
           </div>
