@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import TaskCard from '@/components/ui/TaskCard'
+import { useAppStore } from '@/store/useAppStore'
 
 interface Task {
   id: string
@@ -33,9 +34,18 @@ export default function TrainingDetailPage() {
   const params = useParams()
   const id = params.id as string
 
-  const [training, setTraining] = useState<Training | null>(null)
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
+  const storeTrainings = useAppStore((state) => state.trainings)
+  const storeTasks = useAppStore((state) => state.tasks)
+  const updateStoreTraining = useAppStore((state) => state.updateTraining)
+  const deleteStoreTraining = useAppStore((state) => state.deleteTraining)
+
+  // Instant UI from store
+  const initialTraining = storeTrainings.find(t => t.id === id) as Training | undefined
+  const initialTasks = storeTasks.filter(t => t.training_id === id) as Task[]
+
+  const [training, setTraining] = useState<Training | null>(initialTraining || null)
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [loading, setLoading] = useState(!initialTraining)
   const [activeTab, setActiveTab] = useState<'Overview' | 'Tasks' | 'Materials'>('Overview')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
@@ -52,8 +62,12 @@ export default function TrainingDetailPage() {
       ])
       const trainingData = await trainingRes.json()
       const tasksData = await tasksRes.json()
+      
       setTraining(trainingData.training)
       setTasks(tasksData.tasks || [])
+      
+      // Sync with store
+      if (trainingData.training) updateStoreTraining(trainingData.training)
     } catch (error) {
       console.error('Error fetching training details:', error)
     } finally {
@@ -71,7 +85,9 @@ export default function TrainingDetailPage() {
         body: JSON.stringify({ is_archived: newArchived }),
       })
       if (res.ok) {
-        setTraining(prev => prev ? { ...prev, is_archived: newArchived } : null)
+        const updatedTraining = training ? { ...training, is_archived: newArchived } : null
+        setTraining(updatedTraining)
+        if (updatedTraining) updateStoreTraining(updatedTraining)
       }
     } catch (error) {
       console.error('Error archiving training:', error)
@@ -85,6 +101,7 @@ export default function TrainingDetailPage() {
     try {
       const res = await fetch(`/api/trainings/${id}`, { method: 'DELETE' })
       if (res.ok) {
+        deleteStoreTraining(id)
         router.push('/trainings')
       }
     } catch (error) {
@@ -95,7 +112,7 @@ export default function TrainingDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !training) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />

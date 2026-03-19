@@ -1,13 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import SegmentedControl from '@/components/ui/SegmentedControl'
+import { useAppStore } from '@/store/useAppStore'
 
-export default function NewTrainingPage() {
+function NewTrainingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('id')
+  
+  const addTraining = useAppStore((state) => state.addTraining)
+  const updateTraining = useAppStore((state) => state.updateTraining)
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -93,7 +97,6 @@ export default function NewTrainingPage() {
     setLoading(true)
     setError('')
     try {
-      // Map frontend values to Supabase schema
       const mappedLocationType = locationType === 'Online' ? 'online' : 'offline'
       const mappedStructure = structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
 
@@ -118,17 +121,42 @@ export default function NewTrainingPage() {
           notes,
         }),
       })
+
       if (!res.ok) {
         const data = await res.json()
         setError(data.error || `Failed to ${editId ? 'update' : 'create'} training`)
         return
       }
+
+      const savedData = await res.json()
+      if (editId) {
+        updateTraining(savedData.training)
+      } else {
+        addTraining(savedData.training)
+      }
+      
       router.push('/trainings')
     } catch {
       setError('Something went wrong')
     } finally {
       setLoading(false)
     }
+  }
+
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return (
+      <div className="flex-1 flex flex-col min-h-screen bg-[#f2f2f7] animate-pulse">
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-100 h-14" />
+        <div className="flex-1 max-w-5xl mx-auto px-6 py-12 w-full">
+          <div className="bg-white rounded-2xl h-[500px]" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -169,7 +197,6 @@ export default function NewTrainingPage() {
                 key={step.id} 
                 className="relative z-10 flex flex-col items-center gap-2 flex-1 cursor-pointer group"
                 onClick={() => {
-                  // Basic validation: Don't jump ahead if title is missing on step 1
                   if (step.id > 1 && currentStep === 1 && !title.trim()) {
                     setError('Training title is required before moving forward')
                     return
@@ -535,5 +562,12 @@ export default function NewTrainingPage() {
         </div>
       </div>
     </div>
+  )
+}
+export default function NewTrainingPage() {
+  return (
+    <Suspense fallback={<div className='flex-1 animate-pulse' />}>
+      <NewTrainingForm />
+    </Suspense>
   )
 }

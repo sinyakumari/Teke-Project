@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
+import { useAppStore } from '@/store/useAppStore'
+
 
 interface Training {
   id: string
@@ -26,55 +28,26 @@ interface TaskCount {
 export default function TrainingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
-  const [trainings, setTrainings] = useState<Training[]>([])
-  const [taskCounts, setTaskCounts] = useState<TaskCount[]>([])
-  const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'grid' | 'table'>('grid')
+  
+  const allTrainings = useAppStore((state) => state.trainings)
+  const allTasks = useAppStore((state) => state.tasks)
+  const loading = useAppStore((state) => state.trainingsLoading || state.tasksLoading)
 
-  useEffect(() => {
-    fetchTrainings()
-  }, [activeTab])
+  const trainings = allTrainings.filter(t => 
+    activeTab === 'archived' ? t.is_archived : !t.is_archived
+  )
 
-  async function fetchTrainings() {
-    setLoading(true)
-    try {
-      // Supabase uses is_archived boolean
-      const isArchived = activeTab === 'archived'
-      const [trainingsRes, tasksRes] = await Promise.all([
-        fetch(`/api/trainings?is_archived=${isArchived}`),
-        fetch('/api/tasks'),
-      ])
-
-      const trainingsData = await trainingsRes.json()
-      const tasksData = await tasksRes.json()
-
-      const currentTrainings = trainingsData.trainings || []
-      setTrainings(currentTrainings)
-
-      const counts: TaskCount[] = currentTrainings.map(
-        (t: Training) => {
-          const trainingTasks = (tasksData.tasks || []).filter(
-            (task: { training_id: string }) =>
-              task.training_id === t.id
-          )
-          const completed = trainingTasks.filter(
-            (task: { status: string }) => task.status === 'complete'
-          ).length
-          return {
-            training_id: t.id,
-            total: trainingTasks.length,
-            completed,
-          }
-        }
-      )
-
-      setTaskCounts(counts)
-    } catch (error) {
-      console.error('Error fetching trainings:', error)
-    } finally {
-      setLoading(false)
+  const taskCounts: TaskCount[] = trainings.map(t => {
+    const trainingTasks = allTasks.filter(task => task.training_id === t.id)
+    const completed = trainingTasks.filter(task => task.status === 'complete').length
+    return {
+      training_id: t.id,
+      total: trainingTasks.length,
+      completed,
     }
-  }
+  })
+
 
   function getTaskCount(training_id: string) {
     return taskCounts.find((t) => t.training_id === training_id) || {

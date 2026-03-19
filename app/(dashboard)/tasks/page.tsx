@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
+import { useAppStore } from '@/store/useAppStore'
+
 
 interface Task {
   id: string
@@ -26,31 +28,40 @@ const filterOptions = [
 
 export default function TasksPage() {
   const router = useRouter()
-  const [tasks, setTasks] = useState<Task[]>([])
   const [activeFilter, setActiveFilter] = useState('All')
-  const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'grid' | 'table'>('grid')
 
-  useEffect(() => {
-    fetchTasks()
-  }, [])
+  const tasks = useAppStore((state) => state.tasks)
+  const loading = useAppStore((state) => state.tasksLoading)
+  const updateTask = useAppStore((state) => state.updateTask)
+  const fetchTasks = useAppStore((state) => state.fetchTasks)
 
-  async function fetchTasks() {
-    setLoading(true)
+  async function handleStatusChange(id: string, newStatus: string) {
+    const task = tasks.find(t => t.id === id)
+    if (!task) return
+
+    // Optimistically update store
+    const updatedTask = { ...task, status: newStatus }
+    updateTask(updatedTask)
+
     try {
-      const res = await fetch('/api/tasks')
-      const data = await res.json()
-      setTasks(data.tasks || [])
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) {
+        // Rollback if failed
+        updateTask(task)
+        console.error('Failed to update task status')
+      }
     } catch (error) {
-      console.error('Error fetching tasks:', error)
-    } finally {
-      setLoading(false)
+      updateTask(task)
+      console.error('Error updating task status:', error)
     }
   }
 
-  function handleStatusChange(id: string, newStatus: string) {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t))
-  }
+
 
   const filteredTasks = tasks.filter((task) => {
     if (activeFilter === 'All') return true
@@ -207,7 +218,7 @@ export default function TasksPage() {
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
-                        onStatusChange={() => fetchTasks()}
+                        onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
                     ))}
                   </div>
@@ -229,7 +240,7 @@ export default function TasksPage() {
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
-                        onStatusChange={() => fetchTasks()}
+                        onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
                     ))}
                   </div>
@@ -251,7 +262,7 @@ export default function TasksPage() {
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
-                        onStatusChange={() => fetchTasks()}
+                        onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
                     ))}
                   </div>
@@ -273,7 +284,7 @@ export default function TasksPage() {
                         task={task}
                         onClick={() => router.push(`/tasks/${task.id}`)}
                         onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
-                        onStatusChange={() => fetchTasks()}
+                        onStatusChange={(s: string) => handleStatusChange(task.id, s)}
                       />
                     ))}
                   </div>

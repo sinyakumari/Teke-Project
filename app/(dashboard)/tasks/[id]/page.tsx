@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import SegmentedControl from '@/components/ui/SegmentedControl'
+import { useAppStore } from '@/store/useAppStore'
 
 interface Task {
   id: string
@@ -23,8 +24,15 @@ export default function TaskDetailPage() {
   const params = useParams()
   const id = params.id as string
 
-  const [task, setTask] = useState<Task | null>(null)
-  const [loading, setLoading] = useState(true)
+  const storeTasks = useAppStore((state) => state.tasks)
+  const updateStoreTask = useAppStore((state) => state.updateTask)
+  const deleteStoreTask = useAppStore((state) => state.deleteTask)
+  
+  // Try to find the task in store first for instant UI
+  const initialTask = storeTasks.find(t => t.id === id) as Task | undefined
+
+  const [task, setTask] = useState<Task | null>(initialTask || null)
+  const [loading, setLoading] = useState(!initialTask)
   const [activeTab, setActiveTab] = useState<'Details' | 'Notes' | 'Dependencies'>('Details')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
@@ -36,8 +44,11 @@ export default function TaskDetailPage() {
   async function fetchTask() {
     try {
       const res = await fetch(`/api/tasks/${id}`)
+      if (!res.ok) throw new Error('Task not found')
       const data = await res.json()
       setTask(data.task)
+      // Update store with latest data from detail fetch
+      updateStoreTask(data.task)
     } catch (error) {
       console.error('Error fetching task details:', error)
     } finally {
@@ -54,7 +65,9 @@ export default function TaskDetailPage() {
         body: JSON.stringify({ status: newStatus }),
       })
       if (res.ok) {
-        setTask(prev => prev ? { ...prev, status: newStatus } : null)
+        const updatedTask = task ? { ...task, status: newStatus } : null
+        setTask(updatedTask)
+        if (updatedTask) updateStoreTask(updatedTask)
       }
     } catch (error) {
       console.error('Error updating task status:', error)
@@ -68,6 +81,7 @@ export default function TaskDetailPage() {
     try {
       const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
       if (res.ok) {
+        deleteStoreTask(id)
         router.push('/tasks')
       }
     } catch (error) {
@@ -78,7 +92,7 @@ export default function TaskDetailPage() {
     }
   }
 
-  if (loading) {
+  if (loading && !task) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />

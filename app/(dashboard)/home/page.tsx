@@ -8,6 +8,7 @@ import TaskCard from '@/components/ui/TaskCard'
 import { getGreeting } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { useAppStore } from '@/store/useAppStore'
 
 interface User {
   name: string
@@ -27,18 +28,11 @@ interface Task {
 
 export default function HomePage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [user, setUser] = useState<User | null>(null)
-  const [stats, setStats] = useState({
-    activeTrainings: 0,
-    tasksDone: 0,
-    pending: 0,
-    weekTotal: 0,
-    weekCompleted: 0
-  })
-  const [todayTasks, setTodayTasks] = useState<Task[]>([])
-  const [weekTasks, setWeekTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
+  const user = useAppStore((state) => state.user)
+  const allTasks = useAppStore((state) => state.tasks)
+  const trainings = useAppStore((state) => state.trainings)
+  const loading = useAppStore((state) => state.tasksLoading || state.trainingsLoading)
+  const fetchTasks = useAppStore((state) => state.fetchTasks)
 
   const greeting = getGreeting()
   const now = new Date()
@@ -49,89 +43,53 @@ export default function HomePage() {
   })
   const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  // Derived stats
+  const completedTotal = allTasks.filter(t => t.status === 'complete').length
 
-  async function fetchData() {
-    try {
-      // 1. Get User from Supabase
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser()
-      
-      if (!supabaseUser) {
-        router.push('/login')
-        return
-      }
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+  
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const startOfWeek = new Date(startOfDay)
+  startOfWeek.setDate(startOfDay.getDate() + diffToMonday)
+  
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6)
+  endOfWeek.setHours(23, 59, 59, 999)
 
-      setUser({
-        name: supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.full_name || 'User',
-        email: supabaseUser.email || '',
-        profilePicture: supabaseUser.user_metadata?.profile_picture || supabaseUser.user_metadata?.avatar_url || ''
-      })
+  const todayList = allTasks.filter(t => {
+    if (!t.deadline) return false
+    const d = new Date(t.deadline)
+    return d >= startOfDay && d <= endOfDay
+  })
 
-      // 2. Fetch Data from migrated API Routes
-      const [trainingsRes, tasksRes] = await Promise.all([
-        fetch('/api/trainings?is_archived=false'),
-        fetch('/api/tasks'),
-      ])
+  const weekList = allTasks.filter(t => {
+    if (!t.deadline) return false
+    const d = new Date(t.deadline)
+    return d >= startOfDay && d <= endOfWeek
+  })
 
-      const trainingsData = await trainingsRes.json()
-      const tasksData = await tasksRes.json()
+  const weekTasksDue = allTasks.filter(t => {
+    if (!t.deadline) return false
+    const d = new Date(t.deadline)
+    return d >= startOfWeek && d <= endOfWeek
+  })
+  
+  const weekCompleted = weekTasksDue.filter(t => t.status === 'complete').length
+  const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'complete').length
 
-      const allTasks: Task[] = tasksData.tasks || []
-      // Status values in Supabase are lowercase
-      const completedTotal = allTasks.filter(t => t.status === 'complete').length
-
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
-      
-      const dayOfWeek = now.getDay()
-      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-      const startOfWeek = new Date(startOfDay)
-      startOfWeek.setDate(startOfDay.getDate() + diffToMonday)
-      
-      const endOfWeek = new Date(startOfWeek)
-      endOfWeek.setDate(startOfWeek.getDate() + 6)
-      endOfWeek.setHours(23, 59, 59, 999)
-
-      const todayList = allTasks.filter(t => {
-        if (!t.deadline) return false
-        const d = new Date(t.deadline)
-        return d >= startOfDay && d <= endOfDay
-      })
-
-      const weekList = allTasks.filter(t => {
-        if (!t.deadline) return false
-        const d = new Date(t.deadline)
-        return d >= startOfDay && d <= endOfWeek
-      })
-
-      const weekTasksDue = allTasks.filter(t => {
-        if (!t.deadline) return false
-        const d = new Date(t.deadline)
-        return d >= startOfWeek && d <= endOfWeek
-      })
-      
-      const weekCompleted = weekTasksDue.filter(t => t.status === 'complete').length
-      const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'complete').length
-
-      setStats({
-        activeTrainings: trainingsData.trainings?.length || 0,
-        tasksDone: completedTotal,
-        pending: pendingThisWeek,
-        weekTotal: weekTasksDue.length,
-        weekCompleted: weekCompleted
-      })
-
-      setTodayTasks(todayList)
-      setWeekTasks(weekList)
-
-    } catch (error) {
-      console.error('Error fetching home data:', error)
-    } finally {
-      setLoading(false)
-    }
+  const stats = {
+    activeTrainings: trainings.length,
+    tasksDone: completedTotal,
+    pending: pendingThisWeek,
+    weekTotal: weekTasksDue.length,
+    weekCompleted: weekCompleted
   }
+
+  const todayTasks = todayList
+  const weekTasks = weekList
+
 
   if (loading) {
     return (
@@ -249,7 +207,7 @@ export default function HomePage() {
                           task={task}
                           onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                           onClick={() => router.push(`/tasks/${task.id}`)}
-                          onStatusChange={() => fetchData()}
+                          onStatusChange={() => fetchTasks()}
                         />
                     </div>
                   ))
@@ -285,7 +243,7 @@ export default function HomePage() {
                           task={task}
                           onEditClick={() => router.push(`/tasks/new?id=${task.id}`)}
                           onClick={() => router.push(`/tasks/${task.id}`)}
-                          onStatusChange={() => fetchData()}
+                          onStatusChange={() => fetchTasks()}
                         />
                     </div>
                   ))
