@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, Suspense } from 'react'
+import { useState, useRef, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAppStore } from '@/store/useAppStore'
 
-// PDF.js removed from top-level to prevent Server-Side Rendering crashes
+// Removed top-level pdfjs import to prevent Server-Side Rendering crashes during build.
+// Local dynamic import is used inside the component instead.
 
 interface ExtractedTask {
   id: string
@@ -21,6 +22,23 @@ function ExtractorContent() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [file, setFile] = useState<File | null>(null)
+  const [pdfjsLib, setPdfjsLib] = useState<any>(null)
+
+  useEffect(() => {
+    // Dynamically load pdfjs only on the client
+    const loadPdfjs = async () => {
+      try {
+        const mod = await import('pdfjs-dist')
+        // @ts-ignore
+        mod.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${mod.version}/build/pdf.worker.min.mjs`
+        setPdfjsLib(mod)
+      } catch (err) {
+        console.error('Failed to load pdfjs-dist:', err)
+      }
+    }
+    loadPdfjs()
+  }, [])
+
   const [selectedTrainingId, setSelectedTrainingId] = useState(urlTrainingId || '')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -50,12 +68,10 @@ function ExtractorContent() {
     setProgress(0)
 
     try {
-      // Dynamically import pdfjs only on the client side
-      const pdfjs = await import('pdfjs-dist')
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
-
+      if (!pdfjsLib) throw new Error('PDF library not yet loaded')
+      
       const arrayBuffer = await file.arrayBuffer()
-      const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
       const pdf = await loadingTask.promise
       
       const foundTasks: ExtractedTask[] = []
@@ -152,7 +168,7 @@ function ExtractorContent() {
         throw new Error(errData?.error || 'Failed to save tasks');
       }
 
-      // If urlTrainingId exists, they came directly from a training context (like the training drawer or new form).
+      // If urlTrainingId exists, they came directly from a training context
       // Navigate them back to the main trainings page. Otherwise, back to tasks.
       router.push(urlTrainingId ? '/trainings' : '/tasks');
       router.refresh();

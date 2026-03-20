@@ -56,7 +56,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-2xl shadow-sm border border-slate-50 cursor-pointer active:scale-[0.98] transition-all relative group h-full flex flex-col justify-center ${
+      className={`bg-white rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all relative group h-full flex flex-col justify-center ${
         compact ? 'p-3.5' : 'p-5'
       } ${
         isBlocked ? 'opacity-80' : ''
@@ -86,7 +86,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
         </button>
 
         <div className="flex-1 min-w-0">
-          <h3 className={`font-extrabold truncate transition-colors ${
+          <h3 className={`font-semibold truncate transition-colors ${
             compact ? 'text-[14px] mb-1.5' : 'text-[17px] mb-2'
           } ${
             isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
@@ -96,16 +96,16 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {task.training && (
-              <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded-lg">
-                <span className={`text-indigo-600 material-symbols-outlined font-black ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
-                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-black text-indigo-600 tracking-tight`}>
+              <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100/50">
+                <span className={`text-indigo-600 material-symbols-outlined font-medium ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
+                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold text-indigo-600 tracking-tight`}>
                   {task.training.title}
                 </span>
               </div>
             )}
 
             {task.deadline && (
-              <p className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-black text-slate-400`}>
+              <p className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-medium text-slate-400`}>
                 {formatDate(task.deadline)}
               </p>
             )}
@@ -116,7 +116,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
              <span className={`w-1.5 h-1.5 rounded-full ${
                isComplete ? 'bg-green-500' : 'bg-orange-500'
              }`} />
-             <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-black ${
+             <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold ${
                isComplete ? 'text-green-600' : 'text-orange-500'
              }`}>
                {isComplete ? 'complete' : 'pending'}

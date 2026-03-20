@@ -36,10 +36,10 @@ export default function TrainingCard({
     return (
         <div
             onClick={onClick}
-            className="bg-white rounded-2xl p-4 shadow-sm cursor-pointer active:scale-[0.98] transition-all"
+            className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all"
         >
             <div className="flex items-start justify-between mb-2">
-                <h3 className="font-bold text-[#1a1f2e] text-base flex-1 pr-2">
+                <h3 className="font-semibold text-[#1a1f2e] text-base flex-1 pr-2">
                     {training.title}
                 </h3>
                 <div className="flex items-center gap-1">

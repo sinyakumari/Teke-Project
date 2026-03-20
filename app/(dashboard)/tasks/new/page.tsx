@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAppStore } from '@/store/useAppStore'
 
-function NewTaskForm() {
+function NewTaskContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTrainingId = searchParams.get('training_id')
@@ -419,8 +419,12 @@ function NewTaskForm() {
 
 export default function NewTaskPage() {
   return (
-    <Suspense fallback={<div className="flex-1 animate-pulse" />}>
-      <NewTaskForm />
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center bg-[#f2f2f7]">
+        <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <NewTaskContent />
     </Suspense>
   )
 }
