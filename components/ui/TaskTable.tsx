@@ -15,10 +15,11 @@ interface Task {
 interface TaskTableProps {
   tasks: Task[]
   onTaskClick: (id: string) => void
+  onEditClick: (id: string) => void
   onStatusChange: (id: string, newStatus: string) => void
 }
 
-export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTableProps) {
+export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusChange }: TaskTableProps) {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   async function toggleStatus(e: React.MouseEvent, task: Task) {
@@ -48,7 +49,7 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
@@ -57,6 +58,7 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
               <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Training</th>
               <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deadline</th>
               <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
+              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right w-16">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -94,9 +96,9 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
                     </span>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    {task.training ? (
-                      <span className="text-[11px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase tracking-tight">
-                        {task.training.title}
+                    {task.training || (task as any).trainings ? (
+                      <span className="text-[13px] font-bold text-slate-700 pointer-events-none">
+                        {task.training?.title || (task as any).trainings?.title}
                       </span>
                     ) : (
                       <span className="text-[11px] font-bold text-slate-300">N/A</span>
@@ -114,6 +116,21 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
                         {task.status}
                       </span>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditClick(task.id);
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-lg text-slate-400 hover:text-[#1a1f2e] transition-colors"
+                      title="Edit Task"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               )

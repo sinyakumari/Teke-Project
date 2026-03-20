@@ -44,7 +44,21 @@ export async function PUT(
 
     const { data: training, error } = await supabase
       .from('trainings')
-      .update(body)
+      .update({
+        title: body.title,
+        instructor: body.instructor,
+        location_type: body.locationType?.toLowerCase(),
+        location_detail: body.locationDetail,
+        structure: body.structure === 'Multi-Lesson' ? 'multi-lesson' : 'single',
+        start_date: body.startDate,
+        end_date: body.endDate,
+        duration_value: body.duration ? parseInt(body.duration) : undefined,
+        duration_unit: body.unit?.toLowerCase(),
+        category: body.category?.toLowerCase(),
+        vision: body.vision,
+        mission: body.objective,
+        notes_delta: body.notes ? { text: body.notes } : undefined,
+      })
       .eq('id', id)
       .eq('user_id', user.id)
       .select()

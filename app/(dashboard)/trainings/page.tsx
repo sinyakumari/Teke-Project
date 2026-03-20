@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
+import { useAppStore } from '@/store/useAppStore'
+import TrainingDrawer from '@/components/training/TrainingDrawer'
+
 
 interface Training {
   id: string
@@ -26,55 +29,35 @@ interface TaskCount {
 export default function TrainingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
-  const [trainings, setTrainings] = useState<Training[]>([])
-  const [taskCounts, setTaskCounts] = useState<TaskCount[]>([])
-  const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'grid' | 'table'>('grid')
+  const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null)
+  
+  const allTrainings = useAppStore((state) => state.trainings)
+  const allTasks = useAppStore((state) => state.tasks)
+  const loading = useAppStore((state) => state.trainingsLoading || state.tasksLoading)
+
+  const trainings = allTrainings.filter(t => 
+    activeTab === 'archived' ? t.is_archived : !t.is_archived
+  )
 
   useEffect(() => {
-    fetchTrainings()
-  }, [activeTab])
-
-  async function fetchTrainings() {
-    setLoading(true)
-    try {
-      // Supabase uses is_archived boolean
-      const isArchived = activeTab === 'archived'
-      const [trainingsRes, tasksRes] = await Promise.all([
-        fetch(`/api/trainings?is_archived=${isArchived}`),
-        fetch('/api/tasks'),
-      ])
-
-      const trainingsData = await trainingsRes.json()
-      const tasksData = await tasksRes.json()
-
-      const currentTrainings = trainingsData.trainings || []
-      setTrainings(currentTrainings)
-
-      const counts: TaskCount[] = currentTrainings.map(
-        (t: Training) => {
-          const trainingTasks = (tasksData.tasks || []).filter(
-            (task: { training_id: string }) =>
-              task.training_id === t.id
-          )
-          const completed = trainingTasks.filter(
-            (task: { status: string }) => task.status === 'complete'
-          ).length
-          return {
-            training_id: t.id,
-            total: trainingTasks.length,
-            completed,
-          }
-        }
-      )
-
-      setTaskCounts(counts)
-    } catch (error) {
-      console.error('Error fetching trainings:', error)
-    } finally {
-      setLoading(false)
+    console.log('[DEBUG - FRONTEND] All Trainings from Zustand:', allTrainings.length);
+    console.log('[DEBUG - FRONTEND] Displayed Trainings (filtered):', trainings.length);
+    if (trainings.length > 0) {
+      console.log('[DEBUG - FRONTEND] Sample Training Data:', trainings[0].title);
     }
-  }
+  }, [allTrainings, trainings.length])
+
+  const taskCounts: TaskCount[] = trainings.map(t => {
+    const trainingTasks = allTasks.filter(task => task.training_id === t.id)
+    const completed = trainingTasks.filter(task => task.status === 'complete').length
+    return {
+      training_id: t.id,
+      total: trainingTasks.length,
+      completed,
+    }
+  })
+
 
   function getTaskCount(training_id: string) {
     return taskCounts.find((t) => t.training_id === training_id) || {
@@ -89,9 +72,9 @@ export default function TrainingsPage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">Trainings</h1>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight shrink-0">Trainings</h1>
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* View Toggle */}
               <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
                  <button 
@@ -122,12 +105,13 @@ export default function TrainingsPage() {
 
               <button
                 onClick={() => router.push('/trainings/new')}
-                className="bg-[#1a1f2e] text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="bg-[#1a1f2e] text-white p-2 sm:px-4 sm:py-2 rounded-xl font-black flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[40px]"
+                title="New Training"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                   <path d="M12 5V19M5 12H19"/>
                 </svg>
-                New Training
+                <span className="hidden sm:inline text-sm">New Training</span>
               </button>
             </div>
           </div>
@@ -183,7 +167,8 @@ export default function TrainingsPage() {
             <TrainingTable 
                 trainings={trainings} 
                 taskCounts={taskCounts}
-                onTrainingClick={(id) => router.push(`/trainings/${id}`)}
+                onTrainingClick={(id) => setSelectedTrainingId(id)}
+                onEditClick={(id) => router.push(`/trainings/new?id=${id}`)}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -195,7 +180,8 @@ export default function TrainingsPage() {
                     training={training}
                     taskCount={counts.total}
                     completedCount={counts.completed}
-                    onClick={() => router.push(`/trainings/${training.id}`)}
+                    onClick={() => setSelectedTrainingId(training.id)}
+                    onEditClick={() => router.push(`/trainings/new?id=${training.id}`)}
                     onMenuClick={(e) => {
                       e.stopPropagation()
                     }}
@@ -221,6 +207,12 @@ export default function TrainingsPage() {
           />
         </svg>
       </button>
+
+      {/* Slide-in Training Preview Drawer */}
+      <TrainingDrawer 
+        trainingId={selectedTrainingId} 
+        onClose={() => setSelectedTrainingId(null)} 
+      />
     </div>
   )
 }

@@ -107,7 +107,7 @@ export default function BottomNav() {
     const pathname = usePathname()
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             <div className="max-w-lg mx-auto flex items-center justify-around py-2">
                 {navItems.map((item) => {
                     const active = pathname.startsWith(item.href)
@@ -115,7 +115,7 @@ export default function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="flex flex-col items-center gap-1 px-4 py-1"
+                            className="flex flex-col items-center gap-1 px-4 py-2 min-h-[48px] justify-center"
                         >
                             {active && (
                                 <div className="w-1 h-1 rounded-full bg-[#1a1f2e] mb-1" />

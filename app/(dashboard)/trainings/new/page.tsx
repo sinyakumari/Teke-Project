@@ -1,11 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import SegmentedControl from '@/components/ui/SegmentedControl'
+import { useAppStore } from '@/store/useAppStore'
 
-export default function NewTrainingPage() {
+function NewTrainingForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('id')
+  
+  const addTraining = useAppStore((state) => state.addTraining)
+  const updateTraining = useAppStore((state) => state.updateTraining)
+  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -22,6 +29,39 @@ export default function NewTrainingPage() {
   const [vision, setVision] = useState('')
   const [objective, setObjective] = useState('')
   const [notes, setNotes] = useState('')
+
+  useEffect(() => {
+    if (editId) {
+      fetchTrainingDetails(editId)
+    }
+  }, [editId])
+
+  async function fetchTrainingDetails(id: string) {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/trainings/${id}`)
+      if (!res.ok) throw new Error('Failed to fetch training')
+      const { training } = await res.json()
+      
+      setTitle(training.title || '')
+      setInstructor(training.instructor || '')
+      setLocationType(training.location_type === 'online' ? 'Online' : 'In Person')
+      setStructure(training.structure === 'multi-lesson' ? 'Multi-Lesson' : 'Single Session')
+      setStartDate(training.start_date || '')
+      setEndDate(training.end_date || '')
+      setDuration(training.duration_value?.toString() || '')
+      setUnit(training.duration_unit || '')
+      setCategory(training.category ? training.category.charAt(0).toUpperCase() + training.category.slice(1) : 'Tech')
+      setVision(training.vision || '')
+      setObjective(training.mission || '')
+      setNotes(training.notes_delta?.text || '')
+    } catch (err) {
+      setError('Failed to load training details')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1)
@@ -57,39 +97,66 @@ export default function NewTrainingPage() {
     setLoading(true)
     setError('')
     try {
-      // Map frontend values to Supabase schema
       const mappedLocationType = locationType === 'Online' ? 'online' : 'offline'
       const mappedStructure = structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
 
-      const res = await fetch('/api/trainings', {
-        method: 'POST',
+      const url = editId ? `/api/trainings/${editId}` : '/api/trainings';
+      const method = editId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           instructor,
           locationType: mappedLocationType,
           structure: mappedStructure,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          duration: duration ? Number(duration) : undefined,
-          unit: unit || undefined,
+          startDate: startDate || null,
+          endDate: endDate || null,
+          duration: duration ? duration.toString() : null,
+          unit: unit || null,
           category: category.toLowerCase(),
           vision,
           objective,
           notes,
         }),
       })
+
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'Failed to create training')
+        setError(data.error || `Failed to ${editId ? 'update' : 'create'} training`)
         return
       }
+
+      const savedData = await res.json()
+      if (editId) {
+        updateTraining(savedData.training)
+      } else {
+        addTraining(savedData.training)
+      }
+      
       router.push('/trainings')
     } catch {
       setError('Something went wrong')
     } finally {
       setLoading(false)
     }
+  }
+
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return (
+      <div className="flex-1 flex flex-col min-h-screen bg-[#f2f2f7] animate-pulse">
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-100 h-14" />
+        <div className="flex-1 max-w-5xl mx-auto px-6 py-12 w-full">
+          <div className="bg-white rounded-2xl h-[500px]" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -106,7 +173,7 @@ export default function NewTrainingPage() {
                 <path d="M18 6L6 18M6 6l12 12" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <h1 className="text-sm font-bold text-[#1a1f2e]">New Training</h1>
+            <h1 className="text-sm font-bold text-[#1a1f2e]">{editId ? 'Edit Training' : 'New Training'}</h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -130,7 +197,6 @@ export default function NewTrainingPage() {
                 key={step.id} 
                 className="relative z-10 flex flex-col items-center gap-2 flex-1 cursor-pointer group"
                 onClick={() => {
-                  // Basic validation: Don't jump ahead if title is missing on step 1
                   if (step.id > 1 && currentStep === 1 && !title.trim()) {
                     setError('Training title is required before moving forward')
                     return
@@ -184,7 +250,7 @@ export default function NewTrainingPage() {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Flutter Bootcamp 2025"
+                        placeholder="e.g. Flutte Bootcamp 2025"
                         value={title}
                         onChange={(e) => setTitle(e.target.value.slice(0, 100))}
                         className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:ring-1 focus:ring-[#1a1f2e] transition-all"
@@ -293,7 +359,10 @@ export default function NewTrainingPage() {
                         </div>
                         <h3 className="text-sm font-bold text-[#1a1f2e] mb-1">Upload Syllabus PDF</h3>
                         <p className="text-[10px] text-gray-400 mb-4">Auto-extract learning tasks</p>
-                        <button className="bg-white border border-gray-200 text-[#1a1f2e] px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors">
+                        <button 
+                          onClick={() => router.push(`/tasks/extract${editId ? `?training_id=${editId}` : ''}`)}
+                          className="bg-white border border-gray-200 text-[#1a1f2e] px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors"
+                        >
                           Choose File
                         </button>
                       </div>
@@ -485,7 +554,7 @@ export default function NewTrainingPage() {
                   disabled={loading}
                   className="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
                 >
-                  {loading ? 'Finalizing...' : 'Complete & Save ✓'}
+                  {loading ? 'Finalizing...' : editId ? 'Update & Save ✓' : 'Complete & Save ✓'}
                 </button>
               )}
             </div>
@@ -493,5 +562,12 @@ export default function NewTrainingPage() {
         </div>
       </div>
     </div>
+  )
+}
+export default function NewTrainingPage() {
+  return (
+    <Suspense fallback={<div className='flex-1 animate-pulse' />}>
+      <NewTrainingForm />
+    </Suspense>
   )
 }

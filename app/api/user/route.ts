@@ -19,9 +19,9 @@ export async function GET() {
     return NextResponse.json({
       user: {
         id: user.id,
-        name: user.user_metadata?.name || '',
+        name: user.user_metadata?.name || user.user_metadata?.full_name || '',
         email: user.email,
-        profilePicture: user.user_metadata?.profile_picture || '',
+        profilePicture: user.user_metadata?.profile_picture || user.user_metadata?.avatar_url || '',
         phone: user.user_metadata?.phone || '',
         address: user.user_metadata?.address || '',
         bio: user.user_metadata?.bio || '',
@@ -92,9 +92,9 @@ export async function PUT(req: NextRequest) {
       message: 'Updated successfully',
       user: {
         id: user.id,
-        name: body.name || user.user_metadata?.name || '',
+        name: body.name || user.user_metadata?.name || user.user_metadata?.full_name || '',
         email: body.email || user.email,
-        profilePicture: body.profilePicture || user.user_metadata?.profile_picture || '',
+        profilePicture: body.profilePicture || user.user_metadata?.profile_picture || user.user_metadata?.avatar_url || '',
         phone: body.phone || user.user_metadata?.phone || '',
         address: body.address || user.user_metadata?.address || '',
         bio: body.bio || user.user_metadata?.bio || '',

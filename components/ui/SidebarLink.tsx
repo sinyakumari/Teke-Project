@@ -100,7 +100,10 @@ export default function SidebarNav() {
       {/* Footer User */}
       <div className="p-6 border-t border-slate-800/40">
 
-        <div className="flex items-center gap-4 p-2">
+        <Link 
+          href="/profile"
+          className="flex items-center gap-4 p-2 cursor-pointer hover:bg-white/5 rounded-xl transition-all"
+        >
           {loading ? (
             <div className="flex items-center gap-4 animate-pulse">
               <div className="w-10 h-10 rounded-full bg-slate-800" />
@@ -111,8 +114,10 @@ export default function SidebarNav() {
             </div>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-full bg-[#1a1f2e] overflow-hidden shrink-0 border border-slate-700/50 shadow-inner flex items-center justify-center text-xs font-bold text-slate-400">
-                {user?.name ? (
+              <div className="w-10 h-10 rounded-full bg-[#1a1f2e] overflow-hidden shrink-0 border border-slate-700/50 shadow-inner flex items-center justify-center text-xs font-bold text-slate-400 group-hover:border-slate-500 transition-all">
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                ) : user?.name ? (
                   user.name.charAt(0).toUpperCase()
                 ) : (
                   <span className="material-symbols-outlined text-xl">person</span>
@@ -124,12 +129,12 @@ export default function SidebarNav() {
                   {user?.name || 'Guest User'}
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium truncate">
-                  v1.0.0
+                  View Profile
                 </p>
               </div>
             </>
           )}
-        </div>
+        </Link>
 
       </div>
 

@@ -8,10 +8,12 @@ import TaskCard from '@/components/ui/TaskCard'
 import { getGreeting } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { useAppStore } from '@/store/useAppStore'
 
 interface User {
   name: string
   email: string
+  profilePicture?: string
 }
 
 interface Task {
@@ -26,18 +28,11 @@ interface Task {
 
 export default function HomePage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [user, setUser] = useState<User | null>(null)
-  const [stats, setStats] = useState({
-    activeTrainings: 0,
-    tasksDone: 0,
-    pending: 0,
-    weekTotal: 0,
-    weekCompleted: 0
-  })
-  const [todayTasks, setTodayTasks] = useState<Task[]>([])
-  const [weekTasks, setWeekTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
+  const user = useAppStore((state) => state.user)
+  const allTasks = useAppStore((state) => state.tasks)
+  const trainings = useAppStore((state) => state.trainings)
+  const loading = useAppStore((state) => state.tasksLoading || state.trainingsLoading)
+  const fetchTasks = useAppStore((state) => state.fetchTasks)
 
   const greeting = getGreeting()
   const now = new Date()
@@ -48,88 +43,55 @@ export default function HomePage() {
   })
   const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  // Derived stats
+  const completedTotal = allTasks.filter(t => t.status === 'complete').length
 
-  async function fetchData() {
-    try {
-      // 1. Get User from Supabase
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser()
-      
-      if (!supabaseUser) {
-        router.push('/login')
-        return
-      }
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+  
+  const dayOfWeek = now.getDay()
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const startOfWeek = new Date(startOfDay)
+  startOfWeek.setDate(startOfDay.getDate() + diffToMonday)
+  
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6)
+  endOfWeek.setHours(23, 59, 59, 999)
 
-      setUser({
-        name: supabaseUser.user_metadata?.name || 'User',
-        email: supabaseUser.email || ''
-      })
+  const todayList = allTasks.filter(t => {
+    if (!t.deadline) return false
+    const d = new Date(t.deadline)
+    return d >= startOfDay && d <= endOfDay
+  })
 
-      // 2. Fetch Data from migrated API Routes
-      const [trainingsRes, tasksRes] = await Promise.all([
-        fetch('/api/trainings?is_archived=false'),
-        fetch('/api/tasks'),
-      ])
+  const weekList = allTasks.filter(t => {
+    if (!t.deadline) return false
+    const d = new Date(t.deadline)
+    return d >= startOfDay && d <= endOfWeek
+  })
 
-      const trainingsData = await trainingsRes.json()
-      const tasksData = await tasksRes.json()
+  const weekTasksDue = allTasks.filter(t => {
+    if (!t.deadline) return false
+    const d = new Date(t.deadline)
+    return d >= startOfWeek && d <= endOfWeek
+  })
+  
+  const weekCompleted = weekTasksDue.filter(t => t.status === 'complete').length
+  const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'complete').length
 
-      const allTasks: Task[] = tasksData.tasks || []
-      // Status values in Supabase are lowercase
-      const completedTotal = allTasks.filter(t => t.status === 'complete').length
-
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
-      
-      const dayOfWeek = now.getDay()
-      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-      const startOfWeek = new Date(startOfDay)
-      startOfWeek.setDate(startOfDay.getDate() + diffToMonday)
-      
-      const endOfWeek = new Date(startOfWeek)
-      endOfWeek.setDate(startOfWeek.getDate() + 6)
-      endOfWeek.setHours(23, 59, 59, 999)
-
-      const todayList = allTasks.filter(t => {
-        if (!t.deadline) return false
-        const d = new Date(t.deadline)
-        return d >= startOfDay && d <= endOfDay
-      })
-
-      const weekList = allTasks.filter(t => {
-        if (!t.deadline) return false
-        const d = new Date(t.deadline)
-        return d >= startOfDay && d <= endOfWeek
-      })
-
-      const weekTasksDue = allTasks.filter(t => {
-        if (!t.deadline) return false
-        const d = new Date(t.deadline)
-        return d >= startOfWeek && d <= endOfWeek
-      })
-      
-      const weekCompleted = weekTasksDue.filter(t => t.status === 'complete').length
-      const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'complete').length
-
-      setStats({
-        activeTrainings: trainingsData.trainings?.length || 0,
-        tasksDone: completedTotal,
-        pending: pendingThisWeek,
-        weekTotal: weekTasksDue.length,
-        weekCompleted: weekCompleted
-      })
-
-      setTodayTasks(todayList)
-      setWeekTasks(weekList)
-
-    } catch (error) {
-      console.error('Error fetching home data:', error)
-    } finally {
-      setLoading(false)
-    }
+  const stats = {
+    activeTrainings: trainings.length,
+    tasksDone: completedTotal,
+    pending: pendingThisWeek,
+    weekTotal: weekTasksDue.length,
+    weekCompleted: weekCompleted
   }
+
+  const todayTasks = todayList
+  const weekTasks = weekList
+
+
+  const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
 
   if (loading) {
     return (
@@ -149,20 +111,20 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Exact Header Layout */}
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                 <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">
+          <div className="flex items-start justify-between mb-4 gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                 <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight">
                     {greeting}, {user?.name}
                  </h1>
-                 <span className="text-3xl">👋</span>
+                 <span className="text-2xl sm:text-3xl">👋</span>
               </div>
               <p className="text-[#10b981] text-sm font-black">
                 {todayTasks.length} task(s) due today
               </p>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
                <div className="hidden lg:block text-right">
                   <p className="text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-1">
                     {dayName}
@@ -171,7 +133,9 @@ export default function HomePage() {
                      {todayDate}
                   </p>
                </div>
-               <Avatar name={user?.name || '?'} size="md" />
+               <Link href="/profile" className="hover:scale-110 active:scale-95 transition-all cursor-pointer">
+                 <Avatar name={user?.name || '?'} src={user?.profilePicture} size="md" />
+               </Link>
             </div>
           </div>
 
@@ -243,8 +207,9 @@ export default function HomePage() {
                     <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
-                          onClick={() => router.push(`/tasks/${task.id}`)}
-                          onStatusChange={() => fetchData()}
+                          onEditClick={() => openTaskDrawer(task.id)}
+                          onClick={() => openTaskDrawer(task.id)}
+                          onStatusChange={() => fetchTasks()}
                         />
                     </div>
                   ))
@@ -278,8 +243,9 @@ export default function HomePage() {
                     <div key={task.id} className="h-[140px]">
                         <TaskCard
                           task={task}
-                          onClick={() => router.push(`/tasks/${task.id}`)}
-                          onStatusChange={() => fetchData()}
+                          onEditClick={() => openTaskDrawer(task.id)}
+                          onClick={() => openTaskDrawer(task.id)}
+                          onStatusChange={() => fetchTasks()}
                         />
                     </div>
                   ))

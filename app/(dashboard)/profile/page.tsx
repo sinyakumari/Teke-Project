@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Toggle from '@/components/ui/Toggle'
+import { useAppStore } from '@/store/useAppStore'
 
 interface Training {
   id: string
@@ -26,9 +28,13 @@ interface User {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [trainings, setTrainings] = useState<Training[]>([])
-  const [loading, setLoading] = useState(true)
+  
+  const storeUser = useAppStore((state) => state.user) as User | null
+  const storeUserLoading = useAppStore((state) => state.userLoading)
+  const storeTrainings = useAppStore((state) => state.trainings)
+  const storeTrainingsLoading = useAppStore((state) => state.trainingsLoading)
+  const setUser = useAppStore((state) => state.setUser)
+  
   const [saving, setSaving] = useState(false)
   
   // Settings States
@@ -52,41 +58,20 @@ export default function ProfilePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Initialize form states from store user
   useEffect(() => {
-    fetchData()
-  }, [])
-
-  async function fetchData() {
-    try {
-      const [userRes, trainingsRes] = await Promise.all([
-        fetch('/api/user'),
-        fetch('/api/trainings')
-      ])
-      
-      const userData = await userRes.json()
-      const trainingsData = await trainingsRes.json()
-      
-      if (userData.user) {
-        const u = userData.user
-        setUser(u)
-        setName(u.name || '')
-        setEmail(u.email || '')
-        setPhone(u.phone || '')
-        setAddress(u.address || '')
-        setBio(u.bio || '')
-        setAppLock(u.appLock || false)
-        if (u.reviewReminders !== undefined) {
-          setReviewReminders(u.reviewReminders)
-        }
+    if (storeUser) {
+      setName(storeUser.name || '')
+      setEmail(storeUser.email || '')
+      setPhone(storeUser.phone || '')
+      setAddress(storeUser.address || '')
+      setBio(storeUser.bio || '')
+      setAppLock(storeUser.appLock || false)
+      if (storeUser.reviewReminders !== undefined) {
+        setReviewReminders(storeUser.reviewReminders)
       }
-      
-      setTrainings(trainingsData.trainings || [])
-    } catch (error) {
-      console.error('Error fetching data:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [storeUser])
 
   async function toggleSetting(key: 'appLock' | 'reviewReminders', value: boolean) {
     if (key === 'appLock') setAppLock(value)
@@ -101,6 +86,10 @@ export default function ProfilePage() {
           email
         }),
       })
+      // Update store locally too
+      if (storeUser) {
+        setUser({ ...storeUser, [key]: value })
+      }
     } catch (error) {
       console.error('Error updating setting:', error)
     }
@@ -195,7 +184,8 @@ export default function ProfilePage() {
     alert('Cache cleared successfully!')
   }
 
-  if (loading) {
+  // Only show the main loader if we don't have user data AND it's loading
+  if (storeUserLoading && !storeUser) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f2f2f7]">
         <div className="w-6 h-6 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
@@ -205,18 +195,18 @@ export default function ProfilePage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      {/* 1. Header Section - Reduced py-2 */}
-      <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-        <div className="flex items-center gap-4">
+      {/* 1. Header Section */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-2 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button 
             onClick={() => router.back()}
-            className="text-[#1a1f2e] hover:bg-slate-50 p-2 rounded-full transition"
+            className="text-[#1a1f2e] hover:bg-slate-50 p-2 rounded-full transition shrink-0"
           >
             <span className="material-symbols-outlined text-[22px]">arrow_back</span>
           </button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-[#1a1f2e]">Profile Dashboard</h1>
-            <div className="flex items-center gap-1.5 ml-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-[#1a1f2e] truncate">Profile Dashboard</h1>
+            <div className="hidden sm:flex items-center gap-1.5 ml-1">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Online</span>
             </div>
@@ -224,10 +214,10 @@ export default function ProfilePage() {
         </div>
         <button 
           onClick={handleLogout}
-          className="text-xs font-bold text-red-500 hover:text-red-600 transition flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-xl"
+          className="text-xs font-bold text-red-500 hover:text-red-600 transition flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 hover:bg-red-50 rounded-xl shrink-0"
         >
           <span className="material-symbols-outlined text-[16px]">logout</span>
-          Sign Out
+          <span className="hidden sm:inline">Sign Out</span>
         </button>
       </div>
 
@@ -239,15 +229,15 @@ export default function ProfilePage() {
             
             {/* 2. Left Column: Profile Card */}
             <div className="lg:w-[320px] shrink-0">
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col items-center sticky top-20">
+                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col items-center lg:sticky lg:top-20">
                     <div className="relative mb-6">
                         <div className="w-32 h-32 rounded-full bg-[#1a1f2e] text-white flex items-center justify-center text-4xl font-bold overflow-hidden shadow-xl border-4 border-white">
                             {uploadingImage ? (
                                 <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : user?.profilePicture ? (
-                                <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                            ) : storeUser?.profilePicture ? (
+                                <img src={storeUser.profilePicture} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
-                                user?.name?.charAt(0).toUpperCase() || 'S'
+                                storeUser?.name?.charAt(0).toUpperCase() || 'S'
                             )}
                         </div>
                         <button 
@@ -259,8 +249,8 @@ export default function ProfilePage() {
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                     </div>
 
-                    <h2 className="text-xl font-bold text-[#1a1f2e] mb-1 text-center">{user?.name}</h2>
-                    <p className="text-xs text-slate-400 mb-6 text-center">{user?.email}</p>
+                    <h2 className="text-xl font-bold text-[#1a1f2e] mb-1 text-center">{storeUser?.name}</h2>
+                    <p className="text-xs text-slate-400 mb-6 text-center">{storeUser?.email}</p>
 
                     <div className="w-full space-y-4">
                         <div className="space-y-1">
@@ -366,16 +356,20 @@ export default function ProfilePage() {
                                 </div>
                                 <h3 className="text-base font-bold text-[#1a1f2e]">Joined</h3>
                             </div>
-                            <span className="text-[10px] bg-[#1a1f2e] text-white px-2 py-0.5 rounded-full font-bold">{trainings.length}</span>
+                            <span className="text-[10px] bg-[#1a1f2e] text-white px-2 py-0.5 rounded-full font-bold">{storeTrainings.length}</span>
                         </div>
 
                         <div className="flex-1 flex flex-col gap-2">
-                            {trainings.length === 0 ? (
+                            {storeTrainingsLoading && storeTrainings.length === 0 ? (
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="w-4 h-4 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            ) : storeTrainings.length === 0 ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-slate-100 rounded-2xl">
                                     <p className="text-[10px] font-bold text-slate-400">No active trainings.</p>
                                 </div>
                             ) : (
-                                trainings.slice(0, 3).map((t) => (
+                                storeTrainings.slice(0, 3).map((t) => (
                                     <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all group cursor-pointer" onClick={() => router.push(`/trainings/${t.id}`)}>
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center text-[#1a1f2e]">
@@ -482,6 +476,15 @@ export default function ProfilePage() {
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
                     placeholder="••••••••"
                   />
+                </div>
+                <div className="flex justify-end mt-1">
+                  <Link 
+                    href="/forgot-password" 
+                    title="Go to forgot password flow" 
+                    className="text-[10px] font-bold text-slate-400 hover:text-[#1a1f2e] transition-all uppercase tracking-widest"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
               </div>
               <button 

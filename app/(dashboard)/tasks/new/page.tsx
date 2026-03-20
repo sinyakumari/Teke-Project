@@ -2,32 +2,56 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-interface Training {
-  id: string
-  title: string
-}
-
-interface Task {
-  id: string
-  name: string
-}
+import { useAppStore } from '@/store/useAppStore'
 
 export default function NewTaskPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTrainingId = searchParams.get('training_id')
+  const editId = searchParams.get('id')
+
+  const allTrainings = useAppStore((state) => state.trainings)
+  const allTasks = useAppStore((state) => state.tasks)
+  const addTask = useAppStore((state) => state.addTask)
+  const updateStoreTask = useAppStore((state) => state.updateTask)
+  const tasksLoading = useAppStore((state) => state.tasksLoading)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [trainings, setTrainings] = useState<Training[]>([])
-  const [tasks, setTasks] = useState<Task[]>([])
 
   const [taskName, setTaskName] = useState('')
   const [trainingId, setTrainingId] = useState(initialTrainingId || '')
   const [blockedBy, setBlockedBy] = useState<string>('')
   const [deadline, setDeadline] = useState('')
   const [showBlockedDropdown, setShowBlockedDropdown] = useState(false)
+
+  // Filter tasks for blockers - only show tasks from the same training
+  const filteredTasksForBlockers = allTasks.filter(t => t.training_id === trainingId && t.id !== editId)
+
+  useEffect(() => {
+    if (editId) {
+      fetchTaskDetails(editId)
+    }
+  }, [editId])
+
+  async function fetchTaskDetails(id: string) {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/tasks/${id}`)
+      if (!res.ok) throw new Error('Failed to fetch task')
+      const { task } = await res.json()
+      
+      setTaskName(task.name || '')
+      setTrainingId(task.training_id || '')
+      setBlockedBy(task.blocked_by_task_id || '')
+      setDeadline(task.deadline ? task.deadline.split('T')[0] : '')
+    } catch (err) {
+      setError('Failed to load task details')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState(1)
@@ -58,36 +82,7 @@ export default function NewTaskPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  useEffect(() => {
-    fetchTrainings()
-  }, [])
-
-  useEffect(() => {
-    if (trainingId) fetchTasks(trainingId)
-    else setTasks([])
-  }, [trainingId])
-
-  async function fetchTrainings() {
-    try {
-      const res = await fetch('/api/trainings?status=active')
-      const data = await res.json()
-      setTrainings(data.trainings || [])
-    } catch (error) {
-      console.error('Error fetching trainings:', error)
-    }
-  }
-
-  async function fetchTasks(tId: string) {
-    try {
-      const res = await fetch(`/api/tasks?training_id=${tId}`)
-      const data = await res.json()
-      setTasks(data.tasks || [])
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-    }
-  }
-
-  async function handleCreate() {
+  async function handleSubmit() {
     if (!taskName.trim()) {
       setError('Task name is required')
       setCurrentStep(1)
@@ -103,22 +98,32 @@ export default function NewTaskPage() {
     setError('')
 
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
+      const url = editId ? `/api/tasks/${editId}` : '/api/tasks'
+      const method = editId ? 'PUT' : 'POST'
+      
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: taskName,
           training_id: trainingId,
           blocked_by_task_id: blockedBy || null,
           deadline: deadline || null,
-          status: 'pending',
+          ...(editId ? {} : { status: 'pending' }),
         }),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'Failed to create task')
+        setError(data.error || `Failed to ${editId ? 'update' : 'create'} task`)
         return
+      }
+
+      const savedData = await res.json()
+      if (editId) {
+        updateStoreTask(savedData.task)
+      } else {
+        addTask(savedData.task)
       }
 
       router.push('/tasks')
@@ -129,7 +134,7 @@ export default function NewTaskPage() {
     }
   }
 
-  const selectedBlockedName = tasks.find((t) => t.id === blockedBy)?.name
+  const selectedBlockedName = allTasks.find((t) => t.id === blockedBy)?.name
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
@@ -145,7 +150,7 @@ export default function NewTaskPage() {
                 <path d="M18 6L6 18M6 6l12 12" stroke="#1a1f2e" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <h1 className="text-sm font-bold text-[#1a1f2e]">New Task</h1>
+            <h1 className="text-sm font-bold text-[#1a1f2e]">{editId ? 'Edit Task' : 'New Task'}</h1>
           </div>
         </div>
       </div>
@@ -235,7 +240,7 @@ export default function NewTaskPage() {
                           className="w-full bg-gray-50 border-2 border-transparent rounded-2xl px-6 py-4 text-center text-sm font-bold text-[#1a1f2e] appearance-none outline-none focus:border-[#1a1f2e] focus:bg-white transition-all cursor-pointer shadow-sm"
                         >
                           <option value="">Choose a Training Project...</option>
-                          {trainings.map((t) => (
+                          {allTrainings.map((t) => (
                             <option key={t.id} value={t.id}>{t.title}</option>
                           ))}
                         </select>
@@ -298,8 +303,8 @@ export default function NewTaskPage() {
                             >
                               None (No Blocker)
                             </button>
-                            {tasks.length > 0 ? (
-                              tasks.map((task) => (
+                            {filteredTasksForBlockers.length > 0 ? (
+                              filteredTasksForBlockers.map((task) => (
                                 <button
                                   key={task.id}
                                   onClick={() => { setBlockedBy(task.id); setShowBlockedDropdown(false); }}
@@ -345,7 +350,7 @@ export default function NewTaskPage() {
                       <div className="space-y-3">
                         <div className="bg-gray-50 p-3.5 rounded-[1.2rem] border border-gray-100 shadow-sm">
                           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Project</p>
-                          <p className="font-bold text-[#1a1f2e] text-xs truncate">{trainings.find(t => t.id === trainingId)?.title || '—'}</p>
+                          <p className="font-bold text-[#1a1f2e] text-xs truncate">{allTrainings.find(t => t.id === trainingId)?.title || '—'}</p>
                         </div>
                         <div className="bg-gray-50 p-3.5 rounded-[1.2rem] border border-gray-100 shadow-sm">
                           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Deadline</p>
@@ -395,11 +400,11 @@ export default function NewTaskPage() {
                 </button>
               ) : (
                 <button
-                  onClick={handleCreate}
+                  onClick={handleSubmit}
                   disabled={loading}
                   className="bg-blue-600 text-white px-10 py-3.5 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-2xl active:scale-95 flex items-center gap-3 disabled:opacity-70"
                 >
-                  {loading ? 'Processing...' : 'Create Task ✓'}
+                  {loading ? 'Processing...' : editId ? 'Update Task ✓' : 'Create Task ✓'}
                 </button>
               )}
             </div>
