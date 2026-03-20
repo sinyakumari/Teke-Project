@@ -125,7 +125,7 @@ export default function TrainingsPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 sticky top-0 bg-[#f2f2f7] z-10 pt-2 pb-2">
+          <div className="flex gap-2 mb-4 sticky top-0 bg-[#f2f2f7] z-10 pb-2">
             <button
               onClick={() => setActiveTab('active')}
               className={`px-6 py-2 rounded-full text-xs font-black transition-all ${
