@@ -145,7 +145,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                           setEditingId(task.id)
                           setEditName(task.name)
                         }}
-                        className={`text-[14px] font-bold border-b border-transparent hover:border-slate-300 transition-colors ${isComplete ? 'text-slate-400 line-through hover:border-transparent' : 'text-[#1a1f2e]'}`}
+                        className={`text-[14px] font-bold transition-colors ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'}`}
                       >
                         {task.name}
                       </span>

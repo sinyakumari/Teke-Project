@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { formatDateRange } from '@/lib/utils'
 
 interface Training {
@@ -21,6 +22,7 @@ interface TrainingCardProps {
     onClick: () => void
     onEditClick?: (e: React.MouseEvent) => void
     onMenuClick: (e: React.MouseEvent) => void
+    onTrainingUpdate?: () => void
 }
 
 export default function TrainingCard({
@@ -30,18 +32,76 @@ export default function TrainingCard({
     onClick,
     onEditClick,
     onMenuClick,
+    onTrainingUpdate
 }: TrainingCardProps) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [editTitle, setEditTitle] = useState(training.title)
+    const [isSaving, setIsSaving] = useState(false)
+
     const progress = taskCount > 0 ? (completedCount / taskCount) * 100 : 0
+
+    async function saveTitle() {
+        if (!editTitle.trim() || editTitle.trim() === training.title) {
+            setIsEditing(false)
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            const res = await fetch(`/api/trainings/${training.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: editTitle.trim() }),
+            })
+            
+            if (res.ok && onTrainingUpdate) {
+                onTrainingUpdate()
+            }
+        } catch (error) {
+            console.error('Error updating training title:', error)
+        } finally {
+            setIsSaving(false)
+            setIsEditing(false)
+        }
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent) {
+        if (e.key === 'Enter') {
+            saveTitle()
+        } else if (e.key === 'Escape') {
+            setIsEditing(false)
+            setEditTitle(training.title)
+        }
+    }
 
     return (
         <div
-            onClick={onClick}
+            onClick={isEditing ? undefined : onClick}
             className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all"
         >
             <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-[#1a1f2e] text-base flex-1 pr-2">
-                    {training.title}
-                </h3>
+                {isEditing ? (
+                    <input
+                        type="text"
+                        autoFocus
+                        value={editTitle}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onBlur={() => saveTitle()}
+                        onKeyDown={handleKeyDown}
+                        className="bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 font-semibold outline-none w-full mr-2 text-base"
+                    />
+                ) : (
+                    <h3 
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            setIsEditing(true)
+                        }}
+                        className="font-semibold text-[#1a1f2e] text-base flex-1 pr-2"
+                    >
+                        {training.title}
+                    </h3>
+                )}
                 <div className="flex items-center gap-1">
                     <span className="bg-[#1a1f2e] text-white text-[10px] font-bold px-2 py-0.5 rounded-full mr-1">
                         {training.category.toUpperCase()}

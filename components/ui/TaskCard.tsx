@@ -17,18 +17,24 @@ interface TaskCardProps {
   onClick?: () => void
   onEditClick?: (e: React.MouseEvent) => void
   onStatusChange?: (newStatus: string) => void
+  onTaskUpdate?: () => void
   compact?: boolean
 }
 
-export default function TaskCard({ task, onClick, onEditClick, onStatusChange, compact = false }: TaskCardProps) {
+export default function TaskCard({ task, onClick, onEditClick, onStatusChange, onTaskUpdate, compact = false }: TaskCardProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(task.status)
+  
+  // Edit State
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(task.name)
 
   const isComplete = currentStatus === 'complete'
   const isBlocked = !!task.blocked_by_task_id
   const blockerName = 'Another task'
 
   async function toggleStatus(e: React.MouseEvent) {
+    if (isEditing) return
     e.stopPropagation()
     if (isUpdating) return
 
@@ -53,9 +59,43 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
     }
   }
 
+  async function saveName() {
+    if (!editName.trim() || editName.trim() === task.name) {
+      setIsEditing(false)
+      return
+    }
+
+    setIsUpdating(true)
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName.trim() }),
+      })
+      
+      if (res.ok && onTaskUpdate) {
+        onTaskUpdate()
+      }
+    } catch (error) {
+      console.error('Error updating task name:', error)
+    } finally {
+      setIsUpdating(false)
+      setIsEditing(false)
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      saveName()
+    } else if (e.key === 'Escape') {
+      setIsEditing(false)
+      setEditName(task.name)
+    }
+  }
+
   return (
     <div
-      onClick={onClick}
+      onClick={isEditing ? undefined : onClick}
       className={`bg-white rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all relative group h-full flex flex-col justify-center ${
         compact ? 'p-3.5' : 'p-5'
       } ${
@@ -66,7 +106,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
         {/* Functional Checkbox */}
         <button
           onClick={toggleStatus}
-          disabled={isUpdating}
+          disabled={isUpdating || isEditing}
           className={`rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 mt-0.5 ${
             compact ? 'w-5 h-5' : 'w-6 h-6'
           } ${
@@ -86,19 +126,40 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
         </button>
 
         <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold truncate transition-colors ${
-            compact ? 'text-[14px] mb-1.5' : 'text-[17px] mb-2'
-          } ${
-            isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
-          }`}>
-            {task.name}
-          </h3>
+          {isEditing ? (
+            <input
+              type="text"
+              autoFocus
+              value={editName}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setEditName(e.target.value)}
+              onBlur={() => saveName()}
+              onKeyDown={handleKeyDown}
+              className={`w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 font-semibold outline-none ${
+                compact ? 'text-[14px] mb-1.5' : 'text-[17px] mb-2'
+              }`}
+            />
+          ) : (
+            <h3 
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsEditing(true)
+              }}
+              className={`font-semibold truncate transition-colors ${
+                compact ? 'text-[14px] mb-1.5' : 'text-[17px] mb-2'
+              } ${
+                isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
+              }`}
+            >
+              {task.name}
+            </h3>
+          )}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {task.training && (
-              <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100/50">
-                <span className={`text-indigo-600 material-symbols-outlined font-medium ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
-                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold text-indigo-600 tracking-tight`}>
+              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                <span className={`text-slate-500 material-symbols-outlined font-medium ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
+                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold text-slate-500 tracking-tight`}>
                   {task.training.title}
                 </span>
               </div>

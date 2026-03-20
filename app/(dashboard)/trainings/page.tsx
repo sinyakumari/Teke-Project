@@ -30,10 +30,17 @@ export default function TrainingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
   const [view, setView] = useState<'grid' | 'table'>('grid')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setView('table')
+    }
+  }, [])
   const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null)
   
   const allTrainings = useAppStore((state) => state.trainings)
   const allTasks = useAppStore((state) => state.tasks)
+  const fetchTrainings = useAppStore((state) => state.fetchTrainings)
   const loading = useAppStore((state) => state.trainingsLoading || state.tasksLoading)
 
   const trainings = allTrainings.filter(t => 
@@ -122,7 +129,7 @@ export default function TrainingsPage() {
               onClick={() => setActiveTab('active')}
               className={`px-6 py-2 rounded-full text-xs font-black transition-all ${
                 activeTab === 'active'
-                  ? 'bg-blue-500 text-white shadow-md shadow-blue-100'
+                  ? 'bg-[#1a1f2e] text-white shadow-md shadow-slate-100'
                   : 'bg-white text-slate-400 border border-slate-200'
               }`}
             >
@@ -169,6 +176,7 @@ export default function TrainingsPage() {
                 taskCounts={taskCounts}
                 onTrainingClick={(id) => setSelectedTrainingId(id)}
                 onEditClick={(id) => router.push(`/trainings/new?id=${id}`)}
+                onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -185,6 +193,7 @@ export default function TrainingsPage() {
                     onMenuClick={(e) => {
                       e.stopPropagation()
                     }}
+                    onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
                   />
                 )
               })}

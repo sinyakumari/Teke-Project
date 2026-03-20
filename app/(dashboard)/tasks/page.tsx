@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
@@ -20,8 +20,15 @@ export default function TasksPage() {
   const [activeFilter, setActiveFilter] = useState('All')
   const [view, setView] = useState<'grid' | 'table'>('grid')
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setView('table')
+    }
+  }, [])
+
   const tasks = useAppStore((state) => state.tasks)
   const loading = useAppStore((state) => state.tasksLoading)
+  const fetchTasks = useAppStore((state) => state.fetchTasks)
   const updateTask = useAppStore((state) => state.updateTask)
   const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
 
@@ -135,6 +142,7 @@ export default function TasksPage() {
                 onTaskClick={(id) => openTaskDrawer(id)}
                 onEditClick={(id) => openTaskDrawer(id)}
                 onStatusChange={handleStatusChange}
+                onTaskUpdate={fetchTasks}
             />
           ) : (
             <div className="flex flex-col gap-8">
@@ -151,13 +159,14 @@ export default function TasksPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {section.list.map((task) => (
-                      <TaskCard
+                        <TaskCard
                         key={task.id}
                         task={task}
                         compact={true}
                         onClick={() => openTaskDrawer(task.id)}
                         onEditClick={() => openTaskDrawer(task.id)}
                         onStatusChange={(s) => handleStatusChange(task.id, s)}
+                        onTaskUpdate={fetchTasks}
                       />
                     ))}
                   </div>

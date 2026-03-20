@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { formatDateRange } from '@/lib/utils'
 
 interface Training {
@@ -19,13 +20,52 @@ interface TrainingTableProps {
   taskCounts: { training_id: string; total: number; completed: number }[]
   onTrainingClick: (id: string) => void
   onEditClick: (id: string) => void
+  onTrainingUpdate?: () => void
 }
 
-export default function TrainingTable({ trainings, taskCounts, onTrainingClick, onEditClick }: TrainingTableProps) {
+export default function TrainingTable({ trainings, taskCounts, onTrainingClick, onEditClick, onTrainingUpdate }: TrainingTableProps) {
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+
   function getProgress(training_id: string) {
     const counts = taskCounts.find((t) => t.training_id === training_id) || { total: 0, completed: 0 }
     const percentage = counts.total > 0 ? (counts.completed / counts.total) * 100 : 0
     return { ...counts, percentage }
+  }
+
+  async function saveTitle(training: Training) {
+    if (!editTitle.trim() || editTitle.trim() === training.title) {
+      setEditingId(null)
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const res = await fetch(`/api/trainings/${training.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: editTitle.trim() }),
+      })
+      
+      if (res.ok && onTrainingUpdate) {
+        onTrainingUpdate()
+      }
+    } catch (error) {
+      console.error('Error updating training title:', error)
+    } finally {
+      setIsSaving(false)
+      setEditingId(null)
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent, training: Training) {
+    if (e.key === 'Enter') {
+      saveTitle(training)
+    } else if (e.key === 'Escape') {
+      setEditingId(null)
+    }
   }
 
   return (
@@ -53,16 +93,36 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
                 >
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                        <span className="text-[14px] font-black text-[#1a1f2e] group-hover:text-indigo-600 transition-colors">
+                        {editingId === training.id ? (
+                          <input
+                            type="text"
+                            autoFocus
+                            value={editTitle}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onBlur={() => saveTitle(training)}
+                            onKeyDown={(e) => handleKeyDown(e, training)}
+                            className="bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-black outline-none w-full"
+                          />
+                        ) : (
+                          <span 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEditingId(training.id)
+                              setEditTitle(training.title)
+                            }}
+                            className="text-[14px] font-black text-[#1a1f2e] transition-colors"
+                          >
                             {training.title}
-                        </span>
+                          </span>
+                        )}
                         <span className="text-[11px] font-bold text-slate-400 md:hidden">
                             {training.category}
                         </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase tracking-tight">
+                    <span className="text-[10px] font-black bg-[#1a1f2e] text-white px-2 py-1 rounded-lg uppercase tracking-tight">
                         {training.category}
                     </span>
                   </td>
