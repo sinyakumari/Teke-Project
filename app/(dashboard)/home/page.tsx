@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Avatar from '@/components/ui/Avatar'
 import StatCard from '@/components/ui/StatCard'
 import TaskCard from '@/components/ui/TaskCard'
+import TaskTable from '@/components/ui/TaskTable'
 import { getGreeting } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -33,6 +34,8 @@ export default function HomePage() {
   const trainings = useAppStore((state) => state.trainings)
   const loading = useAppStore((state) => state.tasksLoading || state.trainingsLoading)
   const fetchTasks = useAppStore((state) => state.fetchTasks)
+  
+  const dashboardTasks = allTasks.slice(0, 10)
 
   const greeting = getGreeting()
   const now = new Date()
@@ -87,10 +90,6 @@ export default function HomePage() {
     weekCompleted: weekCompleted
   }
 
-  const todayTasks = todayList
-  const weekTasks = weekList
-
-
   const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
 
   if (loading) {
@@ -120,7 +119,7 @@ export default function HomePage() {
                  <span className="text-2xl sm:text-3xl">👋</span>
               </div>
               <p className="text-[#10b981] text-sm font-black">
-                {todayTasks.length} task(s) due today
+                {stats.pending} tasks due this week
               </p>
             </div>
             
@@ -140,117 +139,101 @@ export default function HomePage() {
           </div>
 
           {/* Stat Grid (4 Cards) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
             <StatCard
-              icon={
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 8V21H3V8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M23 3H1V8H23V3Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M10 12H14" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              }
-              count={stats.activeTrainings}
               label="Active Trainings"
-              iconBg="bg-blue-500"
-            />
-            <StatCard
+              value={stats.activeTrainings}
               icon={
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 8V21H3V8" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M23 3H1V8H23V3Z" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               }
-              count={stats.tasksDone}
+              iconBg="bg-blue-50"
+            />
+            <StatCard
               label="Tasks Done"
-              iconBg="bg-green-500"
+              value={stats.tasksDone}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17L4 12" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+              iconBg="bg-emerald-50"
             />
             <StatCard
-              variant="dual"
-              pending={stats.pending}
-              weekCount={stats.weekTotal}
+              label="Pending Tasks"
+              value={stats.pending}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" strokeDasharray="4 4"/>
+                  <path d="M12 7V12L15 15"/>
+                </svg>
+              }
+              iconBg="bg-amber-50"
             />
             <StatCard
-              variant="progress"
-              percentage={progressPercentage}
-              fraction={`${stats.weekCompleted}/${stats.weekTotal}`}
+              label="Monthly Progress"
+              value={`${progressPercentage}%`}
+              icon={
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20V10M18 20V4M6 20V16"/>
+                </svg>
+              }
+              iconBg="bg-indigo-50"
             />
           </div>
 
           {/* Combined Task Area Layout */}
           <div className="space-y-6">
             
-            {/* Today's Tasks Section */}
+            {/* All Tasks Section */}
             <div>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black text-[#1a1f2e]">Today&apos;s Tasks</h2>
-                  <span className="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    {todayTasks.length} DUE
-                  </span>
+                  <h2 className="text-2xl font-black text-[#1a1f2e]">All Tasks</h2>
                 </div>
                 <Link 
                   href="/tasks" 
                   className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
                 >
-                  See All
+                  See All Tasks
                   <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {todayTasks.length === 0 ? (
-                  <div className="col-span-full bg-green-50/50 border border-green-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                    <span className="text-3xl mb-2">🎉</span>
-                    <p className="text-green-600 font-black">You&apos;re all caught up for today!</p>
+              {dashboardTasks.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl mb-2">🚀</span>
+                  <p className="text-slate-500 font-bold">No tasks to display yet!</p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop view: Table (Limited to 10 tasks already logic-wise) */}
+                  <div className="hidden md:block">
+                    <TaskTable 
+                      tasks={dashboardTasks}
+                      onTaskClick={(id) => openTaskDrawer(id)}
+                      onEditClick={(id) => openTaskDrawer(id)}
+                      onStatusChange={() => fetchTasks()}
+                      onTaskUpdate={() => fetchTasks()}
+                    />
                   </div>
-                ) : (
-                  todayTasks.slice(0, 2).map((task) => (
-                    <div key={task.id} className="h-[140px]">
-                        <TaskCard
-                          task={task}
-                          onEditClick={() => openTaskDrawer(task.id)}
-                          onClick={() => openTaskDrawer(task.id)}
-                          onStatusChange={() => fetchTasks()}
-                        />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* This Week Tasks Section */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black text-[#1a1f2e]">This Week</h2>
-                  <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    {weekTasks.length} TASKS
-                  </span>
-                </div>
-                <Link 
-                  href="/tasks" 
-                  className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
-                >
-                  See All
-                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {weekTasks.length === 0 ? (
-                  <p className="text-slate-300 font-black text-xs uppercase tracking-widest col-span-full">No other tasks this week</p>
-                ) : (
-                  weekTasks.slice(0, 2).map((task) => (
-                    <div key={task.id} className="h-[140px]">
-                        <TaskCard
-                          task={task}
-                          onEditClick={() => openTaskDrawer(task.id)}
-                          onClick={() => openTaskDrawer(task.id)}
-                          onStatusChange={() => fetchTasks()}
-                        />
-                    </div>
-                  ))
-                )}
-              </div>
+                  {/* Mobile view: Cards grid */}
+                  <div className="grid grid-cols-1 md:hidden gap-3">
+                    {dashboardTasks.map((task) => (
+                      <div key={task.id} className="h-[140px]">
+                          <TaskCard
+                            task={task}
+                            onEditClick={() => openTaskDrawer(task.id)}
+                            onClick={() => openTaskDrawer(task.id)}
+                            onStatusChange={() => fetchTasks()}
+                          />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
           </div>

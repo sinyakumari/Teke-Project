@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useRef, Suspense } from 'react'
+import { useState, useRef, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import * as pdfjs from 'pdfjs-dist'
 import { useAppStore } from '@/store/useAppStore'
 
-// Set worker path
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// Removed top-level pdfjs import to prevent 'DOMMatrix is not defined' error during build.
+// Local dynamic import is used inside the component instead.
 
 interface ExtractedTask {
   id: string
@@ -23,6 +22,22 @@ function ExtractorContent() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [file, setFile] = useState<File | null>(null)
+  const [pdfjsLib, setPdfjsLib] = useState<any>(null)
+
+  useEffect(() => {
+    // Dynamically load pdfjs only on the client
+    const loadPdfjs = async () => {
+      try {
+        const mod = await import('pdfjs-dist')
+        // @ts-ignore
+        mod.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${mod.version}/build/pdf.worker.min.mjs`
+        setPdfjsLib(mod)
+      } catch (err) {
+        console.error('Failed to load pdfjs-dist:', err)
+      }
+    }
+    loadPdfjs()
+  }, [])
   const [selectedTrainingId, setSelectedTrainingId] = useState(urlTrainingId || '')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -52,8 +67,9 @@ function ExtractorContent() {
     setProgress(0)
 
     try {
+      if (!pdfjsLib) throw new Error('PDF library not yet loaded')
       const arrayBuffer = await file.arrayBuffer()
-      const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
       const pdf = await loadingTask.promise
       
       const foundTasks: ExtractedTask[] = []
