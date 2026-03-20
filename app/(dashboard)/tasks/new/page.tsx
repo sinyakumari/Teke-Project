@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAppStore } from '@/store/useAppStore'
 
-export default function NewTaskPage() {
+function NewTaskForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTrainingId = searchParams.get('training_id')
@@ -414,5 +414,13 @@ export default function NewTaskPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function NewTaskPage() {
+  return (
+    <Suspense fallback={<div className="flex-1 animate-pulse" />}>
+      <NewTaskForm />
+    </Suspense>
   )
 }
