@@ -16,14 +16,19 @@ interface TaskTableProps {
   tasks: Task[]
   onTaskClick: (id: string) => void
   onStatusChange: (id: string, newStatus: string) => void
+  onTaskUpdate?: () => void
 }
 
-export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTableProps) {
+export default function TaskTable({ tasks, onTaskClick, onStatusChange, onTaskUpdate }: TaskTableProps) {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
 
   async function toggleStatus(e: React.MouseEvent, task: Task) {
     e.stopPropagation()
-    if (updatingId) return
+    if (updatingId || editingId) return
 
     const isComplete = task.status === 'Complete'
     const newStatus = isComplete ? 'Pending' : 'Complete'
@@ -43,6 +48,37 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
       console.error('Error toggling task status:', error)
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  async function saveName(task: Task) {
+    if (!editName.trim() || editName.trim() === task.name) {
+      setEditingId(null)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/tasks/${task._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName.trim() }),
+      })
+      
+      if (res.ok && onTaskUpdate) {
+        onTaskUpdate()
+      }
+    } catch (error) {
+      console.error('Error updating task name:', error)
+    } finally {
+      setEditingId(null)
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent, task: Task) {
+    if (e.key === 'Enter') {
+      saveName(task)
+    } else if (e.key === 'Escape') {
+      setEditingId(null)
     }
   }
 
@@ -89,9 +125,29 @@ export default function TaskTable({ tasks, onTaskClick, onStatusChange }: TaskTa
                     </button>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`text-[14px] font-bold ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'}`}>
-                      {task.name}
-                    </span>
+                    {editingId === task._id ? (
+                      <input
+                        type="text"
+                        autoFocus
+                        value={editName}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onBlur={() => saveName(task)}
+                        onKeyDown={(e) => handleKeyDown(e, task)}
+                        className="w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-bold outline-none"
+                      />
+                    ) : (
+                      <span 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingId(task._id)
+                          setEditName(task.name)
+                        }}
+                        className={`text-[14px] font-bold border-b border-transparent hover:border-slate-300 transition-colors ${isComplete ? 'text-slate-400 line-through hover:border-transparent' : 'text-[#1a1f2e]'}`}
+                      >
+                        {task.name}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
                     {task.trainingId ? (

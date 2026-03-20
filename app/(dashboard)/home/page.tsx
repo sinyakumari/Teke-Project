@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Avatar from '@/components/ui/Avatar'
 import StatCard from '@/components/ui/StatCard'
 import TaskCard from '@/components/ui/TaskCard'
+import TaskTable from '@/components/ui/TaskTable'
 import { getGreeting } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
@@ -32,8 +33,7 @@ export default function HomePage() {
     weekTotal: 0,
     weekCompleted: 0
   })
-  const [todayTasks, setTodayTasks] = useState<Task[]>([])
-  const [weekTasks, setWeekTasks] = useState<Task[]>([])
+  const [dashboardTasks, setDashboardTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
 
   const greeting = getGreeting()
@@ -107,8 +107,8 @@ export default function HomePage() {
         weekCompleted: weekCompleted
       })
 
-      setTodayTasks(todayList)
-      setWeekTasks(weekList)
+      // Show top 10 most recent/relevant tasks (e.g. allTasks already sorted from API)
+      setDashboardTasks(allTasks.slice(0, 10))
 
     } catch (error) {
       console.error('Error fetching home data:', error)
@@ -144,7 +144,7 @@ export default function HomePage() {
                  <span className="text-3xl">👋</span>
               </div>
               <p className="text-[#10b981] text-sm font-black">
-                {todayTasks.length} task(s) due today
+                {stats.pending} tasks due this week
               </p>
             </div>
             
@@ -200,77 +200,55 @@ export default function HomePage() {
           {/* Combined Task Area Layout */}
           <div className="space-y-6">
             
-            {/* Today's Tasks Section */}
+            {/* All Tasks Section */}
             <div>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black text-[#1a1f2e]">Today&apos;s Tasks</h2>
-                  <span className="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    {todayTasks.length} DUE
+                  <h2 className="text-2xl font-black text-[#1a1f2e]">All Tasks</h2>
+                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    {dashboardTasks.length} SHOWN
                   </span>
                 </div>
                 <Link 
                   href="/tasks" 
                   className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
                 >
-                  See All
+                  See All Tasks
                   <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {todayTasks.length === 0 ? (
-                  <div className="col-span-full bg-green-50/50 border border-green-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                    <span className="text-3xl mb-2">🎉</span>
-                    <p className="text-green-600 font-black">You&apos;re all caught up for today!</p>
+              {dashboardTasks.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl mb-2">🚀</span>
+                  <p className="text-slate-500 font-bold">No tasks to display yet!</p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop view: Table (Limited to 10 tasks already logic-wise) */}
+                  <div className="hidden md:block">
+                    <TaskTable 
+                      tasks={dashboardTasks}
+                      onTaskClick={(id) => router.push(`/tasks/${id}`)}
+                      onStatusChange={() => fetchData()}
+                      onTaskUpdate={() => fetchData()}
+                    />
                   </div>
-                ) : (
-                  todayTasks.slice(0, 2).map((task) => (
-                    <div key={task._id} className="h-[140px]">
-                        <TaskCard
-                          task={task}
-                          onClick={() => router.push(`/tasks/${task._id}`)}
-                          onStatusChange={() => fetchData()}
-                        />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
 
-            {/* This Week Tasks Section */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black text-[#1a1f2e]">This Week</h2>
-                  <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    {weekTasks.length} TASKS
-                  </span>
-                </div>
-                <Link 
-                  href="/tasks" 
-                  className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
-                >
-                  See All
-                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {weekTasks.length === 0 ? (
-                  <p className="text-slate-300 font-black text-xs uppercase tracking-widest col-span-full">No other tasks this week</p>
-                ) : (
-                  weekTasks.slice(0, 2).map((task) => (
-                    <div key={task._id} className="h-[140px]">
-                        <TaskCard
-                          task={task}
-                          onClick={() => router.push(`/tasks/${task._id}`)}
-                          onStatusChange={() => fetchData()}
-                        />
-                    </div>
-                  ))
-                )}
-              </div>
+                  {/* Mobile view: Cards grid */}
+                  <div className="grid grid-cols-1 md:hidden gap-3">
+                    {dashboardTasks.map((task) => (
+                      <div key={task._id} className="h-[140px]">
+                          <TaskCard
+                            task={task}
+                            onClick={() => router.push(`/tasks/${task._id}`)}
+                            onStatusChange={() => fetchData()}
+                          />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
           </div>
