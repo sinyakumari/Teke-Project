@@ -136,7 +136,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                         onChange={(e) => setEditName(e.target.value)}
                         onBlur={() => saveName(task)}
                         onKeyDown={(e) => handleKeyDown(e, task)}
-                        className="w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-bold outline-none"
+                        className="w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-semibold outline-none"
                       />
                     ) : (
                       <span 
@@ -145,7 +145,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                           setEditingId(task.id)
                           setEditName(task.name)
                         }}
-                        className={`text-[14px] font-bold transition-colors ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'}`}
+                        className={`text-[14px] font-semibold transition-colors ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'}`}
                       >
                         {task.name}
                       </span>

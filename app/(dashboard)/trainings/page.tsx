@@ -37,6 +37,7 @@ export default function TrainingsPage() {
     }
   }, [])
   const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null)
+  const [drawerMode, setDrawerMode] = useState<'view' | 'edit'>('view')
   
   const allTrainings = useAppStore((state) => state.trainings)
   const allTasks = useAppStore((state) => state.tasks)
@@ -174,8 +175,14 @@ export default function TrainingsPage() {
             <TrainingTable 
                 trainings={trainings} 
                 taskCounts={taskCounts}
-                onTrainingClick={(id) => setSelectedTrainingId(id)}
-                onEditClick={(id) => router.push(`/trainings/new?id=${id}`)}
+                onTrainingClick={(id) => {
+                  setSelectedTrainingId(id);
+                  setDrawerMode('view');
+                }}
+                onEditClick={(id) => {
+                  setSelectedTrainingId(id);
+                  setDrawerMode('edit');
+                }}
                 onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
             />
           ) : (
@@ -188,8 +195,15 @@ export default function TrainingsPage() {
                     training={training}
                     taskCount={counts.total}
                     completedCount={counts.completed}
-                    onClick={() => setSelectedTrainingId(training.id)}
-                    onEditClick={() => router.push(`/trainings/new?id=${training.id}`)}
+                    onClick={() => {
+                      setSelectedTrainingId(training.id);
+                      setDrawerMode('view');
+                    }}
+                    onEditClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTrainingId(training.id);
+                      setDrawerMode('edit');
+                    }}
                     onMenuClick={(e) => {
                       e.stopPropagation()
                     }}
@@ -221,6 +235,7 @@ export default function TrainingsPage() {
       <TrainingDrawer 
         trainingId={selectedTrainingId} 
         onClose={() => setSelectedTrainingId(null)} 
+        initialMode={drawerMode}
       />
     </div>
   )

@@ -102,7 +102,7 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
                             onChange={(e) => setEditTitle(e.target.value)}
                             onBlur={() => saveTitle(training)}
                             onKeyDown={(e) => handleKeyDown(e, training)}
-                            className="bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-black outline-none w-full"
+                            className="bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-semibold outline-none w-full"
                           />
                         ) : (
                           <span 
@@ -111,7 +111,7 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
                               setEditingId(training.id)
                               setEditTitle(training.title)
                             }}
-                            className="text-[14px] font-black text-[#1a1f2e] transition-colors"
+                            className="text-[14px] font-semibold text-[#1a1f2e] transition-colors"
                           >
                             {training.title}
                           </span>
