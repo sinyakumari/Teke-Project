@@ -2,11 +2,9 @@
 
 import { useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import * as pdfjs from 'pdfjs-dist'
 import { useAppStore } from '@/store/useAppStore'
 
-// Set worker path
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// PDF.js removed from top-level to prevent Server-Side Rendering crashes
 
 interface ExtractedTask {
   id: string
@@ -52,6 +50,10 @@ function ExtractorContent() {
     setProgress(0)
 
     try {
+      // Dynamically import pdfjs only on the client side
+      const pdfjs = await import('pdfjs-dist')
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+
       const arrayBuffer = await file.arrayBuffer()
       const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
       const pdf = await loadingTask.promise
@@ -150,7 +152,9 @@ function ExtractorContent() {
         throw new Error(errData?.error || 'Failed to save tasks');
       }
 
-      router.push(selectedTrainingId ? `/trainings/${selectedTrainingId}` : '/tasks');
+      // If urlTrainingId exists, they came directly from a training context (like the training drawer or new form).
+      // Navigate them back to the main trainings page. Otherwise, back to tasks.
+      router.push(urlTrainingId ? '/trainings' : '/tasks');
       router.refresh();
     } catch (err: any) {
       console.error('Save error:', err);
