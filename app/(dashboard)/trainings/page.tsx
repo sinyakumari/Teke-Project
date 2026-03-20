@@ -40,6 +40,14 @@ export default function TrainingsPage() {
     activeTab === 'archived' ? t.is_archived : !t.is_archived
   )
 
+  useEffect(() => {
+    console.log('[DEBUG - FRONTEND] All Trainings from Zustand:', allTrainings.length);
+    console.log('[DEBUG - FRONTEND] Displayed Trainings (filtered):', trainings.length);
+    if (trainings.length > 0) {
+      console.log('[DEBUG - FRONTEND] Sample Training Data:', trainings[0].title);
+    }
+  }, [allTrainings, trainings.length])
+
   const taskCounts: TaskCount[] = trainings.map(t => {
     const trainingTasks = allTasks.filter(task => task.training_id === t.id)
     const completed = trainingTasks.filter(task => task.status === 'complete').length

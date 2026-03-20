@@ -250,7 +250,7 @@ function NewTrainingForm() {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Flutter Bootcamp 2025"
+                        placeholder="e.g. Flutte Bootcamp 2025"
                         value={title}
                         onChange={(e) => setTitle(e.target.value.slice(0, 100))}
                         className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:ring-1 focus:ring-[#1a1f2e] transition-all"

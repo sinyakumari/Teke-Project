@@ -20,6 +20,8 @@ export async function GET(req: NextRequest) {
       .eq('is_archived', isArchived)
       .order('created_at', { ascending: false })
 
+    console.log(`[DEBUG - GET TRAININGS] UserId: ${user.id}, isArchived: ${isArchived}, Found: ${trainings?.length || 0} trainings`);
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
