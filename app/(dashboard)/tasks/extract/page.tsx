@@ -144,13 +144,16 @@ function ExtractorContent() {
     if (tasks.length === 0) return;
     setLoading(true);
     setError('');
+    
+    // Externalize the store call
+    const addBulkTasks = useAppStore.getState().addBulkTasks;
+
     try {
       const tasksToCreate = tasks.map(t => {
         const payload: any = {
           name: t.text,
           status: 'pending'
         }
-        // Only attach training_id if it exists and is a valid string, preventing empty string UUID errors
         if (selectedTrainingId && selectedTrainingId.trim() !== '') {
           payload.training_id = selectedTrainingId
         }
@@ -163,18 +166,23 @@ function ExtractorContent() {
         body: JSON.stringify(tasksToCreate)
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || 'Failed to save tasks');
+      const data = await res.json();
+      if (data.task) {
+        // Find the training title for the notification
+        const training = trainings.find(t => t.id === selectedTrainingId);
+        const trainingTitle = training?.title;
+        
+        // Data.task is always an array for bulk insertions in the API
+        addBulkTasks(Array.isArray(data.task) ? data.task : [data.task], trainingTitle);
       }
 
-      // If urlTrainingId exists, they came directly from a training context
-      // Navigate them back to the main trainings page. Otherwise, back to tasks.
-      router.push(urlTrainingId ? '/trainings' : '/tasks');
-      router.refresh();
+      // Small delay so the user feels the 'success'
+      setTimeout(() => {
+        router.push(urlTrainingId ? '/trainings' : '/tasks');
+      }, 800);
     } catch (err: any) {
       console.error('Save error:', err);
-      setError(err?.message || 'Failed to save extracted tasks to the database.');
+      setError(err?.message || 'Failed to save extracted tasks.');
     } finally {
       setLoading(false);
     }

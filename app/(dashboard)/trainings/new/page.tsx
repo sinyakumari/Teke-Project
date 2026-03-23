@@ -12,6 +12,8 @@ function NewTrainingForm() {
   
   const addTraining = useAppStore((state) => state.addTraining)
   const updateTraining = useAppStore((state) => state.updateTraining)
+  const addNotification = useAppStore((state) => state.addNotification)
+  const addToast = useAppStore((state) => state.addToast)
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -131,13 +133,28 @@ function NewTrainingForm() {
       const savedData = await res.json()
       if (editId) {
         updateTraining(savedData.training)
+        addToast('Training updated successfully', 'success')
+        addNotification({
+          title: 'Training Updated',
+          message: `The training "${title}" has been updated.`,
+          type: 'success',
+          link: `/trainings/${editId}`
+        })
       } else {
         addTraining(savedData.training)
+        addToast('New training created!', 'success')
+        addNotification({
+          title: 'New Training Created',
+          message: `You started a new training: "${title}". Good luck!`,
+          type: 'success',
+          link: `/trainings/${savedData.training.id}`
+        })
       }
       
       router.push('/trainings')
     } catch {
       setError('Something went wrong')
+      addToast('Failed to save training', 'error')
     } finally {
       setLoading(false)
     }
