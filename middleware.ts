@@ -2,9 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,6 +13,8 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // Must set on both request AND response so downstream Route Handlers
+          // and Server Components can read the refreshed session tokens.
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
@@ -27,19 +27,22 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // IMPORTANT: calling getUser() (not getSession()) sends a request to Supabase
+  // to validate the token — it's more secure and also refreshes the session cookie.
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
 
+  // Let the OAuth callback pass through — session cookies will be set by /api/auth/callback
+  if (pathname.startsWith('/api/auth/callback')) {
+    return supabaseResponse
+  }
+
   const protectedRoutes = ['/home', '/trainings', '/tasks', '/profile']
   const authRoutes = ['/login', '/register']
 
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
-  const isAuthRoute = authRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
+  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -60,5 +63,6 @@ export const config = {
     '/profile/:path*',
     '/login',
     '/register',
+    '/api/auth/callback',
   ],
 }
