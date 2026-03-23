@@ -119,13 +119,13 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         <div className="p-6 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
           <div className="flex-1 min-w-0 pr-4">
              <div className="flex items-center gap-2 mb-1">
-                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider ${
                   training.is_archived ? 'bg-slate-200 text-slate-500' : 'bg-blue-100 text-blue-700'
                 }`}>
                   {training.is_archived ? 'Archived' : 'Active'}
                 </span>
              </div>
-             <h2 className="text-xl font-black text-[#1a1f2e] truncate leading-tight">
+             <h2 className="text-xl font-bold text-[#1a1f2e] truncate leading-tight">
                {training.title}
              </h2>
           </div>
@@ -167,10 +167,10 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
             <div className="flex items-end justify-between">
                <div>
-                  <h3 className="text-sm font-black text-[#1a1f2e]">Course Completion</h3>
-                  <p className="text-xs font-bold text-slate-400">{stats.completed} of {stats.total} tasks completed</p>
+                  <h3 className="text-sm font-bold text-[#1a1f2e]">Course Completion</h3>
+                  <p className="text-xs font-medium text-slate-400">{stats.completed} of {stats.total} tasks completed</p>
                </div>
-               <span className="text-2xl font-black text-[#1a1f2e]">{stats.progress}%</span>
+               <span className="text-2xl font-bold text-[#1a1f2e]">{stats.progress}%</span>
             </div>
             <div className="h-4 bg-slate-50 rounded-full overflow-hidden flex border border-slate-100 shadow-inner">
                <div 
@@ -185,12 +185,12 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           {/* Detailed Info Grid */}
           <div className="grid grid-cols-2 gap-2">
              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Instructor</p>
-                <p className="text-xs font-black text-[#1a1f2e]">{training.instructor}</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Instructor</p>
+                <p className="text-xs font-bold text-[#1a1f2e]">{training.instructor}</p>
              </div>
              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Location</p>
-                <p className="text-xs font-black text-slate-700">{training.location_type} • {training.location_name || 'N/A'}</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Location</p>
+                <p className="text-xs font-bold text-slate-700">{training.location_type} • {training.location_name || 'N/A'}</p>
              </div>
           </div>
 
@@ -207,12 +207,11 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
             />
           </div>
 
-          {/* Tab Content */}
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {/* Tab Content */}          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
              {activeTab === 'Overview' && (
                <div className="space-y-4">
                  <div>
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">About this Course</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">About this Course</h3>
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                        <p className="text-sm text-slate-600 leading-relaxed italic">
                          {training.description || 'No detailed description provided for this training.'}
@@ -225,13 +224,13 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                     <button 
                       onClick={handleArchive}
                       disabled={actionLoading}
-                      className="px-6 py-3.5 bg-white border-2 border-[#1a1f2e] text-[#1a1f2e] font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                      className="px-6 py-3.5 bg-white border-2 border-[#1a1f2e] text-[#1a1f2e] font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                     >
                       {actionLoading ? '...' : training.is_archived ? 'Restore' : 'Archive'}
                     </button>
                     <button 
                       onClick={() => openTaskDrawer('new', trainingId)}
-                      className="px-6 py-3.5 bg-[#1a1f2e] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                      className="px-6 py-3.5 bg-[#1a1f2e] text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-slate-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -246,7 +245,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
               {activeTab === 'Tasks' && (
                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Full Task List</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Full Task List</h3>
                     <span className="text-[10px] font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm">
                       {relatedTasks.length} ITEMS
                     </span>
@@ -254,7 +253,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
 
                   <button 
                     onClick={() => router.push(`/tasks/extract?training_id=${trainingId}`)}
-                    className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-2xl border-2 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 transition-colors font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-indigo-50 text-indigo-600 rounded-2xl border-2 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 transition-colors font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                     Auto-Extract from Syllabus
@@ -262,7 +261,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                   {relatedTasks.length === 0 ? (
                     <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center shadow-inner">
                       <span className="text-4xl block mb-4">📋</span>
-                      <p className="text-sm font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
                         Your task board is empty.<br/>Add a task to start tracking.
                       </p>
                     </div>
@@ -285,9 +284,9 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                </div>
              )}
 
-             {activeTab === 'Materials' && (
+              {activeTab === 'Materials' && (
                <div className="space-y-4">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Course Resources</h3>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Course Resources</h3>
                   {training.pdfs && (training as any).pdfs.length > 0 ? (
                     <div className="grid gap-3">
                       {(training as any).pdfs.map((pdf: any, idx: number) => (
@@ -302,7 +301,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                             <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500 font-bold group-hover:scale-110 transition-transform">
                               PDF
                             </div>
-                            <p className="text-xs font-black text-[#1a1f2e]">{pdf.name}</p>
+                            <p className="text-xs font-bold text-[#1a1f2e]">{pdf.name}</p>
                           </div>
                           <span className="text-blue-500 text-xs font-bold uppercase tracking-widest">Download</span>
                         </a>
@@ -311,7 +310,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                   ) : (
                     <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-sm">
                        <span className="text-4xl block mb-4">📁</span>
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No resources uploaded yet.</p>
+                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No resources uploaded yet.</p>
                     </div>
                   )}
                </div>
@@ -328,12 +327,12 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
               <span className="material-symbols-outlined text-3xl">delete_forever</span>
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-black text-slate-900">Delete Course?</h3>
-              <p className="text-xs text-slate-500 font-bold leading-relaxed px-2">This action will permanently remove this training and its associated tasks.</p>
+              <h3 className="text-lg font-bold text-slate-900">Delete Course?</h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed px-2">This action will permanently remove this training and its associated tasks.</p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
-               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-white border-2 border-slate-100 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">Cancel</button>
-               <button onClick={handleDelete} disabled={actionLoading} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-red-100 hover:bg-red-600 transition-colors active:scale-95">{actionLoading ? '...' : 'Delete'}</button>
+               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-white border-2 border-slate-100 text-slate-400 font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-colors">Cancel</button>
+               <button onClick={handleDelete} disabled={actionLoading} className="py-3.5 bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-red-100 hover:bg-red-600 transition-colors active:scale-95">{actionLoading ? '...' : 'Delete'}</button>
             </div>
           </div>
         </div>

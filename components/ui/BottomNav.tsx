@@ -122,7 +122,7 @@ export default function BottomNav() {
                             )}
                             {item.icon(active)}
                             <span
-                                className={`text-xs ${active ? 'text-[#1a1f2e] font-semibold' : 'text-gray-400'
+                                className={`text-xs ${active ? 'text-[#1a1f2e] font-medium' : 'text-gray-400'
                                     }`}
                             >
                                 {item.label}

@@ -256,14 +256,14 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                value={name}
                onChange={(e) => setName(e.target.value)}
                placeholder="Task Name"
-               className="text-[17px] font-black text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300"
+               className="text-[17px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300"
              />
              <div className="flex items-center gap-1.5 mt-0.5">
                <div className="relative group">
                  <select 
                    value={status}
                    onChange={(e) => setStatus(e.target.value)}
-                   className={`text-[9px] font-black uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
+                   className={`text-[9px] font-bold uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
                  >
                    {AVAILABLE_STATUSES.map(s => (
                      <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
@@ -298,7 +298,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
           
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm flex flex-col">
-              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[11px]">flag</span> Priority
               </label>
               <div className="flex gap-1 justify-between">
@@ -306,7 +306,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   <button 
                     key={opt}
                     onClick={() => setPriority(opt as any)}
-                    className={`flex-1 py-1 rounded-lg text-[9px] font-black transition-all ${
+                    className={`flex-1 py-1 rounded-lg text-[9px] font-bold transition-all ${
                       priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                     }`}
                   >
@@ -316,26 +316,26 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
               </div>
             </div>
             <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
-              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[11px]">calendar_today</span> Deadline
               </label>
               <input 
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="w-full text-xs font-black text-[#1a1f2e] bg-transparent outline-none cursor-pointer"
+                className="w-full text-xs font-bold text-[#1a1f2e] bg-transparent outline-none cursor-pointer"
               />
             </div>
           </div>
 
           <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
-             <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+             <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                <span className="material-symbols-outlined text-[11px]">school</span> Linked Training
              </label>
              <select 
                value={trainingId}
                onChange={(e) => setTrainingId(e.target.value)}
-               className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+               className="w-full text-xs font-bold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
              >
                <option value="">NO TRAINING</option>
                {trainings.map(t => (
@@ -363,7 +363,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Add detailed description..."
-                    className="w-full min-h-[100px] text-xs font-bold text-slate-600 leading-relaxed outline-none resize-none bg-transparent"
+                    className="w-full min-h-[100px] text-xs font-medium text-slate-600 leading-relaxed outline-none resize-none bg-transparent"
                   />
                </div>
              )}
@@ -373,11 +373,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   {/* Attachments Section Only */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1 mb-1">
-                      <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">ATTACHMENTS (PDF, IMG, VIDEO)</h3>
+                      <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">ATTACHMENTS (PDF, IMG, VIDEO)</h3>
                       <button 
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
-                        className={`text-[9px] font-black text-indigo-500 hover:translate-y-[-1px] transition-transform ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`text-[9px] font-semibold text-indigo-500 hover:translate-y-[-1px] transition-transform ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {uploading ? 'UPLOADING...' : 'ADD FILE'}
                       </button>
@@ -400,12 +400,12 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                                  </span>
                               </div>
                             )}
-                            <p className="text-[9px] font-black text-slate-700 truncate px-1 uppercase tracking-tight">{file.name}</p>
+                            <p className="text-[9px] font-semibold text-slate-700 truncate px-1 uppercase tracking-tight">{file.name}</p>
                          </a>
                        )) : (
                          <div className="col-span-2 bg-slate-50 border border-dashed border-slate-200 rounded-[1.5rem] py-6 flex flex-col items-center justify-center text-slate-300">
                             <span className="material-symbols-outlined text-2xl mb-1">upload_file</span>
-                            <p className="text-[8px] font-black uppercase tracking-widest">No attachments</p>
+                            <p className="text-[8px] font-bold uppercase tracking-widest">No attachments</p>
                          </div>
                        )}
                     </div>
@@ -415,20 +415,20 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
 
              {activeTab === 'Dependencies' && (
                <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[11px]">lock</span> Blocked By
                   </label>
                   <select 
                     value={blockedBy}
                     onChange={(e) => setBlockedBy(e.target.value)}
-                    className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+                    className="w-full text-xs font-bold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
                   >
                     <option value="">NOT BLOCKED</option>
                     {tasks.filter(t => t.id !== taskId).map(t => (
                       <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
                     ))}
                   </select>
-                  <p className="text-[9px] text-slate-400 font-bold italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
+                  <p className="text-[9px] text-slate-400 font-medium italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
                     If this task depends on another, it will be marked as &apos;Blocked&apos; in the system until the dependency is completed.
                   </p>
                </div>
@@ -440,14 +440,14 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3 z-20 min-h-[72px]">
            <button 
              onClick={onClose}
-             className="px-5 py-3 rounded-2xl text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
+             className="px-5 py-3 rounded-2xl text-slate-400 font-semibold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
            >
              Cancel
            </button>
            <button 
              onClick={handleSave}
              disabled={!hasChanges || loading || !name}
-             className={`flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+             className={`flex-1 py-3 rounded-2xl font-semibold text-[10px] uppercase tracking-widest transition-all ${
                hasChanges && !loading && name
                  ? 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 active:scale-[0.98]'
                  : 'bg-slate-100 text-slate-300 cursor-not-allowed'
@@ -466,12 +466,12 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
               <span className="material-symbols-outlined text-3xl">delete_forever</span>
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-black text-slate-900">Delete Task?</h3>
-              <p className="text-xs text-slate-500 font-bold px-2 leading-relaxed">This will permanently remove the task.</p>
+              <h3 className="text-lg font-bold text-slate-900">Delete Task?</h3>
+              <p className="text-xs text-slate-500 font-medium px-2 leading-relaxed">This will permanently remove the task.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl">Cancel</button>
-               <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl">Delete</button>
+               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-semibold text-xs uppercase tracking-widest rounded-2xl">Cancel</button>
+               <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-semibold text-xs uppercase tracking-widest rounded-2xl">Delete</button>
             </div>
           </div>
         </div>

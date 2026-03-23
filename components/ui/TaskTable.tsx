@@ -89,12 +89,12 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-12 text-center text-center">Done</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Task Name</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Training</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deadline</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right w-16">Actions</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center text-center">Done</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Task Name</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Training</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deadline</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right w-16">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -136,7 +136,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                         onChange={(e) => setEditName(e.target.value)}
                         onBlur={() => saveName(task)}
                         onKeyDown={(e) => handleKeyDown(e, task)}
-                        className="w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-bold outline-none"
+                        className="w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-semibold outline-none"
                       />
                     ) : (
                       <span 
@@ -145,7 +145,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                           setEditingId(task.id)
                           setEditName(task.name)
                         }}
-                        className={`text-[14px] font-bold border-b border-transparent hover:border-slate-300 transition-colors ${isComplete ? 'text-slate-400 line-through hover:border-transparent' : 'text-[#1a1f2e]'}`}
+                        className={`text-[14px] font-semibold border-b border-transparent hover:border-slate-300 transition-colors ${isComplete ? 'text-slate-400 line-through hover:border-transparent' : 'text-[#1a1f2e]'}`}
                       >
                         {task.name}
                       </span>
@@ -153,7 +153,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
                     {task.training || (task as any).trainings ? (
-                      <span className="text-[13px] font-bold text-slate-700 pointer-events-none">
+                      <span className="text-[13px] font-medium text-slate-700 pointer-events-none">
                         {task.training?.title || (task as any).trainings?.title}
                       </span>
                     ) : (
@@ -161,14 +161,14 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-[12px] font-bold text-slate-500 whitespace-nowrap">
+                    <span className="text-[12px] font-medium text-slate-500 whitespace-nowrap">
                       {task.deadline ? formatDate(task.deadline) : 'No date'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <span className={`w-1.5 h-1.5 rounded-full ${isComplete ? 'bg-green-500' : 'bg-orange-500'}`} />
-                      <span className={`text-[10px] font-black uppercase tracking-wider ${isComplete ? 'text-green-600' : 'text-orange-500'}`}>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isComplete ? 'text-green-600' : 'text-orange-500'}`}>
                         {task.status}
                       </span>
                     </div>

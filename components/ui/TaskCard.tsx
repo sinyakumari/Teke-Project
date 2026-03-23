@@ -98,7 +98,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
             {task.training && (
               <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100/50">
                 <span className={`text-indigo-600 material-symbols-outlined font-medium ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
-                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold text-indigo-600 tracking-tight`}>
+                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-medium text-indigo-600 tracking-tight`}>
                   {task.training.title}
                 </span>
               </div>
@@ -116,7 +116,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, c
              <span className={`w-1.5 h-1.5 rounded-full ${
                isComplete ? 'bg-green-500' : 'bg-orange-500'
              }`} />
-             <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold ${
+             <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-medium ${
                isComplete ? 'text-green-600' : 'text-orange-500'
              }`}>
                {isComplete ? 'complete' : 'pending'}

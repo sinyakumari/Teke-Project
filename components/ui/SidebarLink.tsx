@@ -46,14 +46,14 @@ export default function SidebarNav() {
           <h1 className="font-bold text-white text-lg leading-tight tracking-tight">
             TEKE
           </h1>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold opacity-80">
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold opacity-80">
             PROJECT MANAGER
           </p>
         </div>
       </div>
 
       {/* Menu Title */}
-      <div className="px-8 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+      <div className="px-8 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-[0.2em]">
         Menu
       </div>
 
@@ -86,7 +86,7 @@ export default function SidebarNav() {
 
               <span
                 className={`text-sm tracking-wide ${
-                  active ? 'font-bold' : 'font-medium'
+                  active ? 'font-semibold' : 'font-medium'
                 }`}
               >
                 {item.label}
@@ -125,7 +125,7 @@ export default function SidebarNav() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate tracking-tight">
+                <p className="text-sm font-semibold text-white truncate tracking-tight">
                   {user?.name || 'Guest User'}
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium truncate">

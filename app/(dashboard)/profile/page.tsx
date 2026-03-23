@@ -214,7 +214,7 @@ export default function ProfilePage() {
         </div>
         <button 
           onClick={handleLogout}
-          className="text-xs font-bold text-red-500 hover:text-red-600 transition flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 hover:bg-red-50 rounded-xl shrink-0"
+          className="text-xs font-semibold text-red-500 hover:text-red-600 transition flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 hover:bg-red-50 rounded-xl shrink-0"
         >
           <span className="material-symbols-outlined text-[16px]">logout</span>
           <span className="hidden sm:inline">Sign Out</span>
@@ -387,7 +387,7 @@ export default function ProfilePage() {
 
                         <button 
                             onClick={() => router.push('/trainings')}
-                            className="w-full mt-4 py-2.5 text-[10px] font-bold text-[#1a1f2e] hover:bg-slate-50 border border-slate-100 rounded-xl transition-all flex items-center justify-center gap-2"
+                            className="w-full mt-4 py-2.5 text-[10px] font-semibold text-[#1a1f2e] hover:bg-slate-50 border border-slate-100 rounded-xl transition-all flex items-center justify-center gap-2"
                         >
                             Explore Catalog
                             <span className="material-symbols-outlined text-[14px]">arrow_right_alt</span>
@@ -401,7 +401,7 @@ export default function ProfilePage() {
                     <button 
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="w-44 bg-[#1a1f2e] text-white py-3.5 rounded-2xl font-bold text-[10px] uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#2a2f3e] transition-all active:scale-[0.98] shadow-lg shadow-slate-200 disabled:opacity-50 ring-1 ring-white/10"
+                        className="w-44 bg-[#1a1f2e] text-white py-3.5 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#2a2f3e] transition-all active:scale-[0.98] shadow-lg shadow-slate-200 disabled:opacity-50 ring-1 ring-white/10"
                     >
                         {saving ? (
                             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
@@ -417,7 +417,7 @@ export default function ProfilePage() {
                             className="px-5 h-11 bg-white text-[#1a1f2e] rounded-2xl hover:bg-slate-50 transition-all border border-slate-200 active:scale-[0.98] flex items-center justify-center gap-2 group shadow-sm"
                         >
                             <span className="material-symbols-outlined text-[16px] text-slate-400 group-hover:text-[#1a1f2e] transition-colors">lock_person</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#1a1f2e]">Update Password</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#1a1f2e]">Update Password</span>
                         </button>
                         <button 
                             onClick={handleClearCache}
@@ -481,7 +481,7 @@ export default function ProfilePage() {
                   <Link 
                     href="/forgot-password" 
                     title="Go to forgot password flow" 
-                    className="text-[10px] font-bold text-slate-400 hover:text-[#1a1f2e] transition-all uppercase tracking-widest"
+                    className="text-[10px] font-semibold text-slate-400 hover:text-[#1a1f2e] transition-all uppercase tracking-widest"
                   >
                     Forgot Password?
                   </Link>
@@ -489,7 +489,7 @@ export default function ProfilePage() {
               </div>
               <button 
                 type="submit" disabled={pwdLoading}
-                className="w-full bg-[#1a1f2e] text-white font-bold py-5 rounded-2xl hover:shadow-xl hover:scale-[1.01] transition-all active:scale-[0.99] disabled:opacity-70 flex items-center justify-center gap-3 mt-4"
+                className="w-full bg-[#1a1f2e] text-white font-semibold py-5 rounded-2xl hover:shadow-xl hover:scale-[1.01] transition-all active:scale-[0.99] disabled:opacity-70 flex items-center justify-center gap-3 mt-4"
               >
                 {pwdLoading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

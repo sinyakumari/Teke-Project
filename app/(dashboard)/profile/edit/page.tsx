@@ -271,7 +271,7 @@ export default function EditProfilePage() {
             <button 
               type="submit" 
               disabled={saving}
-              className="px-8 py-3 bg-[#1a1f2e] text-white rounded-xl text-[13px] font-bold shadow-md hover:bg-[#2d3548] transition disabled:opacity-70 flex items-center gap-2"
+              className="px-8 py-3 bg-[#1a1f2e] text-white rounded-xl text-[13px] font-semibold shadow-md hover:bg-[#2d3548] transition disabled:opacity-70 flex items-center gap-2"
             >
               {saving ? (
                 <>
@@ -283,7 +283,7 @@ export default function EditProfilePage() {
             <button 
               type="button"
               onClick={() => router.push('/profile')}
-              className="px-8 py-3.5 bg-slate-50 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition sm:hidden"
+              className="px-8 py-3.5 bg-slate-50 text-slate-600 rounded-2xl font-semibold hover:bg-slate-100 transition sm:hidden"
             >
               Cancel
             </button>
