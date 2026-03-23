@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -31,15 +31,16 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Let the OAuth callback pass through — session cookies will be set by /api/auth/callback
+  if (pathname.startsWith('/api/auth/callback')) {
+    return supabaseResponse
+  }
+
   const protectedRoutes = ['/home', '/trainings', '/tasks', '/profile']
   const authRoutes = ['/login', '/register']
 
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
-  const isAuthRoute = authRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
+  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -60,5 +61,6 @@ export const config = {
     '/profile/:path*',
     '/login',
     '/register',
+    '/api/auth/callback',
   ],
 }
