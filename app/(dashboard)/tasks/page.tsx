@@ -81,7 +81,7 @@ export default function TasksPage() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight shrink-0">Tasks</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f2e] tracking-tight shrink-0">Tasks</h1>
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
                  <button onClick={() => setView('grid')} className={`p-1.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[#1a1f2e] text-white' : 'text-slate-400'}`}>
@@ -93,14 +93,14 @@ export default function TasksPage() {
               </div>
               <button 
                 onClick={() => router.push('/tasks/extract')}
-                className="bg-white border border-slate-200 p-2 sm:px-4 rounded-xl font-black flex items-center gap-2 hover:bg-slate-50 transition-all"
+                className="bg-white border border-slate-200 p-2 sm:px-4 rounded-xl font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">auto_stories</span>
                 <span className="hidden sm:inline text-sm">Extract</span>
               </button>
               <button
                 onClick={() => openTaskDrawer('new')}
-                className="bg-[#1a1f2e] text-white p-2 sm:px-4 rounded-xl font-black flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="bg-[#1a1f2e] text-white p-2 sm:px-4 rounded-xl font-semibold flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">add</span>
                 <span className="hidden sm:inline text-sm">New Task</span>
@@ -114,7 +114,7 @@ export default function TasksPage() {
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-black transition-all ${
+                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                   activeFilter === filter ? 'bg-[#1a1f2e] text-white shadow-md' : 'bg-white text-slate-400 border border-slate-200'
                 }`}
               >
@@ -132,8 +132,8 @@ export default function TasksPage() {
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl">📎</div>
               <div className="text-center">
-                  <p className="font-black text-[#1a1f2e] text-lg">No tasks found</p>
-                  <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Try a different filter or create a new task</p>
+                  <p className="font-bold text-[#1a1f2e] text-lg">No tasks found</p>
+                  <p className="text-slate-400 text-sm font-medium uppercase tracking-widest mt-1">Try a different filter or create a new task</p>
               </div>
             </div>
           ) : view === 'table' ? (
@@ -153,9 +153,9 @@ export default function TasksPage() {
               ].map(section => section.list.length > 0 && (
                 <div key={section.title}>
                   <div className="flex items-center gap-3 mb-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{section.title}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{section.title}</p>
                     <div className="h-[1px] flex-1 bg-slate-200" />
-                    <span className={`${section.color} px-2 py-0.5 rounded-lg text-[10px] font-black`}>{section.list.length}</span>
+                    <span className={`${section.color} px-2 py-0.5 rounded-lg text-[10px] font-bold`}>{section.list.length}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {section.list.map((task) => (

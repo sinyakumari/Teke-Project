@@ -113,22 +113,22 @@ export default function HomePage() {
           <div className="flex items-start justify-between mb-4 gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                 <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight">
+                 <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f2e] tracking-tight">
                     {greeting}, {user?.name}
                  </h1>
                  <span className="text-2xl sm:text-3xl">👋</span>
               </div>
-              <p className="text-[#10b981] text-sm font-black">
+              <p className="text-[#10b981] text-sm font-semibold">
                 {stats.pending} tasks due this week
               </p>
             </div>
             
             <div className="flex items-center gap-4 shrink-0">
                <div className="hidden lg:block text-right">
-                  <p className="text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                  <p className="text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em] leading-none mb-1">
                     {dayName}
                   </p>
-                  <p className="text-[#1a1f2e] text-sm font-black">
+                  <p className="text-[#1a1f2e] text-sm font-bold">
                      {todayDate}
                   </p>
                </div>
@@ -191,11 +191,11 @@ export default function HomePage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-black text-[#1a1f2e]">All Tasks</h2>
+                  <h2 className="text-2xl font-bold text-[#1a1f2e]">All Tasks</h2>
                 </div>
                 <Link 
                   href="/tasks" 
-                  className="text-indigo-600 text-[13px] font-black flex items-center gap-1 group"
+                  className="text-indigo-600 text-[13px] font-bold flex items-center gap-1 group"
                 >
                   See All Tasks
                   <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">chevron_right</span>

@@ -81,7 +81,7 @@ export default function TrainingsPage() {
           
           {/* Header */}
           <div className="flex items-center justify-between mb-4 gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-[#1a1f2e] tracking-tight shrink-0">Trainings</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f2e] tracking-tight shrink-0">Trainings</h1>
             <div className="flex items-center gap-1.5 sm:gap-2">
               {/* View Toggle */}
               <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
@@ -113,7 +113,7 @@ export default function TrainingsPage() {
 
               <button
                 onClick={() => router.push('/trainings/new')}
-                className="bg-[#1a1f2e] text-white p-2 sm:px-4 sm:py-2 rounded-xl font-black flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[40px]"
+                className="bg-[#1a1f2e] text-white p-2 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[40px]"
                 title="New Training"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -128,7 +128,7 @@ export default function TrainingsPage() {
           <div className="flex gap-2 mb-4 sticky top-0 bg-[#f2f2f7] z-10 pb-2">
             <button
               onClick={() => setActiveTab('active')}
-              className={`px-6 py-2 rounded-full text-xs font-black transition-all ${
+              className={`px-6 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'active'
                   ? 'bg-[#1a1f2e] text-white shadow-md shadow-slate-100'
                   : 'bg-white text-slate-400 border border-slate-200'
@@ -138,7 +138,7 @@ export default function TrainingsPage() {
             </button>
             <button
               onClick={() => setActiveTab('archived')}
-              className={`px-6 py-2 rounded-full text-xs font-black transition-all ${
+              className={`px-6 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'archived'
                   ? 'bg-slate-500 text-white shadow-md shadow-slate-100'
                   : 'bg-white text-slate-400 border border-slate-200'
@@ -159,14 +159,14 @@ export default function TrainingsPage() {
                 <span className="text-4xl">🎓</span>
               </div>
               <div className="text-center">
-                <p className="font-black text-[#1a1f2e] text-lg">No trainings found</p>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
+                <p className="font-bold text-[#1a1f2e] text-lg">No trainings found</p>
+                <p className="text-slate-400 text-sm font-medium uppercase tracking-widest mt-1">
                   Create your first training to start tracking
                 </p>
               </div>
               <button
                 onClick={() => router.push('/trainings/new')}
-                className="bg-[#1a1f2e] text-white px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-slate-200 mt-2"
+                className="bg-[#1a1f2e] text-white px-8 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-slate-200 mt-2"
               >
                 Create Training
               </button>

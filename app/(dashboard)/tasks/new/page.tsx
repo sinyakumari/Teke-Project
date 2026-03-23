@@ -380,7 +380,7 @@ function NewTaskContent() {
               <button
                 onClick={handleBack}
                 disabled={currentStep === 1}
-                className={`group flex items-center gap-3 font-bold text-sm px-6 py-3.5 rounded-2xl transition-all shadow-lg active:scale-95 ${
+                className={`group flex items-center gap-3 font-semibold text-sm px-6 py-3.5 rounded-2xl transition-all shadow-lg active:scale-95 ${
                   currentStep === 1 
                     ? 'bg-gray-50 text-gray-200 cursor-not-allowed shadow-none' 
                     : 'bg-[#1a1f2e] text-white hover:bg-[#2d3548]'
@@ -393,7 +393,7 @@ function NewTaskContent() {
               {currentStep < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="bg-[#1a1f2e] text-white px-8 py-3.5 rounded-2xl font-bold text-sm hover:translate-x-1 transition-all shadow-2xl active:scale-95 flex items-center gap-3 group"
+                  className="bg-[#1a1f2e] text-white px-8 py-3.5 rounded-2xl font-semibold text-sm hover:translate-x-1 transition-all shadow-2xl active:scale-95 flex items-center gap-3 group"
                 >
                   Continue 
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -402,7 +402,7 @@ function NewTaskContent() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="bg-blue-600 text-white px-10 py-3.5 rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-2xl active:scale-95 flex items-center gap-3 disabled:opacity-70"
+                  className="bg-blue-600 text-white px-10 py-3.5 rounded-2xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-2xl active:scale-95 flex items-center gap-3 disabled:opacity-70"
                 >
                   {loading ? 'Processing...' : editId ? 'Update Task ✓' : 'Create Task ✓'}
                 </button>

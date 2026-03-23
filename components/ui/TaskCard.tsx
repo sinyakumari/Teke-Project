@@ -157,9 +157,9 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, o
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {task.training && (
-              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
-                <span className={`text-slate-500 material-symbols-outlined font-medium ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
-                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold text-slate-500 tracking-tight`}>
+              <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100/50">
+                <span className={`text-indigo-600 material-symbols-outlined font-medium ${compact ? 'text-[12px]' : 'text-[14px]'}`}>school</span>
+                <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-medium text-indigo-600 tracking-tight`}>
                   {task.training.title}
                 </span>
               </div>
@@ -177,7 +177,7 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, o
              <span className={`w-1.5 h-1.5 rounded-full ${
                isComplete ? 'bg-green-500' : 'bg-orange-500'
              }`} />
-             <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-semibold ${
+             <span className={`${compact ? 'text-[9px]' : 'text-[11px]'} font-medium ${
                isComplete ? 'text-green-600' : 'text-orange-500'
              }`}>
                {isComplete ? 'complete' : 'pending'}

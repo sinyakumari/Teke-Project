@@ -270,7 +270,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           <div className="flex-1 min-w-0 pr-2">
              <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ${
+                    <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-bold uppercase tracking-wider ${
                       training.is_archived ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-600'
                     }`}>
                       {training.is_archived ? 'Archived' : 'Active'}
@@ -279,7 +279,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                  <input 
                    value={formData.title}
                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                   className="text-[17px] font-black text-[#1a1f2e] bg-transparent outline-none w-full"
+                   className="text-[17px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full"
                  />
              </div>
           </div>
@@ -298,10 +298,10 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm space-y-1.5">
             <div className="flex items-end justify-between">
                <div>
-                  <h3 className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Status</h3>
+                  <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">Status</h3>
                   <p className="text-[11px] font-bold text-slate-900 leading-none mt-1">{stats.completed}/{stats.total} Tasks</p>
                </div>
-               <span className="text-lg font-black text-[#1a1f2e]">{stats.progress}%</span>
+               <span className="text-lg font-bold text-[#1a1f2e]">{stats.progress}%</span>
             </div>
             <div className="h-2 bg-slate-50 rounded-full overflow-hidden flex border border-slate-100 shadow-inner">
                <div className={`h-full transition-all duration-1000 ${stats.progress === 100 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.2)]' : 'bg-[#1a1f2e]'}`} style={{ width: `${stats.progress}%` }} />
@@ -311,7 +311,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           {/* Form Fields - Compact Grid */}
           <div className="grid grid-cols-2 gap-2">
              <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[10px]">person</span> Instructor
                 </label>
                 <input
@@ -322,14 +322,14 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                 />
              </div>
              <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[10px]">location_on</span> Location
                 </label>
                 <div className="flex gap-1">
                   <select
                     value={formData.locationType}
                     onChange={(e) => setFormData({ ...formData, locationType: e.target.value })}
-                    className="bg-slate-50 border-none rounded-lg px-0.5 py-1 text-[8px] font-black text-slate-500"
+                    className="bg-slate-50 border-none rounded-lg px-0.5 py-1 text-[8px] font-bold text-slate-500"
                   >
                     <option value="offline">OFF</option>
                     <option value="online">ON</option>
@@ -340,13 +340,13 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                     onChange={(e) => setFormData({ ...formData, locationDetail: e.target.value })}
                     className="flex-1 bg-slate-50 border-none rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700"
                   />
-                </div>
+                </div>ev
              </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[10px]">calendar_today</span> Start
                 </label>
                 <input
@@ -357,7 +357,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                 />
              </div>
              <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[10px]">event</span> End
                 </label>
                 <input
@@ -384,7 +384,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           <div className="animate-in fade-in duration-300">
              {activeTab === 'Overview' && (
                <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[12px]">description</span> Objective
                   </label>
                   <textarea
@@ -399,9 +399,24 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
 
              {activeTab === 'Tasks' && (
                <div className="space-y-1">
+                  <div className="flex items-center justify-between px-1 mb-2">
+                    <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Full Task List</h3>
+                    <span className="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
+                      {relatedTasks.length} ITEMS
+                    </span>
+                  </div>
+
+                  <button 
+                    onClick={() => router.push(`/tasks/extract?training_id=${trainingId}`)}
+                    className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors font-semibold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 mb-3"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
+                    Auto-Extract from Syllabus
+                  </button>
+
                   {relatedTasks.length === 0 ? (
                     <div className="py-8 text-center bg-white border border-slate-100 rounded-2xl">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No tasks</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">No tasks</p>
                     </div>
                   ) : (
                     relatedTasks.map((task) => (
@@ -419,7 +434,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
              {activeTab === 'Materials' && (
                <div className="space-y-3">
                   <div className="flex items-center justify-between mb-1">
-                     <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resources</h4>
+                     <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Resources</h4>
                      <div className="flex items-center gap-1.5">
                         <button 
                           onClick={() => fileInputRef.current?.click()}
@@ -437,7 +452,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
 
                   {fetchingMaterials ? (
                     <div className="py-10 text-center bg-white border border-slate-100 rounded-2xl">
-                       <p className="text-[9px] font-black text-slate-400 animate-pulse uppercase tracking-widest">Syncing...</p>
+                       <p className="text-[9px] font-bold text-slate-400 animate-pulse uppercase tracking-widest">Syncing...</p>
                     </div>
                   ) : materials.length === 0 ? (
                     <div className="py-12 bg-white border border-slate-100 rounded-2xl flex flex-col items-center justify-center shadow-sm">
@@ -459,7 +474,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                                   <span className="material-symbols-outlined text-[16px]">description</span>
                                </div>
                                <div className="overflow-hidden">
-                                  <p className="text-[11px] font-black text-[#1a1f2e] truncate leading-tight pr-2">{mat.file_name}</p>
+                                  <p className="text-[11px] font-bold text-[#1a1f2e] truncate leading-tight pr-2">{mat.file_name}</p>
                                </div>
                             </div>
                              <div className="flex items-center gap-1 flex-shrink-0">
@@ -496,21 +511,21 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                className="h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center gap-1.5 text-[#1a1f2e] hover:bg-slate-100 transition-all shadow-sm"
              >
                 <span className="material-symbols-outlined text-[18px]">add_task</span>
-                <span className="text-[9px] font-black uppercase tracking-widest">Task</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest">Task</span>
              </button>
           </div>
           
           <div className="flex items-center gap-2 flex-1 justify-end">
             <button 
               onClick={onClose} 
-              className="px-4 py-2.5 rounded-xl text-[#1a1f2e] font-black text-[9px] uppercase tracking-widest border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm flex-shrink-0"
+              className="px-4 py-2.5 rounded-xl text-[#1a1f2e] font-bold text-[9px] uppercase tracking-widest border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm flex-shrink-0"
             >
               Cancel
             </button>
             <button 
               onClick={handleSave} 
               disabled={!hasChanges || actionLoading || !formData.title} 
-              className={`px-5 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all min-w-[110px] ${
+              className={`px-5 py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest transition-all min-w-[110px] ${
                 hasChanges && !actionLoading && formData.title 
                   ? 'bg-[#1a1f2e] text-white shadow-lg active:scale-95' 
                   : 'bg-slate-100 text-slate-300 border border-slate-100 cursor-not-allowed'
@@ -525,10 +540,16 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <h3 className="text-md font-black text-slate-900">Purge Training?</h3>
-            <div className="grid grid-cols-2 gap-3">
-               <button onClick={() => setShowDeleteConfirm(false)} className="py-2.5 bg-slate-50 text-slate-400 font-black text-[9px] uppercase rounded-xl">Cancel</button>
-               <button onClick={handleDelete} className="py-2.5 bg-red-500 text-white font-black text-[9px] uppercase rounded-xl">Delete</button>
+             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <span className="material-symbols-outlined text-3xl">delete_forever</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-slate-900">Purge Training?</h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed px-2">This action will permanently remove this training and its associated tasks.</p>
+            </div>
+             <div className="grid grid-cols-2 gap-3 pt-2">
+               <button onClick={() => setShowDeleteConfirm(false)} className="py-2.5 bg-slate-50 text-slate-400 font-semibold text-[9px] uppercase rounded-xl">Cancel</button>
+               <button onClick={handleDelete} className="py-2.5 bg-red-500 text-white font-semibold text-[9px] uppercase rounded-xl">Delete</button>
             </div>
           </div>
         </div>

@@ -74,12 +74,12 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Training Name</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Category</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest lg:table-cell hidden">Instructor</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Dates</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Progress</th>
-              <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right w-16">Actions</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Training Name</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Category</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest lg:table-cell hidden">Instructor</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dates</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Progress</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right w-16">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -116,31 +116,31 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
                             {training.title}
                           </span>
                         )}
-                        <span className="text-[11px] font-bold text-slate-400 md:hidden">
+                        <span className="text-[11px] font-medium text-slate-400 md:hidden">
                             {training.category}
                         </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <span className="text-[10px] font-black bg-[#1a1f2e] text-white px-2 py-1 rounded-lg uppercase tracking-tight">
+                    <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase tracking-tight">
                         {training.category}
                     </span>
                   </td>
                   <td className="px-6 py-4 lg:table-cell hidden">
-                    <span className="text-[12px] font-bold text-[#1a1f2e]">
+                    <span className="text-[12px] font-medium text-[#1a1f2e]">
                         {training.instructor}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-[11px] font-bold text-slate-500 whitespace-nowrap">
+                    <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">
                         {formatDateRange(training.start_date, training.end_date)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex flex-col items-end gap-1.5">
                         <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-black text-slate-400">{progress.completed}/{progress.total}</span>
-                             <span className="text-[11px] font-black text-[#1a1f2e]">{Math.round(progress.percentage)}%</span>
+                             <span className="text-[10px] font-bold text-slate-400">{progress.completed}/{progress.total}</span>
+                             <span className="text-[11px] font-bold text-[#1a1f2e]">{Math.round(progress.percentage)}%</span>
                         </div>
                         <div className="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
                             <div 

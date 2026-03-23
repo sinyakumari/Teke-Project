@@ -532,7 +532,7 @@ function NewTrainingForm() {
               <button
                 onClick={handleBack}
                 disabled={currentStep === 1}
-                className={`flex items-center gap-2 font-bold text-sm px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 ${
+                className={`flex items-center gap-2 font-semibold text-sm px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 ${
                   currentStep === 1 
                     ? 'bg-gray-100 text-gray-300 cursor-not-allowed shadow-none' 
                     : 'bg-[#1a1f2e] text-white hover:bg-[#2d3548]'
@@ -544,7 +544,7 @@ function NewTrainingForm() {
               {currentStep < 5 ? (
                 <button
                   onClick={handleNext}
-                  className="bg-[#1a1f2e] text-white px-8 py-2.5 rounded-xl font-bold text-sm hover:translate-x-1 transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                  className="bg-[#1a1f2e] text-white px-8 py-2.5 rounded-xl font-semibold text-sm hover:translate-x-1 transition-all shadow-lg active:scale-95 flex items-center gap-2"
                 >
                   Next Step →
                 </button>
@@ -552,7 +552,7 @@ function NewTrainingForm() {
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                  className="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"
                 >
                   {loading ? 'Finalizing...' : editId ? 'Update & Save ✓' : 'Complete & Save ✓'}
                 </button>

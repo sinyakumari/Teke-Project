@@ -199,7 +199,7 @@ function ExtractorContent() {
             </svg>
           </button>
           <div>
-            <h1 className="text-3xl font-black text-[#1a1f2e] tracking-tight">Task Extractor</h1>
+            <h1 className="text-3xl font-bold text-[#1a1f2e] tracking-tight">Task Extractor</h1>
             <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
               {urlTrainingId ? 'Extracting tasks for current training' : 'Upload PDF to auto-detect tasks'}
             </p>
@@ -209,7 +209,7 @@ function ExtractorContent() {
         {/* Training Selection (If coming from main tasks page) */}
         {!urlTrainingId && (
           <div className="mb-6">
-            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Training Course *</label>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Select Training Course *</label>
             <select
               value={selectedTrainingId}
               onChange={(e) => setSelectedTrainingId(e.target.value)}
@@ -248,10 +248,10 @@ function ExtractorContent() {
                 <line x1="9" y1="15" x2="15" y2="15"/>
               </svg>
             </div>
-            <p className="text-[#1a1f2e] font-black text-lg mb-1">
+            <p className="text-[#1a1f2e] font-bold text-lg mb-1">
               {file ? file.name : 'Choose Syllabus PDF'}
             </p>
-            <p className="text-slate-400 text-sm font-black uppercase tracking-wider">
+            <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">
               {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Only standard text-based PDFs supported'}
             </p>
           </div>
@@ -266,7 +266,7 @@ function ExtractorContent() {
           <button
             onClick={extractTasks}
             disabled={!file || !selectedTrainingId || loading}
-            className={`w-full mt-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
+            className={`w-full mt-6 py-4 rounded-2xl font-semibold text-sm uppercase tracking-widest transition-all ${
               !file || !selectedTrainingId || loading 
                 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
                 : 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 hover:scale-[1.01] active:scale-[0.99]'
@@ -285,15 +285,15 @@ function ExtractorContent() {
         {tasks.length > 0 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-black text-[#1a1f2e]">Detected Tasks</h2>
+              <h2 className="text-xl font-bold text-[#1a1f2e]">Detected Tasks</h2>
               <div className="flex items-center gap-2">
                  <button 
                    onClick={() => setTasks([])}
-                   className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-red-500 transition-colors"
+                   className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 hover:text-red-500 transition-colors"
                  >
                    Clear
                  </button>
-                 <span className="bg-[#1a1f2e] text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                 <span className="bg-[#1a1f2e] text-white px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest">
                   {tasks.length} FOUND
                 </span>
               </div>
@@ -307,7 +307,7 @@ function ExtractorContent() {
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-[#1a1f2e] group-hover:w-2 transition-all" />
                   <div className="flex items-start gap-4 pr-12">
-                    <div className="bg-slate-50 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-[10px] font-black text-slate-400">
+                    <div className="bg-slate-50 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-slate-400">
                       P{task.page}
                     </div>
                     <p className="text-[#1a1f2e] text-sm font-bold leading-relaxed">{task.text}</p>
@@ -330,7 +330,7 @@ function ExtractorContent() {
               <button 
                 onClick={confirmExtractedTasks}
                 disabled={loading}
-                className="bg-green-500 text-white px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-green-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                className="bg-green-500 text-white px-12 py-4 rounded-2xl font-semibold text-xs uppercase tracking-[0.2em] shadow-lg shadow-green-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

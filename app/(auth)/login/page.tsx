@@ -218,7 +218,7 @@ export default function LoginPage() {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-[#1a1f2e] text-white rounded-2xl py-3.5 font-bold text-base mb-5 hover:bg-[#2d3548] active:scale-[0.98] transition-all disabled:opacity-70 shadow-lg shadow-[#1a1f2e]/10 hover:shadow-[#1a1f2e]/20"
+            className="w-full bg-[#1a1f2e] text-white rounded-2xl py-3.5 font-semibold text-base mb-5 hover:bg-[#2d3548] active:scale-[0.98] transition-all disabled:opacity-70 shadow-lg shadow-[#1a1f2e]/10 hover:shadow-[#1a1f2e]/20"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-3">
@@ -239,7 +239,7 @@ export default function LoginPage() {
           <button 
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full bg-white border border-gray-100 rounded-2xl py-3 font-bold text-[13px] text-[#1a1f2e] flex items-center justify-center gap-3 mb-6 hover:bg-gray-50 transition-all active:scale-[0.98] disabled:opacity-70 shadow-sm"
+            className="w-full bg-white border border-gray-100 rounded-2xl py-3 font-semibold text-[13px] text-[#1a1f2e] flex items-center justify-center gap-3 mb-6 hover:bg-gray-50 transition-all active:scale-[0.98] disabled:opacity-70 shadow-sm"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -253,7 +253,7 @@ export default function LoginPage() {
           {/* Footer Link */}
           <p className="text-center text-[13px] text-gray-400 font-medium tracking-tight">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-[#1a1f2e] font-bold hover:underline transition-all">
+            <Link href="/register" className="text-[#1a1f2e] font-semibold hover:underline transition-all">
               Sign up free
             </Link>
           </p>
