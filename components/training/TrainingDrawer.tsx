@@ -15,6 +15,7 @@ interface TrainingDrawerProps {
 }
 
 export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerProps) {
+  const router = useRouter()
   const trainings = useAppStore((state) => state.trainings)
   const allTasks = useAppStore((state) => state.tasks)
   const user = useAppStore((state) => state.user)
