@@ -341,7 +341,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                     onChange={(e) => setFormData({ ...formData, locationDetail: e.target.value })}
                     className="flex-1 bg-slate-50 border-none rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-700"
                   />
-                </div>ev
+                </div>
              </div>
           </div>
 
