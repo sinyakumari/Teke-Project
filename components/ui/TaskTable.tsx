@@ -18,12 +18,20 @@ interface TaskTableProps {
   onTaskClick: (id: string) => void
   onEditClick: (id: string) => void
   onTaskUpdate?: () => void
+  highlightedIds?: string[]
 }
 
-export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdate }: TaskTableProps) {
+export default function TaskTable({ 
+  tasks: visibleTasks, 
+  onTaskClick, 
+  onEditClick,
+  onTaskUpdate,
+  highlightedIds = []
+}: TaskTableProps) {
+  const allTasks = useAppStore((state) => state.tasks)
   const toggleTaskStatus = useAppStore((state) => state.toggleTaskStatus)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  
+
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
@@ -54,7 +62,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdat
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editName.trim() }),
       })
-      
+
       if (res.ok && onTaskUpdate) {
         onTaskUpdate()
       }
@@ -79,7 +87,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdat
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center text-center">Done</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center">Done</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Task Name</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Training</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deadline</th>
@@ -88,28 +96,35 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdat
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {tasks.map((task) => {
+            {visibleTasks.map((task) => {
+              const blockerTask = task.blocked_by_task_id ? allTasks.find(t => t.id === task.blocked_by_task_id) : null
+              const isBlocked = !!blockerTask && blockerTask.status !== 'complete'
               const isComplete = task.status === 'complete'
               return (
-                <tr 
+                <tr
                   key={task.id}
                   onClick={() => onTaskClick(task.id)}
-                  className="hover:bg-slate-50/50 cursor-pointer transition-colors group"
+                  className={`hover:bg-slate-50/50 cursor-pointer transition-colors group ${highlightedIds.includes(task.id) ? 'bg-indigo-50/30' : ''}`}
                 >
                   <td className="px-6 py-4 text-center">
                     <button
                       onClick={(e) => toggleStatus(e, task)}
-                      disabled={updatingId === task.id}
-                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all mx-auto ${
-                        isComplete
+                      disabled={updatingId === task.id || isBlocked}
+                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all mx-auto ${isComplete
                           ? 'bg-[#1a1f2e] border-[#1a1f2e]'
-                          : 'bg-white border-slate-200 group-hover:border-slate-300'
-                      }`}
+                          : isBlocked 
+                            ? 'bg-slate-50 border-slate-200 cursor-not-allowed'
+                            : 'bg-white border-slate-200 group-hover:border-slate-300'
+                        }`}
+                      title={isBlocked ? `Requires: ${blockerTask?.name}` : undefined}
                     >
                       {isComplete && (
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                          <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
+                      )}
+                      {!isComplete && isBlocked && (
+                        <span className="material-symbols-outlined text-[10px] text-slate-400">lock</span>
                       )}
                       {updatingId === task.id && (
                         <div className="w-2 h-2 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
@@ -129,7 +144,7 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdat
                         className="w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 text-[14px] font-semibold outline-none"
                       />
                     ) : (
-                      <span 
+                      <span
                         onClick={(e) => {
                           e.stopPropagation()
                           setEditingId(task.id)
@@ -157,9 +172,9 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdat
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${isComplete ? 'bg-green-500' : 'bg-orange-500'}`} />
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isComplete ? 'text-green-600' : 'text-orange-500'}`}>
-                        {task.status}
+                      <span className={`w-1.5 h-1.5 rounded-full ${isComplete ? 'bg-green-500' : isBlocked ? 'bg-slate-300' : 'bg-orange-500'}`} />
+                      <span className={`text-[10px] font-black uppercase tracking-wider ${isComplete ? 'text-green-600' : isBlocked ? 'text-slate-400' : 'text-orange-500'}`}>
+                        {isComplete ? 'complete' : isBlocked ? 'blocked' : task.status}
                       </span>
                     </div>
                   </td>
@@ -173,8 +188,8 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdat
                       title="Edit Task"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
                     </button>
                   </td>

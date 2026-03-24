@@ -10,6 +10,7 @@ import { getGreeting } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useAppStore } from '@/store/useAppStore'
+import NotificationDropdown from '@/components/ui/NotificationDropdown'
 
 interface User {
   name: string
@@ -132,6 +133,10 @@ export default function HomePage() {
                      {todayDate}
                   </p>
                </div>
+               
+               {/* Notification Dropdown */}
+               <NotificationDropdown />
+
                <Link href="/profile" className="hover:scale-110 active:scale-95 transition-all cursor-pointer">
                  <Avatar name={user?.name || '?'} src={user?.profilePicture} size="md" />
                </Link>
