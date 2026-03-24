@@ -20,6 +20,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
   const user = useAppStore((state) => state.user)
   const updateTrainingStore = useAppStore((state) => state.updateTraining)
   const deleteTrainingStore = useAppStore((state) => state.deleteTraining)
+  const addNotification = useAppStore((state) => state.addNotification)
+  const addToast = useAppStore((state) => state.addToast)
   
   const [activeTab, setActiveTab] = useState<'Overview' | 'Tasks' | 'Materials'>('Overview')
   const [actionLoading, setActionLoading] = useState(false)
@@ -106,7 +108,16 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_archived: newArchived }),
       })
-      if (res.ok) updateTrainingStore({ ...training, is_archived: newArchived })
+      if (res.ok) {
+        updateTrainingStore({ ...training, is_archived: newArchived })
+        addNotification({
+          title: newArchived ? 'Training Archived 📦' : 'Training Restored 📂',
+          message: `"${training.title}" has been ${newArchived ? 'archived' : 'restored'}.`,
+          category: newArchived ? 'warning' : 'info',
+          type: 'in-app',
+        })
+        addToast(newArchived ? 'Training archived' : 'Training restored', 'info')
+      }
     } catch (error) {
       console.error('Error archiving:', error)
     } finally {
@@ -115,12 +126,20 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
   }
 
   async function handleDelete() {
-    if (!trainingId) return
+    if (!trainingId || !training) return
     setActionLoading(true)
+    const trainingTitle = training.title
     try {
       const res = await fetch(`/api/trainings/${trainingId}`, { method: 'DELETE' })
       if (res.ok) {
         deleteTrainingStore(trainingId)
+        addNotification({
+          title: 'Training Deleted 🗑️',
+          message: `"${trainingTitle}" has been permanently removed.`,
+          category: 'warning',
+          type: 'in-app',
+        })
+        addToast('Training deleted', 'warning')
         onClose()
       }
     } catch (error) {
@@ -144,6 +163,13 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         const result = await res.json()
         updateTrainingStore(result.training)
         setHasChanges(false)
+        addNotification({
+          title: 'Training Saved ✏️',
+          message: `Changes to "${formData.title}" have been saved.`,
+          category: 'info',
+          type: 'in-app',
+        })
+        addToast('Training saved', 'success')
       }
     } catch (error) {
       console.error('Save error:', error)

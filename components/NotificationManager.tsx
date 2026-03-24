@@ -2,72 +2,114 @@
 
 import { useEffect, useRef } from 'react'
 import { useAppStore } from '@/store/useAppStore'
+import { createClient } from '@/lib/supabase'
 
-const INACTIVITY_LIMIT = 5 * 60 * 1000 // 5 minutes in ms
-const CHECK_INTERVAL = 60 * 1000 // 1 minute in ms
+// 3 days in milliseconds for inactivity tracking
+const INACTIVITY_LIMIT_MS = 3 * 24 * 60 * 60 * 1000
+const INACTIVITY_CHECK_INTERVAL_MS = 60 * 60 * 1000 // check every hour
+const LAST_ACTIVE_KEY = 'teke_last_active_ts'
 
 export default function NotificationManager() {
   const addNotification = useAppStore((state) => state.addNotification)
-  const lastActivityRef = useRef<number>(Date.now())
+  const fetchNotifications = useAppStore((state) => state.fetchNotifications)
+  const user = useAppStore((state) => state.user)
   const hasNotifiedInactivity = useRef<boolean>(false)
 
-  // 1. Service Worker & Push Permissions
+  // — Service Worker registration
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then(() => console.log('Service Worker Registered'))
-        .catch(err => console.error('SW Error:', err))
+        .then(() => console.log('[SW] Registered'))
+        .catch(err => console.warn('[SW] Error:', err))
     }
-
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
   }, [])
 
-  // 2. Inactivity Tracking
+  // — Supabase Realtime: listen for DB inserts on the history table.
+  //   We only refresh the local list; we don't call addNotification to avoid infinite loops.
   useEffect(() => {
-    const handleActivity = () => {
-      lastActivityRef.current = Date.now()
+    if (!user?.id) return
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`history:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'history',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (_payload) => {
+          // Refresh from DB so UI stays in sync (handles multi-tab & server triggers)
+          fetchNotifications()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id, fetchNotifications])
+
+  // — Activity tracking: update localStorage on each interaction
+  useEffect(() => {
+    const touch = () => {
+      localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString())
       hasNotifiedInactivity.current = false
     }
 
-    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart']
-    activityEvents.forEach(event => window.addEventListener(event, handleActivity))
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click']
+    events.forEach(e => window.addEventListener(e, touch, { passive: true }))
+    touch() // initialise on mount
 
-    const interval = setInterval(() => {
-      const now = Date.now()
-      const timeSinceLastActivity = now - lastActivityRef.current
+    return () => events.forEach(e => window.removeEventListener(e, touch))
+  }, [])
 
-      if (timeSinceLastActivity > INACTIVITY_LIMIT && !hasNotifiedInactivity.current) {
+  // — Inactivity check: runs every hour, fires notification after 3 days idle
+  useEffect(() => {
+    const check = () => {
+      const lastActive = parseInt(localStorage.getItem(LAST_ACTIVE_KEY) ?? '0', 10)
+      if (!lastActive) return
+
+      const idleMs = Date.now() - lastActive
+
+      if (idleMs >= INACTIVITY_LIMIT_MS && !hasNotifiedInactivity.current) {
         hasNotifiedInactivity.current = true
-        
-        // In-App Notification
-        addNotification({
-          title: "Still there?",
-          message: "You haven't been active for 5 minutes. Take a break or check your pending tasks!",
-          type: 'info'
-        })
+        const idleDays = Math.floor(idleMs / (24 * 60 * 60 * 1000))
 
-        // Push Notification
+        const isHidden = document.visibilityState === 'hidden'
+
+        if (!isHidden) {
+          addNotification({
+            title: "We miss you! 👋",
+            message: `You haven't been active for ${idleDays} day${idleDays > 1 ? 's' : ''}. Check your pending tasks and trainings.`,
+            category: 'info',
+            type: 'in-app',
+          })
+        }
+
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
-            const n = new Notification('TEKE: Inactivity Detected', {
-              body: "You've been idle for a while. Let's finish those tasks!",
-              icon: '/favicon.ico'
+            new Notification('TEKE: Long time no see!', {
+              body: `You've been idle for ${idleDays} day${idleDays > 1 ? 's' : ''}. Let's get back on track!`,
+              icon: '/favicon.ico',
+              tag: 'inactivity-nudge',
             })
-            n.onclick = () => window.focus()
           } catch (e) {
-            console.error('Push notification failed', e)
+            console.warn('[Push] Native notification failed:', e)
           }
         }
       }
-    }, CHECK_INTERVAL)
-
-    return () => {
-      activityEvents.forEach(event => window.removeEventListener(event, handleActivity))
-      clearInterval(interval)
     }
+
+    check() // check on mount
+    const interval = setInterval(check, INACTIVITY_CHECK_INTERVAL_MS)
+    return () => clearInterval(interval)
   }, [addNotification])
 
-  return null // This component handles side-effects only
+  return null
 }

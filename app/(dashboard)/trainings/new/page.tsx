@@ -137,7 +137,8 @@ function NewTrainingForm() {
         addNotification({
           title: 'Training Updated',
           message: `The training "${title}" has been updated.`,
-          type: 'success',
+          category: 'success',
+          type: 'in-app',
           link: `/trainings/${editId}`
         })
       } else {
@@ -146,7 +147,8 @@ function NewTrainingForm() {
         addNotification({
           title: 'New Training Created',
           message: `You started a new training: "${title}". Good luck!`,
-          type: 'success',
+          category: 'success',
+          type: 'in-app',
           link: `/trainings/${savedData.training.id}`
         })
       }

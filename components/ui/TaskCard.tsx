@@ -20,9 +20,10 @@ interface TaskCardProps {
   onStatusChange?: (newStatus: string) => void
   onTaskUpdate?: () => void
   compact?: boolean
+  highlighted?: boolean
 }
 
-export default function TaskCard({ task, onClick, onEditClick, onStatusChange, onTaskUpdate, compact = false }: TaskCardProps) {
+export default function TaskCard({ task, onClick, onEditClick, onStatusChange, onTaskUpdate, compact = false, highlighted = false }: TaskCardProps) {
   const tasks = useAppStore((state) => state.tasks)
   const [isUpdating, setIsUpdating] = useState(false)
   const [currentStatus, setCurrentStatus] = useState(task.status)
@@ -98,9 +99,10 @@ export default function TaskCard({ task, onClick, onEditClick, onStatusChange, o
   return (
     <div
       onClick={isEditing ? undefined : onClick}
-      className={`bg-white rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all relative group h-full flex flex-col justify-center ${compact ? 'p-3.5' : 'p-5'
-        } ${isBlocked ? 'opacity-80' : ''
-        }`}
+      className={`bg-white rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all relative group h-full flex flex-col justify-center
+        ${compact ? 'p-3.5' : 'p-5'}
+        ${isBlocked ? 'opacity-80' : ''}
+      `}
     >
       <div className="flex items-start gap-3 sm:gap-4">
         {/* Functional Checkbox */}

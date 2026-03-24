@@ -19,9 +19,17 @@ interface TaskTableProps {
   onEditClick: (id: string) => void
   onStatusChange: (id: string, newStatus: string) => void
   onTaskUpdate?: () => void
+  highlightedIds?: string[]
 }
 
-export default function TaskTable({ tasks: visibleTasks, onTaskClick, onEditClick, onStatusChange, onTaskUpdate }: TaskTableProps) {
+export default function TaskTable({ 
+  tasks: visibleTasks, 
+  onTaskClick, 
+  onEditClick, 
+  onStatusChange, 
+  onTaskUpdate,
+  highlightedIds = []
+}: TaskTableProps) {
   const allTasks = useAppStore((state) => state.tasks)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 

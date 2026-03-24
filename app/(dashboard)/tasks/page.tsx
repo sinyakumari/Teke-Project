@@ -18,7 +18,11 @@ const filterOptions = [
 
 export default function TasksPage() {
   const router = useRouter()
-  const [activeFilter, setActiveFilter] = useState('All')
+  const { searchParams } = new URL(typeof window !== 'undefined' ? window.location.href : 'http://localhost')
+  const initialFilter = searchParams.get('filter') || 'All'
+  const filterIds = searchParams.get('ids')?.split(',') || []
+
+  const [activeFilter, setActiveFilter] = useState(initialFilter)
   const [view, setView] = useState<'grid' | 'table'>('grid')
 
   useEffect(() => {
@@ -60,6 +64,22 @@ export default function TasksPage() {
   const filteredTasks = tasks.filter((task) => {
     if (activeFilter === 'All') return true
     return task.status === activeFilter
+  })
+
+  // Sort tasks such that tasks from the notification appear at the top
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    const aInFilter = filterIds.includes(a.id)
+    const bInFilter = filterIds.includes(b.id)
+    
+    if (aInFilter && !bInFilter) return -1
+    if (!aInFilter && bInFilter) return 1
+    
+    // Within the same group, maintain original order or sort by provided list order
+    if (aInFilter && bInFilter) {
+      return filterIds.indexOf(a.id) - filterIds.indexOf(b.id)
+    }
+    
+    return 0
   })
 
   // Grouping logic
@@ -140,11 +160,12 @@ export default function TasksPage() {
             </div>
           ) : view === 'table' ? (
             <TaskTable 
-                tasks={filteredTasks} 
+                tasks={sortedTasks} 
                 onTaskClick={(id) => openTaskDrawer(id)}
                 onEditClick={(id) => openTaskDrawer(id)}
                 onStatusChange={handleStatusChange}
                 onTaskUpdate={fetchTasks}
+                highlightedIds={filterIds}
             />
           ) : (
             <div className="flex flex-col gap-8">
@@ -169,6 +190,7 @@ export default function TasksPage() {
                         onEditClick={() => openTaskDrawer(task.id)}
                         onStatusChange={(s) => handleStatusChange(task.id, s)}
                         onTaskUpdate={fetchTasks}
+                        highlighted={filterIds.includes(task.id)}
                       />
                     ))}
                   </div>
