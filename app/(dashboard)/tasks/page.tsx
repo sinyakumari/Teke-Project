@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
 import { useAppStore } from '@/store/useAppStore'
@@ -16,9 +16,9 @@ const filterOptions = [
   'canceled',
 ]
 
-export default function TasksPage() {
+function TasksPageContent() {
   const router = useRouter()
-  const { searchParams } = new URL(typeof window !== 'undefined' ? window.location.href : 'http://localhost')
+  const searchParams = useSearchParams()
   const initialFilter = searchParams.get('filter') || 'All'
   const filterIds = searchParams.get('ids')?.split(',') || []
 
@@ -181,5 +181,17 @@ export default function TasksPage() {
         <span className="material-symbols-outlined text-white text-3xl">add</span>
       </button>
     </div>
+  )
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7] items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <TasksPageContent />
+    </Suspense>
   )
 }
