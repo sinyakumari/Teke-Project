@@ -215,7 +215,6 @@ export default function HomePage() {
                       tasks={dashboardTasks}
                       onTaskClick={(id) => openTaskDrawer(id)}
                       onEditClick={(id) => openTaskDrawer(id)}
-                      onStatusChange={() => fetchTasks()}
                       onTaskUpdate={() => fetchTasks()}
                     />
                   </div>
@@ -227,7 +226,7 @@ export default function HomePage() {
                             task={task}
                             onEditClick={() => openTaskDrawer(task.id)}
                             onClick={() => openTaskDrawer(task.id)}
-                            onStatusChange={() => fetchTasks()}
+                            onTaskUpdate={() => fetchTasks()}
                           />
                       </div>
                     ))}
