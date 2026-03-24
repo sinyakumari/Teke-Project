@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
+import { useAppStore } from '@/store/useAppStore'
 
 interface Task {
   id: string
@@ -16,44 +17,32 @@ interface TaskCardProps {
   task: Task
   onClick?: () => void
   onEditClick?: (e: React.MouseEvent) => void
-  onStatusChange?: (newStatus: string) => void
   onTaskUpdate?: () => void
   compact?: boolean
 }
-
-export default function TaskCard({ task, onClick, onEditClick, onStatusChange, onTaskUpdate, compact = false }: TaskCardProps) {
+ 
+export default function TaskCard({ task, onClick, onEditClick, onTaskUpdate, compact = false }: TaskCardProps) {
+  const toggleTaskStatus = useAppStore((state) => state.toggleTaskStatus)
   const [isUpdating, setIsUpdating] = useState(false)
-  const [currentStatus, setCurrentStatus] = useState(task.status)
   
   // Edit State
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(task.name)
-
-  const isComplete = currentStatus === 'complete'
+ 
+  const isComplete = task.status === 'complete'
   const isBlocked = !!task.blocked_by_task_id
   const blockerName = 'Another task'
-
+ 
   async function toggleStatus(e: React.MouseEvent) {
     if (isEditing) return
     e.stopPropagation()
     if (isUpdating) return
-
-    const newStatus = isComplete ? 'pending' : 'complete'
+ 
     setIsUpdating(true)
-    
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      
-      if (res.ok) {
-        setCurrentStatus(newStatus)
-        if (onStatusChange) onStatusChange(newStatus)
-      }
+      await toggleTaskStatus(task.id)
     } catch (error) {
-      console.error('Error toggling task status:', error)
+      console.error('Error toggling status:', error)
     } finally {
       setIsUpdating(false)
     }

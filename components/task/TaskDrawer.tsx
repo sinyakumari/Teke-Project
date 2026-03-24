@@ -183,15 +183,15 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     }
   }
 
+  const deleteTaskAction = useAppStore((state) => state.deleteTaskAction)
+ 
   async function handleDelete() {
     if (!taskId || isCreateMode) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
-      if (res.ok) {
-        deleteTaskInStore(taskId)
-        onClose()
-      }
+      // Step: Perform optimistic delete via store
+      await deleteTaskAction(taskId)
+      onClose()
     } catch (error) {
       console.error('Delete error:', error)
     } finally {

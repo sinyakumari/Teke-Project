@@ -66,6 +66,8 @@ interface AppState {
   addTask: (task: Task) => void
   updateTask: (task: Task) => void
   deleteTask: (id: string) => void
+  toggleTaskStatus: (id: string) => Promise<void>
+  deleteTaskAction: (id: string) => Promise<void>
 
   // UI State
   activeTaskId: string | null
@@ -148,6 +150,57 @@ export const useAppStore = create<AppState>()(
       deleteTask: (id) => set((state) => ({
         tasks: state.tasks.filter(t => t.id !== id)
       }), false, 'tasks/delete'),
+
+      toggleTaskStatus: async (id) => {
+        const { tasks, updateTask } = get()
+        const task = tasks.find(t => t.id === id)
+        if (!task) return
+
+        const oldStatus = task.status
+        const newStatus = oldStatus === 'complete' ? 'pending' : 'complete'
+        
+        // 1. Optimistic UI update
+        updateTask({ ...task, status: newStatus })
+
+        try {
+          const res = await fetch(`/api/tasks/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus }),
+          })
+          
+          if (!res.ok) throw new Error('Failed to update status')
+          
+          const result = await res.json()
+          // Ensure we have the latest server state (if any extra fields were updated)
+          if (result.task) updateTask(result.task)
+        } catch (error) {
+          console.error('Task status toggle failed:', error)
+          // 2. Rollback
+          updateTask({ ...task, status: oldStatus })
+        }
+      },
+
+      deleteTaskAction: async (id) => {
+        const { tasks, deleteTask, addTask } = get()
+        const task = tasks.find(t => t.id === id)
+        if (!task) return
+
+        // 1. Optimistic UI update
+        deleteTask(id)
+
+        try {
+          const res = await fetch(`/api/tasks/${id}`, {
+            method: 'DELETE'
+          })
+          
+          if (!res.ok) throw new Error('Failed to delete task')
+        } catch (error) {
+          console.error('Task deletion failed:', error)
+          // 2. Rollback
+          if (task) addTask(task)
+        }
+      },
 
       // UI State
       activeTaskId: null,

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
+import { useAppStore } from '@/store/useAppStore'
 
 interface Task {
   id: string
@@ -16,11 +17,11 @@ interface TaskTableProps {
   tasks: Task[]
   onTaskClick: (id: string) => void
   onEditClick: (id: string) => void
-  onStatusChange: (id: string, newStatus: string) => void
   onTaskUpdate?: () => void
 }
 
-export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusChange, onTaskUpdate }: TaskTableProps) {
+export default function TaskTable({ tasks, onTaskClick, onEditClick, onTaskUpdate }: TaskTableProps) {
+  const toggleTaskStatus = useAppStore((state) => state.toggleTaskStatus)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   
   // Edit State
@@ -31,20 +32,9 @@ export default function TaskTable({ tasks, onTaskClick, onEditClick, onStatusCha
     e.stopPropagation()
     if (updatingId || editingId) return
 
-    const isComplete = task.status === 'complete'
-    const newStatus = isComplete ? 'pending' : 'complete'
     setUpdatingId(task.id)
-    
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      
-      if (res.ok) {
-        onStatusChange(task.id, newStatus)
-      }
+      await toggleTaskStatus(task.id)
     } catch (error) {
       console.error('Error toggling task status:', error)
     } finally {

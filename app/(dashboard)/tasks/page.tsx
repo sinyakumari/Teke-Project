@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
@@ -28,52 +28,30 @@ export default function TasksPage() {
 
   const tasks = useAppStore((state) => state.tasks)
   const loading = useAppStore((state) => state.tasksLoading)
-  const fetchTasks = useAppStore((state) => state.fetchTasks)
-  const updateTask = useAppStore((state) => state.updateTask)
   const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
-
-  async function handleStatusChange(id: string, newStatus: string) {
-    const task = tasks.find(t => t.id === id)
-    if (!task) return
-
-    // Optimistically update store
-    const updatedTask = { ...task, status: newStatus }
-    updateTask(updatedTask)
-
-    try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      if (!res.ok) {
-        updateTask(task)
-        console.error('Failed to update task status')
-      }
-    } catch (error) {
-      updateTask(task)
-      console.error('Error updating task status:', error)
-    }
-  }
-
+ 
   const filteredTasks = tasks.filter((task) => {
     if (activeFilter === 'All') return true
     return task.status === activeFilter
   })
 
   // Grouping logic
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const endOfToday = new Date()
-  endOfToday.setHours(23, 59, 59, 999)
-  const endOfWeek = new Date()
-  endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
-  endOfWeek.setHours(23, 59, 59, 999)
+  const { todayTasks, thisWeekTasks, otherTasks, noDeadlineTasks } = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const endOfToday = new Date()
+    endOfToday.setHours(23, 59, 59, 999)
+    const endOfWeek = new Date()
+    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
+    endOfWeek.setHours(23, 59, 59, 999)
 
-  const todayTasks = filteredTasks.filter(t => t.deadline && new Date(t.deadline) <= endOfToday)
-  const thisWeekTasks = filteredTasks.filter(t => t.deadline && new Date(t.deadline) > endOfToday && new Date(t.deadline) <= endOfWeek)
-  const otherTasks = filteredTasks.filter(t => t.deadline && new Date(t.deadline) > endOfWeek)
-  const noDeadlineTasks = filteredTasks.filter(t => !t.deadline)
+    return {
+      todayTasks: filteredTasks.filter(t => t.deadline && new Date(t.deadline) <= endOfToday),
+      thisWeekTasks: filteredTasks.filter(t => t.deadline && new Date(t.deadline) > endOfToday && new Date(t.deadline) <= endOfWeek),
+      otherTasks: filteredTasks.filter(t => t.deadline && new Date(t.deadline) > endOfWeek),
+      noDeadlineTasks: filteredTasks.filter(t => !t.deadline)
+    }
+  }, [filteredTasks])
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
@@ -141,8 +119,6 @@ export default function TasksPage() {
                 tasks={filteredTasks} 
                 onTaskClick={(id) => openTaskDrawer(id)}
                 onEditClick={(id) => openTaskDrawer(id)}
-                onStatusChange={handleStatusChange}
-                onTaskUpdate={fetchTasks}
             />
           ) : (
             <div className="flex flex-col gap-8">
@@ -165,8 +141,6 @@ export default function TasksPage() {
                         compact={true}
                         onClick={() => openTaskDrawer(task.id)}
                         onEditClick={() => openTaskDrawer(task.id)}
-                        onStatusChange={(s) => handleStatusChange(task.id, s)}
-                        onTaskUpdate={fetchTasks}
                       />
                     ))}
                   </div>

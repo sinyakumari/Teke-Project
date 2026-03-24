@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
@@ -56,7 +56,7 @@ export default function TrainingsPage() {
     }
   }, [allTrainings, trainings.length])
 
-  const taskCounts: TaskCount[] = trainings.map(t => {
+  const taskCounts: TaskCount[] = useMemo(() => trainings.map(t => {
     const trainingTasks = allTasks.filter(task => task.training_id === t.id)
     const completed = trainingTasks.filter(task => task.status === 'complete').length
     return {
@@ -64,7 +64,7 @@ export default function TrainingsPage() {
       total: trainingTasks.length,
       completed,
     }
-  })
+  }), [trainings, allTasks])
 
 
   function getTaskCount(training_id: string) {
