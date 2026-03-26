@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
 import { useAppStore } from '@/store/useAppStore'
@@ -28,7 +27,6 @@ interface TaskCount {
 }
 
 export default function TrainingsPage() {
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
   const [view, setView] = useState<'grid' | 'table'>('grid')
 
@@ -37,8 +35,10 @@ export default function TrainingsPage() {
       setView('table')
     }
   }, [])
-  const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null)
-  const [drawerMode, setDrawerMode] = useState<'view' | 'edit'>('view')
+  const openTrainingDrawer = useAppStore((state) => state.openTrainingDrawer)
+  const closeTrainingDrawer = useAppStore((state) => state.closeTrainingDrawer)
+  const isTrainingDrawerOpen = useAppStore((state) => state.isTrainingDrawerOpen)
+  const activeTrainingId = useAppStore((state) => state.activeTrainingId)
   
   const allTrainings = useAppStore((state) => state.trainings)
   const allTasks = useAppStore((state) => state.tasks)
@@ -114,7 +114,7 @@ export default function TrainingsPage() {
 
               <NotificationDropdown />
               <button
-                onClick={() => router.push('/trainings/new')}
+                onClick={() => openTrainingDrawer('new')}
                 className="bg-[#1a1f2e] text-white p-2 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[40px]"
                 title="New Training"
               >
@@ -167,7 +167,7 @@ export default function TrainingsPage() {
                 </p>
               </div>
               <button
-                onClick={() => router.push('/trainings/new')}
+                onClick={() => openTrainingDrawer('new')}
                 className="bg-[#1a1f2e] text-white px-8 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-slate-200 mt-2"
               >
                 Create Training
@@ -177,14 +177,8 @@ export default function TrainingsPage() {
             <TrainingTable 
                 trainings={trainings} 
                 taskCounts={taskCounts}
-                onTrainingClick={(id) => {
-                  setSelectedTrainingId(id);
-                  setDrawerMode('view');
-                }}
-                onEditClick={(id) => {
-                  setSelectedTrainingId(id);
-                  setDrawerMode('edit');
-                }}
+                onTrainingClick={(id) => openTrainingDrawer(id, 'view')}
+                onEditClick={(id) => openTrainingDrawer(id, 'edit')}
                 onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
             />
           ) : (
@@ -197,14 +191,10 @@ export default function TrainingsPage() {
                     training={training}
                     taskCount={counts.total}
                     completedCount={counts.completed}
-                    onClick={() => {
-                      setSelectedTrainingId(training.id);
-                      setDrawerMode('view');
-                    }}
+                    onClick={() => openTrainingDrawer(training.id, 'view')}
                     onEditClick={(e) => {
                       e.stopPropagation();
-                      setSelectedTrainingId(training.id);
-                      setDrawerMode('edit');
+                      openTrainingDrawer(training.id, 'edit');
                     }}
                     onMenuClick={(e) => {
                       e.stopPropagation()
@@ -220,7 +210,7 @@ export default function TrainingsPage() {
 
       {/* Floating + Button (Mobile) */}
       <button
-        onClick={() => router.push('/trainings/new')}
+        onClick={() => openTrainingDrawer('new')}
         className="lg:hidden fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg z-20"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -233,12 +223,6 @@ export default function TrainingsPage() {
         </svg>
       </button>
 
-      {/* Slide-in Training Preview Drawer */}
-      <TrainingDrawer 
-        trainingId={selectedTrainingId} 
-        onClose={() => setSelectedTrainingId(null)} 
-        initialMode={drawerMode}
-      />
     </div>
   )
 }

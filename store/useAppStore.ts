@@ -103,9 +103,13 @@ interface AppState {
   activeTaskId: string | null
   activeTrainingId: string | null
   isTaskDrawerOpen: boolean
+  isTrainingDrawerOpen: boolean
+  trainingDrawerMode: 'view' | 'edit'
   isNotificationHistoryOpen: boolean
   openTaskDrawer: (id: string | 'new', trainingId?: string) => void
   closeTaskDrawer: () => void
+  openTrainingDrawer: (id: string | 'new', mode?: 'view' | 'edit') => void
+  closeTrainingDrawer: () => void
   toggleNotificationHistory: (open?: boolean) => void
 
   // Toasts
@@ -509,10 +513,13 @@ export const useAppStore = create<AppState>()(
         activeTaskId: null,
         activeTrainingId: null,
         isTaskDrawerOpen: false,
+        isTrainingDrawerOpen: false,
+        trainingDrawerMode: 'view',
         isNotificationHistoryOpen: false,
         openTaskDrawer: (id, trainingId) => set({
           activeTaskId: id,
           isTaskDrawerOpen: true,
+          isTrainingDrawerOpen: false,
           activeTrainingId: trainingId || null,
           isNotificationHistoryOpen: false,
         }, false, 'ui/openTaskDrawer'),
@@ -521,9 +528,21 @@ export const useAppStore = create<AppState>()(
           isTaskDrawerOpen: false,
           activeTrainingId: null,
         }, false, 'ui/closeTaskDrawer'),
+        openTrainingDrawer: (id, mode = 'view') => set({
+          activeTrainingId: id,
+          isTrainingDrawerOpen: true,
+          trainingDrawerMode: mode,
+          isTaskDrawerOpen: false,
+          isNotificationHistoryOpen: false,
+        }, false, 'ui/openTrainingDrawer'),
+        closeTrainingDrawer: () => set({
+          activeTrainingId: null,
+          isTrainingDrawerOpen: false,
+        }, false, 'ui/closeTrainingDrawer'),
         toggleNotificationHistory: (open) => set((state) => ({
           isNotificationHistoryOpen: typeof open === 'boolean' ? open : !state.isNotificationHistoryOpen,
           isTaskDrawerOpen: false,
+          isTrainingDrawerOpen: false,
         }), false, 'ui/toggleNotificationHistory'),
 
         // Toasts
