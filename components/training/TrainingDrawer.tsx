@@ -8,6 +8,7 @@ import TaskCard from '@/components/ui/TaskCard'
 import { createClient } from '@/lib/supabase'
 import { useRef } from 'react'
 import LessonManager from '@/components/lesson/LessonManager'
+import WorksheetManager from '@/components/worksheet/WorksheetManager'
 
 interface TrainingDrawerProps {
   trainingId: string | null
@@ -25,7 +26,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
   const addNotification = useAppStore((state) => state.addNotification)
   const addToast = useAppStore((state) => state.addToast)
   
-  const [activeTab, setActiveTab] = useState<'Lessons' | 'Tasks'>('Lessons')
+  const [activeTab, setActiveTab] = useState<'Lessons' | 'Tasks' | 'Worksheet'>('Lessons')
   const [actionLoading, setActionLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
@@ -299,7 +300,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
             <SegmentedControl
               options={[
                 { label: 'Lessons', value: 'Lessons' },
-                { label: 'Tasks', value: 'Tasks' }
+                { label: 'Tasks', value: 'Tasks' },
+                { label: 'Worksheet', value: 'Worksheet' }
               ]}
               value={activeTab}
               onChange={(v) => setActiveTab(v as any)}
@@ -349,7 +351,11 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                </div>
              )}
 
-             {/* Removed Materials tab content */}
+              {activeTab === 'Worksheet' && (
+                <div className="pt-1">
+                   <WorksheetManager trainingId={trainingId} />
+                </div>
+              )}
           </div>
         </div>
 
