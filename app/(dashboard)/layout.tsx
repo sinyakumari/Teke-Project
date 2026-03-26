@@ -9,10 +9,14 @@ import ToastContainer from '@/components/ui/ToastContainer'
 import NotificationManager from '@/components/NotificationManager'
 
 import NotificationHistory from '@/components/ui/NotificationHistory'
+import TrainingDrawer from '@/components/training/TrainingDrawer'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const activeTaskId = useAppStore((state) => state.activeTaskId)
+  const activeTrainingId = useAppStore((state) => state.activeTrainingId)
+  const trainingDrawerMode = useAppStore((state) => state.trainingDrawerMode)
   const closeTaskDrawer = useAppStore((state) => state.closeTaskDrawer)
+  const closeTrainingDrawer = useAppStore((state) => state.closeTrainingDrawer)
 
   return (
     <SyncStore>
@@ -42,6 +46,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <TaskDrawer 
           taskId={activeTaskId} 
           onClose={closeTaskDrawer} 
+        />
+        <TrainingDrawer 
+          trainingId={activeTrainingId} 
+          onClose={closeTrainingDrawer} 
+          initialMode={trainingDrawerMode}
         />
       </div>
     </SyncStore>

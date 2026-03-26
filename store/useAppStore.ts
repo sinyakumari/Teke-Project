@@ -11,6 +11,7 @@ interface User {
   bio?: string
   appLock?: boolean
   reviewReminders?: boolean
+  notificationPrefs?: Record<string, { in_app: boolean; push: boolean }>
 }
 
 interface Training {
@@ -23,6 +24,7 @@ interface Training {
   end_date?: string
   category: string
   is_archived: boolean
+  notifications_enabled: boolean
   description?: string
   pdfs?: { name: string; url: string }[]
 }
@@ -66,6 +68,7 @@ interface AppState {
   userError: string | null
   fetchUser: () => Promise<void>
   setUser: (user: User | null) => void
+  updateUser: (updates: Partial<User>) => Promise<void>
 
   // Trainings
   trainings: Training[]
@@ -103,9 +106,13 @@ interface AppState {
   activeTaskId: string | null
   activeTrainingId: string | null
   isTaskDrawerOpen: boolean
+  isTrainingDrawerOpen: boolean
+  trainingDrawerMode: 'view' | 'edit'
   isNotificationHistoryOpen: boolean
   openTaskDrawer: (id: string | 'new', trainingId?: string) => void
   closeTaskDrawer: () => void
+  openTrainingDrawer: (id: string | 'new', mode?: 'view' | 'edit') => void
+  closeTrainingDrawer: () => void
   toggleNotificationHistory: (open?: boolean) => void
 
   // Toasts
@@ -136,6 +143,27 @@ export const useAppStore = create<AppState>()(
             set({ user: data.user, userLoading: false }, false, 'user/fetch_success')
           } catch (error: any) {
             set({ userError: error.message, userLoading: false }, false, 'user/fetch_error')
+          }
+        },
+        updateUser: async (updates: Partial<User>) => {
+          const { user } = get()
+          if (!user) return
+          
+          // Optimistic update
+          set({ user: { ...user, ...updates } }, false, 'user/update_optimistic')
+          
+          try {
+            const res = await fetch('/api/user', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updates)
+            })
+            if (!res.ok) throw new Error('Failed to update user settings')
+            const data = await res.json()
+            set({ user: data.user }, false, 'user/update_success')
+          } catch (error: any) {
+            set({ userError: error.message }, false, 'user/update_error')
+            // Rollback is usually handled by fresh fetch or just keeping state and informing user
           }
         },
 
@@ -509,10 +537,13 @@ export const useAppStore = create<AppState>()(
         activeTaskId: null,
         activeTrainingId: null,
         isTaskDrawerOpen: false,
+        isTrainingDrawerOpen: false,
+        trainingDrawerMode: 'view',
         isNotificationHistoryOpen: false,
         openTaskDrawer: (id, trainingId) => set({
           activeTaskId: id,
           isTaskDrawerOpen: true,
+          isTrainingDrawerOpen: false,
           activeTrainingId: trainingId || null,
           isNotificationHistoryOpen: false,
         }, false, 'ui/openTaskDrawer'),
@@ -521,9 +552,21 @@ export const useAppStore = create<AppState>()(
           isTaskDrawerOpen: false,
           activeTrainingId: null,
         }, false, 'ui/closeTaskDrawer'),
+        openTrainingDrawer: (id, mode = 'view') => set({
+          activeTrainingId: id,
+          isTrainingDrawerOpen: true,
+          trainingDrawerMode: mode,
+          isTaskDrawerOpen: false,
+          isNotificationHistoryOpen: false,
+        }, false, 'ui/openTrainingDrawer'),
+        closeTrainingDrawer: () => set({
+          activeTrainingId: null,
+          isTrainingDrawerOpen: false,
+        }, false, 'ui/closeTrainingDrawer'),
         toggleNotificationHistory: (open) => set((state) => ({
           isNotificationHistoryOpen: typeof open === 'boolean' ? open : !state.isNotificationHistoryOpen,
           isTaskDrawerOpen: false,
+          isTrainingDrawerOpen: false,
         }), false, 'ui/toggleNotificationHistory'),
 
         // Toasts
