@@ -7,6 +7,7 @@ import SegmentedControl from '@/components/ui/SegmentedControl'
 import TaskCard from '@/components/ui/TaskCard'
 import { createClient } from '@/lib/supabase'
 import { useRef } from 'react'
+import LessonManager from '@/components/lesson/LessonManager'
 
 interface TrainingDrawerProps {
   trainingId: string | null
@@ -24,7 +25,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
   const addNotification = useAppStore((state) => state.addNotification)
   const addToast = useAppStore((state) => state.addToast)
   
-  const [activeTab, setActiveTab] = useState<'Overview' | 'Tasks' | 'Materials'>('Overview')
+  const [activeTab, setActiveTab] = useState<'Lessons' | 'Tasks'>('Lessons')
   const [actionLoading, setActionLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
@@ -193,97 +194,6 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
     }
   }, [trainingId, onClose])
 
-  useEffect(() => {
-    if (trainingId && activeTab === 'Materials') {
-      fetchMaterials()
-    }
-  }, [trainingId, activeTab])
-
-  async function fetchMaterials() {
-    if (!trainingId) return
-    setFetchingMaterials(true)
-    try {
-      const res = await fetch(`/api/trainings/${trainingId}/materials`)
-      if (res.ok) {
-        const data = await res.json()
-        setMaterials(data.materials || [])
-      }
-    } catch (error) {
-      console.error('Error fetching materials:', error)
-    } finally {
-      setFetchingMaterials(false)
-    }
-  }
-
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !trainingId) return
-
-    setUploadingMaterial(true)
-    try {
-      const supabase = createClient()
-      
-      // Get User ID for storage policy requirement
-      let userId = user?.id
-      if (!userId) {
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        userId = authUser?.id
-      }
-      
-      if (!userId) throw new Error('User not authenticated')
-
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
-      const storagePath = `${userId}/trainings/${trainingId}/${fileName}`
-
-      const { data, error } = await supabase.storage
-        .from('training-media')
-        .upload(storagePath, file)
-
-      if (error) throw error
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('training-media')
-        .getPublicUrl(data.path)
-
-      const res = await fetch(`/api/trainings/${trainingId}/materials`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          file_type: 'pdf',
-          storage_path: publicUrl,
-          file_name: file.name,
-          file_size: file.size
-        }),
-      })
-
-      if (res.ok) {
-        const result = await res.json()
-        setMaterials(prev => [result.material, ...prev])
-      }
-    } catch (error) {
-      console.error('Upload failed:', error)
-      alert('Upload failed.')
-    } finally {
-      setUploadingMaterial(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
-  async function handleDeleteMaterial(id: string) {
-    if (!trainingId) return
-    try {
-      const res = await fetch(`/api/trainings/${trainingId}/materials?id=${id}`, {
-        method: 'DELETE'
-      })
-      if (res.ok) {
-        setMaterials(prev => prev.filter(m => m.id !== id))
-      }
-    } catch (error) {
-       console.error('Delete failed:', error)
-    }
-  }
-
   if (!trainingId || !training) return null
 
   return (
@@ -321,25 +231,12 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-hide p-3 space-y-3 pb-24">
-          {/* Progress Overview */}
-          <div className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm space-y-1.5">
-            <div className="flex items-end justify-between">
-               <div>
-                  <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">Status</h3>
-                  <p className="text-[11px] font-bold text-slate-900 leading-none mt-1">{stats.completed}/{stats.total} Tasks</p>
-               </div>
-               <span className="text-lg font-bold text-[#1a1f2e]">{stats.progress}%</span>
-            </div>
-            <div className="h-2 bg-slate-50 rounded-full overflow-hidden flex border border-slate-100 shadow-inner">
-               <div className={`h-full transition-all duration-1000 ${stats.progress === 100 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.2)]' : 'bg-[#1a1f2e]'}`} style={{ width: `${stats.progress}%` }} />
-            </div>
-          </div>
-
+          {/* Removed Progress Overview */}
           {/* Form Fields - Compact Grid */}
           <div className="grid grid-cols-2 gap-2">
              <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[10px]">person</span> Instructor
+                <label className="text-[7px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  Instructor
                 </label>
                 <input
                   type="text"
@@ -349,8 +246,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                 />
              </div>
              <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[10px]">location_on</span> Location
+                <label className="text-[7px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  Location
                 </label>
                 <div className="flex gap-1">
                   <select
@@ -372,20 +269,22 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[10px]">calendar_today</span> Start
+             <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
+                <label className="text-[7px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  Status
                 </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full bg-slate-50 border-none rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700"
-                />
+                <select
+                  value={training.is_archived ? 'archived' : 'active'}
+                  onChange={(e) => handleArchive()}
+                  className="w-full bg-slate-50 border-none rounded-lg px-2 py-1 text-[11px] font-black text-slate-800 outline-none cursor-pointer"
+                >
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
              </div>
              <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-                <label className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[10px]">event</span> End
+                <label className="text-[7px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                  End Date
                 </label>
                 <input
                   type="date"
@@ -399,9 +298,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           <div className="bg-white p-0.5 rounded-xl border border-slate-100 shadow-sm">
             <SegmentedControl
               options={[
-                { label: 'Overview', value: 'Overview' },
-                { label: 'Tasks', value: 'Tasks' },
-                { label: 'Files', value: 'Materials' }
+                { label: 'Lessons', value: 'Lessons' },
+                { label: 'Tasks', value: 'Tasks' }
               ]}
               value={activeTab}
               onChange={(v) => setActiveTab(v as any)}
@@ -409,37 +307,30 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           </div>
 
           <div className="animate-in fade-in duration-300">
-             {activeTab === 'Overview' && (
-               <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[12px]">description</span> Objective
-                  </label>
-                  <textarea
-                    value={formData.objective}
-                    onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
-                    rows={3}
-                    className="w-full bg-transparent border-none p-0 text-[11px] font-semibold text-slate-600 leading-relaxed outline-none resize-none italic"
-                    placeholder="Describe mission..."
-                  />
+             {activeTab === 'Lessons' && (
+               <div className="space-y-3 pt-1">
+                  <LessonManager trainingId={trainingId} />
                </div>
              )}
 
              {activeTab === 'Tasks' && (
                <div className="space-y-1">
                   <div className="flex items-center justify-between px-1 mb-2">
-                    <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Full Task List</h3>
-                    <span className="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
-                      {relatedTasks.length} ITEMS
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Full Task List</h3>
+                      <span className="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">
+                        {relatedTasks.length} ITEMS
+                      </span>
+                    </div>
 
-                  <button 
-                    onClick={() => router.push(`/tasks/extract?training_id=${trainingId}`)}
-                    className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors font-semibold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 mb-3"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
-                    Auto-Extract from Syllabus
-                  </button>
+                    <button 
+                      onClick={() => router.push(`/tasks/extract?training_id=${trainingId}`)}
+                      className="flex items-center justify-center p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors group"
+                      title="Auto-Extract from Syllabus"
+                    >
+                      <span className="material-symbols-outlined text-[14px] group-hover:rotate-180 transition-transform duration-500">auto_awesome</span>
+                    </button>
+                  </div>
 
                   {relatedTasks.length === 0 ? (
                     <div className="py-8 text-center bg-white border border-slate-100 rounded-2xl">
@@ -458,66 +349,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                </div>
              )}
 
-             {activeTab === 'Materials' && (
-               <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-1">
-                     <h4 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Resources</h4>
-                     <div className="flex items-center gap-1.5">
-                        <button 
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploadingMaterial}
-                          title="Upload more"
-                          className="flex items-center gap-1.5 px-2.5 py-1 bg-[#1a1f2e] text-white rounded-lg text-[8px] font-bold uppercase tracking-widest hover:scale-105 transition-all shadow-md"
-                        >
-                           <span className="material-symbols-outlined text-[12px]">add</span>
-                           Add Notes
-                        </button>
-                     </div>
-                  </div>
-
-                  <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf" onChange={handleFileUpload} />
-
-                  {fetchingMaterials ? (
-                    <div className="py-10 text-center bg-white border border-slate-100 rounded-2xl">
-                       <p className="text-[9px] font-bold text-slate-400 animate-pulse uppercase tracking-widest">Syncing...</p>
-                    </div>
-                  ) : materials.length === 0 ? (
-                    <div className="py-12 bg-white border border-slate-100 rounded-2xl flex flex-col items-center justify-center shadow-sm">
-                       <button 
-                         onClick={() => fileInputRef.current?.click()}
-                         disabled={uploadingMaterial}
-                         className="flex items-center gap-2 px-6 py-3 bg-[#1a1f2e] text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl"
-                       >
-                         <span className="material-symbols-outlined text-[18px]">upload_file</span>
-                         {uploadingMaterial ? 'Uploading...' : 'Upload Notes'}
-                       </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                       {materials.map((mat) => (
-                         <div key={mat.id} className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between group hover:border-[#1a1f2e] transition-all">
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                               <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 flex-shrink-0">
-                                  <span className="material-symbols-outlined text-[16px]">description</span>
-                               </div>
-                               <div className="overflow-hidden">
-                                  <p className="text-[11px] font-bold text-[#1a1f2e] truncate leading-tight pr-2">{mat.file_name}</p>
-                               </div>
-                            </div>
-                             <div className="flex items-center gap-1 flex-shrink-0">
-                               <a href={mat.storage_path} target="_blank" rel="noreferrer" className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-[#1a1f2e] hover:bg-[#1a1f2e] hover:text-white transition-all">
-                                  <span className="material-symbols-outlined text-[14px]">visibility</span>
-                               </a>
-                               <button onClick={() => handleDeleteMaterial(mat.id)} className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-red-300 hover:bg-red-500 hover:text-white transition-all">
-                                  <span className="material-symbols-outlined text-[14px]">delete</span>
-                               </button>
-                            </div>
-                         </div>
-                       ))}
-                    </div>
-                  )}
-               </div>
-             )}
+             {/* Removed Materials tab content */}
           </div>
         </div>
 
