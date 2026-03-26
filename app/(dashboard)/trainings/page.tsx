@@ -6,6 +6,7 @@ import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
 import { useAppStore } from '@/store/useAppStore'
 import TrainingDrawer from '@/components/training/TrainingDrawer'
+import NotificationDropdown from '@/components/ui/NotificationDropdown'
 
 
 interface Training {
@@ -111,6 +112,7 @@ export default function TrainingsPage() {
                  </button>
               </div>
 
+              <NotificationDropdown />
               <button
                 onClick={() => router.push('/trainings/new')}
                 className="bg-[#1a1f2e] text-white p-2 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[40px]"

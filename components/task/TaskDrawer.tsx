@@ -26,10 +26,13 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const updateTaskInStore = useAppStore((state) => state.updateTask)
   const addTaskInStore = useAppStore((state) => state.addTask)
   const deleteTaskInStore = useAppStore((state) => state.deleteTask)
-  
+  const addNotification = useAppStore((state) => state.addNotification)
+  const addToast = useAppStore((state) => state.addToast)
+  const allTasks = useAppStore((state) => state.tasks)
+
   const isCreateMode = taskId === 'new'
-  const task = useMemo(() => 
-    isCreateMode ? null : tasks.find(t => t.id === taskId), 
+  const task = useMemo(() =>
+    isCreateMode ? null : tasks.find(t => t.id === taskId),
     [tasks, taskId, isCreateMode]
   )
 
@@ -44,8 +47,13 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const [notes, setNotes] = useState('')
   const [attachments, setAttachments] = useState<{ name: string; url: string; type: string }[]>([])
   const [uploading, setUploading] = useState(false)
-  
-  const [activeTab, setActiveTab] = useState<'Details' | 'Notes' | 'Dependencies' | 'Files'>('Details')
+
+  const [activeTab, setActiveTab] = useState<'Dependencies' | 'Comments'>('Dependencies')
+  const [comments, setComments] = useState<any[]>([])
+  const [commentContent, setCommentContent] = useState('')
+  const [commentMedia, setCommentMedia] = useState<string | null>(null)
+  const [uploadingCommentMedia, setUploadingCommentMedia] = useState(false)
+  const [fetchingComments, setFetchingComments] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -53,7 +61,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const activeTrainingId = useAppStore((state) => state.activeTrainingId)
-  
+
   // Initialize state when task or mode changes
   useEffect(() => {
     if (isCreateMode) {
@@ -86,7 +94,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     if (isCreateMode) {
       setHasChanges(!!name)
     } else if (task) {
-      const changed = 
+      const changed =
         name !== task.name ||
         description !== (task.description || '') ||
         status !== task.status ||
@@ -99,6 +107,93 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
       setHasChanges(changed)
     }
   }, [name, description, status, priority, deadline, trainingId, blockedBy, notes, attachments, task, isCreateMode])
+
+  useEffect(() => {
+    if (taskId && taskId !== 'new' && activeTab === 'Comments') {
+      fetchComments()
+    }
+  }, [taskId, activeTab])
+
+  async function fetchComments() {
+    if (!taskId || taskId === 'new') return
+    setFetchingComments(true)
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/comments`)
+      const data = await res.json()
+      if (res.ok) {
+        setComments(data.comments || [])
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error)
+    } finally {
+      setFetchingComments(false)
+    }
+  }
+
+  async function handleAddComment() {
+    if (!commentContent.trim() || !taskId) return
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: commentContent, mediaUrl: commentMedia })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setComments(prev => [...prev, data.comment])
+        setCommentContent('')
+        setCommentMedia(null)
+        addToast('Comment added', 'success')
+      }
+    } catch (error) {
+       console.error('Error adding comment:', error)
+    }
+  }
+
+  async function handleCommentMediaUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !taskId) return
+
+    setUploadingCommentMedia(true)
+    try {
+      const supabase = createClient()
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `comments/${taskId}/${fileName}`
+
+      const { data, error } = await supabase.storage
+        .from('task-attachments')
+        .upload(filePath, file)
+
+      if (error) throw error
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('task-attachments')
+        .getPublicUrl(data.path)
+
+      setCommentMedia(publicUrl)
+      addToast('Media attached', 'success')
+    } catch (error) {
+      console.error('Comment media upload failed:', error)
+      addToast('Upload failed', 'error')
+    } finally {
+      setUploadingCommentMedia(false)
+    }
+  }
+
+  async function handleDeleteComment(id: string) {
+    try {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        setComments(prev => prev.filter(c => c.id !== id))
+        addToast('Comment removed', 'info')
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error)
+    }
+  }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -184,12 +279,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   }
 
   const deleteTaskAction = useAppStore((state) => state.deleteTaskAction)
- 
+
   async function handleDelete() {
     if (!taskId || isCreateMode) return
     setLoading(true)
     try {
-      // Step: Perform optimistic delete via store
       await deleteTaskAction(taskId)
       onClose()
     } catch (error) {
@@ -231,60 +325,60 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-100"
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
-      <div 
+      <div
         className="fixed top-0 right-0 h-full z-[151] bg-[#f9fafb] shadow-2xl transition-transform duration-300 ease-out flex flex-col
           w-full sm:w-[480px] translate-x-0"
       >
         {/* Hidden File Input */}
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
           onChange={handleFileUpload}
         />
 
-        {/* Header - More Compact */}
+        {/* Header */}
         <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 min-h-[64px]">
           <div className="flex-1 min-w-0 pr-2">
-             <input 
-               value={name}
-               onChange={(e) => setName(e.target.value)}
-               placeholder="Task Name"
-               className="text-[17px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300"
-             />
-             <div className="flex items-center gap-1.5 mt-0.5">
-               <div className="relative group">
-                 <select 
-                   value={status}
-                   onChange={(e) => setStatus(e.target.value)}
-                   className={`text-[9px] font-bold uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
-                 >
-                   {AVAILABLE_STATUSES.map(s => (
-                     <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
-                   ))}
-                 </select>
-                 <span className="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 text-[12px] pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
-                   expand_more
-                 </span>
-               </div>
-             </div>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Task Name"
+              className="text-[17px] font-black text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300"
+            />
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="relative group">
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className={`text-[9px] font-black uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
+                >
+                  {AVAILABLE_STATUSES.map(s => (
+                    <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 text-[12px] pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                  expand_more
+                </span>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             {!isCreateMode && (
-              <button 
+              <button
                 onClick={() => setShowDeleteConfirm(true)}
                 className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-all border border-slate-100"
               >
-                 <span className="material-symbols-outlined text-[16px]">delete</span>
+                <span className="material-symbols-outlined text-[16px]">delete</span>
               </button>
             )}
-            <button 
+            <button
               onClick={onClose}
               className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all border border-slate-100"
             >
@@ -293,22 +387,39 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
           </div>
         </div>
 
-        {/* Scrollable Content - More Compact */}
+        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto scrollbar-hide p-3 space-y-3 pb-32">
-          
+
+          {/* Blocked Warning Banner */}
+          {(() => {
+            const blocker = blockedBy ? tasks.find(t => t.id === blockedBy) : null;
+            if (blocker && blocker.status !== 'complete') {
+              return (
+                <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3 flex items-start gap-3 animate-in fade-in slide-in-from-top-1">
+                  <span className="material-symbols-outlined text-orange-400 text-[20px] shrink-0 mt-0.5">lock</span>
+                  <div className="flex-1">
+                    <p className="text-[#1a1f2e] text-[11px] font-black uppercase tracking-tight leading-none mb-1">TASK IS BLOCKED</p>
+                    <p className="text-orange-600 text-[10px] font-bold leading-tight">
+                      This task depends on <span className="underline italic">&quot;{blocker.name}&quot;</span> being completed first.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm flex flex-col">
               <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[11px]">flag</span> Priority
+                Priority
               </label>
               <div className="flex gap-1 justify-between">
                 {PRIORITY_OPTIONS.map((opt) => (
-                  <button 
+                  <button
                     key={opt}
                     onClick={() => setPriority(opt as any)}
-                    className={`flex-1 py-1 rounded-lg text-[9px] font-bold transition-all ${
-                      priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                    }`}
+                    className={`flex-1 py-1 rounded-lg text-[9px] font-black transition-all ${priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                   >
                     {opt}
                   </button>
@@ -317,9 +428,9 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             </div>
             <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
               <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[11px]">calendar_today</span> Deadline
+                Deadline
               </label>
-              <input 
+              <input
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
@@ -329,132 +440,158 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
           </div>
 
           <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
-             <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-               <span className="material-symbols-outlined text-[11px]">school</span> Linked Training
-             </label>
-             <select 
-               value={trainingId}
-               onChange={(e) => setTrainingId(e.target.value)}
-               className="w-full text-xs font-bold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
-             >
-               <option value="">NO TRAINING</option>
-               {trainings.map(t => (
-                 <option key={t.id} value={t.id}>{t.title.toUpperCase()}</option>
-               ))}
-             </select>
+            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+              Linked Training
+            </label>
+            <select
+              value={trainingId}
+              onChange={(e) => setTrainingId(e.target.value)}
+              className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+            >
+              <option value="">NO TRAINING</option>
+              {trainings.map(t => (
+                <option key={t.id} value={t.id}>{t.title.toUpperCase()}</option>
+              ))}
+            </select>
           </div>
 
           <div className="bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
             <SegmentedControl
               options={[
-                { label: 'Details', value: 'Details' },
-                { label: 'Files', value: 'Notes' },
-                { label: 'Blocking', value: 'Dependencies' }
+                { label: 'Dependency', value: 'Dependencies' },
+                { label: 'Comments', value: 'Comments' }
               ]}
-              value={activeTab === 'Files' ? 'Notes' : activeTab}
+              value={activeTab}
               onChange={(v) => setActiveTab(v as any)}
             />
           </div>
 
           <div className="min-h-[180px]">
-             {activeTab === 'Details' && (
-               <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                  <textarea 
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Add detailed description..."
-                    className="w-full min-h-[100px] text-xs font-medium text-slate-600 leading-relaxed outline-none resize-none bg-transparent"
+            {activeTab === 'Dependencies' && (
+              <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[11px]">device_hub</span> Dependency
+                </label>
+                <select
+                  value={blockedBy}
+                  onChange={(e) => setBlockedBy(e.target.value)}
+                  className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">NOT BLOCKED</option>
+                  {tasks.filter(t => t.id !== taskId).map(t => (
+                    <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
+                  ))}
+                </select>
+                <p className="text-[9px] text-slate-400 font-bold italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
+                  If this task depends on another, it will be marked as &apos;Blocked&apos; in the system until the dependency is completed.
+                </p>
+              </div>
+            )}
+
+            {activeTab === 'Comments' && (
+              <div className="space-y-4">
+                <div className="bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm flex items-end gap-1.5 focus-within:border-indigo-200 transition-colors">
+                  <textarea
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    onInput={(e) => {
+                      e.currentTarget.style.height = 'auto';
+                      e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                    }}
+                    placeholder="Write a comment..."
+                    rows={1}
+                    className="flex-1 text-[11px] font-medium text-[#1a1f2e] outline-none min-h-[16px] max-h-[100px] resize-none overflow-y-auto bg-transparent py-1.5 px-2 placeholder-slate-400"
                   />
-               </div>
-             )}
-
-             {(activeTab === 'Notes' || activeTab === 'Files') && (
-               <div className="space-y-3">
-                  {/* Attachments Section Only */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1 mb-1">
-                      <h3 className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">ATTACHMENTS (PDF, IMG, VIDEO)</h3>
-                      <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                        className={`text-[9px] font-semibold text-indigo-500 hover:translate-y-[-1px] transition-transform ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        {uploading ? 'UPLOADING...' : 'ADD FILE'}
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                       {attachments.length > 0 ? attachments.map((file, i) => (
-                         <a 
-                           key={i} 
-                           href={file.url} 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           className="bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm group hover:border-indigo-200 transition-all block"
-                         >
-                            {file.type.startsWith('image/') ? (
-                              <img src={file.url} alt={file.name} className="w-full h-20 object-cover rounded-xl mb-1.5" />
-                            ) : (
-                              <div className="w-full h-20 bg-slate-50 rounded-xl mb-1.5 flex flex-col items-center justify-center">
-                                 <span className="material-symbols-outlined text-slate-300 text-xl">
-                                   {file.type.includes('pdf') ? 'picture_as_pdf' : 'video_library'}
-                                 </span>
-                              </div>
-                            )}
-                            <p className="text-[9px] font-semibold text-slate-700 truncate px-1 uppercase tracking-tight">{file.name}</p>
-                         </a>
-                       )) : (
-                         <div className="col-span-2 bg-slate-50 border border-dashed border-slate-200 rounded-[1.5rem] py-6 flex flex-col items-center justify-center text-slate-300">
-                            <span className="material-symbols-outlined text-2xl mb-1">upload_file</span>
-                            <p className="text-[8px] font-bold uppercase tracking-widest">No attachments</p>
-                         </div>
-                       )}
-                    </div>
+                  <div className="flex items-center gap-1 shrink-0 pb-0.5 pr-0.5">
+                    <button 
+                      onClick={() => {
+                        const input = document.createElement('input')
+                        input.type = 'file'
+                        input.onchange = (e) => handleCommentMediaUpload(e as any)
+                        input.click()
+                      }}
+                      disabled={uploadingCommentMedia}
+                      className="w-6 h-6 flex items-center justify-center text-slate-400 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-slate-200"
+                      title="Attach Media"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">
+                        {uploadingCommentMedia ? 'hourglass_top' : 'attach_file'}
+                      </span>
+                    </button>
+                    <button 
+                      onClick={handleAddComment}
+                      disabled={(!commentContent.trim() && !commentMedia) || uploadingCommentMedia}
+                      className="w-6 h-6 flex items-center justify-center bg-[#1a1f2e] text-white rounded-lg shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:bg-slate-200"
+                      title="Send Comment"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                    </button>
                   </div>
-               </div>
-             )}
+                </div>
+                {commentMedia && (
+                  <div className="relative w-12 h-12 bg-slate-50 rounded-lg overflow-hidden border border-slate-100 group mt-2">
+                    <img src={commentMedia} alt="Media preview" className="w-full h-full object-cover" />
+                    <button 
+                      onClick={() => setCommentMedia(null)}
+                      className="absolute top-1 right-1 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                       <span className="material-symbols-outlined text-[10px]">close</span>
+                    </button>
+                  </div>
+                )}
 
-             {activeTab === 'Dependencies' && (
-               <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[11px]">lock</span> Blocked By
-                  </label>
-                  <select 
-                    value={blockedBy}
-                    onChange={(e) => setBlockedBy(e.target.value)}
-                    className="w-full text-xs font-bold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="">NOT BLOCKED</option>
-                    {tasks.filter(t => t.id !== taskId).map(t => (
-                      <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
-                    ))}
-                  </select>
-                  <p className="text-[9px] text-slate-400 font-medium italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
-                    If this task depends on another, it will be marked as &apos;Blocked&apos; in the system until the dependency is completed.
-                  </p>
-               </div>
-             )}
+                {/* Comments List */}
+                <div className="space-y-2">
+                  {fetchingComments ? (
+                    <div className="text-center py-6 text-slate-300 font-black text-[8px] uppercase tracking-widest animate-pulse">Syncing Thread...</div>
+                  ) : comments.length === 0 ? null : (
+                    comments.map((c) => (
+                      <div key={c.id} className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm group">
+                        <div className="flex items-center justify-between mb-1.5">
+                          {c.media_url ? (
+                            <a href={c.media_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md hover:bg-indigo-100 transition-colors w-fit">
+                              <span className="material-symbols-outlined text-[10px]">image</span>
+                              MEDIA
+                            </a>
+                          ) : <div />}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-bold text-slate-300">{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <button 
+                              onClick={() => handleDeleteComment(c.id)}
+                              className="text-slate-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-medium text-slate-600 leading-relaxed">{c.content}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Fixed Footer Action - Most Compact */}
+        {/* Fixed Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3 z-20 min-h-[72px]">
-           <button 
-             onClick={onClose}
-             className="px-5 py-3 rounded-2xl text-slate-400 font-semibold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
-           >
-             Cancel
-           </button>
-           <button 
-             onClick={handleSave}
-             disabled={!hasChanges || loading || !name}
-             className={`flex-1 py-3 rounded-2xl font-semibold text-[10px] uppercase tracking-widest transition-all ${
-               hasChanges && !loading && name
-                 ? 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 active:scale-[0.98]'
-                 : 'bg-slate-100 text-slate-300 cursor-not-allowed'
-             }`}
-           >
-             {loading ? 'Saving...' : isCreateMode ? 'Create Task' : 'Save Changes'}
-           </button>
+          <button
+            onClick={onClose}
+            className="px-5 py-3 rounded-2xl text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!hasChanges || loading || !name}
+            className={`flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${hasChanges && !loading && name
+                ? 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 active:scale-[0.98]'
+                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              }`}
+          >
+            {loading ? 'Saving...' : isCreateMode ? 'Create Task' : 'Save Changes'}
+          </button>
         </div>
       </div>
 
@@ -470,8 +607,8 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
               <p className="text-xs text-slate-500 font-medium px-2 leading-relaxed">This will permanently remove the task.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-               <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-semibold text-xs uppercase tracking-widest rounded-2xl">Cancel</button>
-               <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-semibold text-xs uppercase tracking-widest rounded-2xl">Delete</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl">Cancel</button>
+              <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl">Delete</button>
             </div>
           </div>
         </div>

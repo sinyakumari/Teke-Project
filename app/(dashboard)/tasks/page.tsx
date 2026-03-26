@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
 import { useAppStore } from '@/store/useAppStore'
+import NotificationDropdown from '@/components/ui/NotificationDropdown'
 
 const filterOptions = [
   'All',
@@ -15,9 +16,13 @@ const filterOptions = [
   'canceled',
 ]
 
-export default function TasksPage() {
+function TasksPageContent() {
   const router = useRouter()
-  const [activeFilter, setActiveFilter] = useState('All')
+  const searchParams = useSearchParams()
+  const initialFilter = searchParams.get('filter') || 'All'
+  const filterIds = searchParams.get('ids')?.split(',') || []
+
+  const [activeFilter, setActiveFilter] = useState(initialFilter)
   const [view, setView] = useState<'grid' | 'table'>('grid')
 
   useEffect(() => {
@@ -29,10 +34,25 @@ export default function TasksPage() {
   const tasks = useAppStore((state) => state.tasks)
   const loading = useAppStore((state) => state.tasksLoading)
   const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
- 
+
   const filteredTasks = tasks.filter((task) => {
     if (activeFilter === 'All') return true
     return task.status === activeFilter
+  })
+
+  // Sort tasks such that tasks from the notification appear at the top
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    const aInFilter = filterIds.includes(a.id)
+    const bInFilter = filterIds.includes(b.id)
+
+    if (aInFilter && !bInFilter) return -1
+    if (!aInFilter && bInFilter) return 1
+
+    if (aInFilter && bInFilter) {
+      return filterIds.indexOf(a.id) - filterIds.indexOf(b.id)
+    }
+
+    return 0
   })
 
   // Grouping logic
@@ -62,14 +82,15 @@ export default function TasksPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f2e] tracking-tight shrink-0">Tasks</h1>
             <div className="flex items-center gap-1.5 sm:gap-2">
               <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
-                 <button onClick={() => setView('grid')} className={`p-1.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[#1a1f2e] text-white' : 'text-slate-400'}`}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                 </button>
-                 <button onClick={() => setView('table')} className={`p-1.5 rounded-lg transition-all ${view === 'table' ? 'bg-[#1a1f2e] text-white' : 'text-slate-400'}`}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                 </button>
+                <button onClick={() => setView('grid')} className={`p-1.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[#1a1f2e] text-white' : 'text-slate-400'}`}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                </button>
+                <button onClick={() => setView('table')} className={`p-1.5 rounded-lg transition-all ${view === 'table' ? 'bg-[#1a1f2e] text-white' : 'text-slate-400'}`}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
               </div>
-              <button 
+              <NotificationDropdown />
+              <button
                 onClick={() => router.push('/tasks/extract')}
                 className="bg-white border border-slate-200 p-2 sm:px-4 rounded-xl font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all"
               >
@@ -110,15 +131,16 @@ export default function TasksPage() {
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl">📎</div>
               <div className="text-center">
-                  <p className="font-bold text-[#1a1f2e] text-lg">No tasks found</p>
-                  <p className="text-slate-400 text-sm font-medium uppercase tracking-widest mt-1">Try a different filter or create a new task</p>
+                <p className="font-bold text-[#1a1f2e] text-lg">No tasks found</p>
+                <p className="text-slate-400 text-sm font-medium uppercase tracking-widest mt-1">Try a different filter or create a new task</p>
               </div>
             </div>
           ) : view === 'table' ? (
-            <TaskTable 
-                tasks={filteredTasks} 
-                onTaskClick={(id) => openTaskDrawer(id)}
-                onEditClick={(id) => openTaskDrawer(id)}
+            <TaskTable
+              tasks={sortedTasks}
+              onTaskClick={(id) => openTaskDrawer(id)}
+              onEditClick={(id) => openTaskDrawer(id)}
+              highlightedIds={filterIds}
             />
           ) : (
             <div className="flex flex-col gap-8">
@@ -135,12 +157,13 @@ export default function TasksPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {section.list.map((task) => (
-                        <TaskCard
+                      <TaskCard
                         key={task.id}
                         task={task}
                         compact={true}
                         onClick={() => openTaskDrawer(task.id)}
                         onEditClick={() => openTaskDrawer(task.id)}
+                        highlighted={filterIds.includes(task.id)}
                       />
                     ))}
                   </div>
@@ -158,5 +181,17 @@ export default function TasksPage() {
         <span className="material-symbols-outlined text-white text-3xl">add</span>
       </button>
     </div>
+  )
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7] items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <TasksPageContent />
+    </Suspense>
   )
 }

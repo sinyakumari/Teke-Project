@@ -5,6 +5,10 @@ import MobileNav from '@/components/ui/BottomNav'
 import { SyncStore } from '@/components/SyncStore'
 import TaskDrawer from '@/components/task/TaskDrawer'
 import { useAppStore } from '@/store/useAppStore'
+import ToastContainer from '@/components/ui/ToastContainer'
+import NotificationManager from '@/components/NotificationManager'
+
+import NotificationHistory from '@/components/ui/NotificationHistory'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const activeTaskId = useAppStore((state) => state.activeTaskId)
@@ -12,6 +16,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SyncStore>
+      <ToastContainer />
+      <NotificationManager />
+      <NotificationHistory />
       <div className="h-screen bg-[#f2f2f7] flex transition-all duration-300 overflow-hidden">
         {/* Desktop Sidebar */}
         <SidebarNav />
