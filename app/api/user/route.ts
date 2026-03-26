@@ -27,6 +27,7 @@ export async function GET() {
         bio: user.user_metadata?.bio || '',
         appLock: settings?.app_lock ?? false,
         reviewReminders: settings?.notifications_enabled ?? true,
+        notificationPrefs: settings?.notification_prefs || {}
       }
     }, { status: 200 })
 
@@ -46,7 +47,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, email, profilePicture, phone, address, bio, appLock, reviewReminders } = body
+    const { name, email, profilePicture, phone, address, bio, appLock, reviewReminders, notificationPrefs } = body
 
     // Update info in Supabase Auth Metadata
     if (name || email || profilePicture || phone || address || bio) {
@@ -73,6 +74,7 @@ export async function PUT(req: NextRequest) {
           user_id: user.id,
           ...(appLock !== undefined && { app_lock: appLock }),
           ...(reviewReminders !== undefined && { notifications_enabled: reviewReminders }),
+          ...(notificationPrefs !== undefined && { notification_prefs: notificationPrefs }),
           updated_at: new Date().toISOString(),
         })
 
@@ -100,6 +102,7 @@ export async function PUT(req: NextRequest) {
         bio: body.bio || user.user_metadata?.bio || '',
         appLock: updatedSettings?.app_lock ?? false,
         reviewReminders: updatedSettings?.notifications_enabled ?? true,
+        notificationPrefs: updatedSettings?.notification_prefs || {}
       }
     }, { status: 200 })
 

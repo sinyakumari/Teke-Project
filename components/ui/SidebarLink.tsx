@@ -25,6 +25,11 @@ const navItems = [
     label: 'Profile',
     icon: 'group',
   },
+  {
+    href: '/settings',
+    label: 'Settings',
+    icon: 'settings',
+  },
 ]
 
 export default function SidebarNav() {

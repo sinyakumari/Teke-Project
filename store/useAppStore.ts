@@ -11,6 +11,7 @@ interface User {
   bio?: string
   appLock?: boolean
   reviewReminders?: boolean
+  notificationPrefs?: Record<string, { in_app: boolean; push: boolean }>
 }
 
 interface Training {
@@ -23,6 +24,7 @@ interface Training {
   end_date?: string
   category: string
   is_archived: boolean
+  notifications_enabled: boolean
   description?: string
   pdfs?: { name: string; url: string }[]
 }
@@ -66,6 +68,7 @@ interface AppState {
   userError: string | null
   fetchUser: () => Promise<void>
   setUser: (user: User | null) => void
+  updateUser: (updates: Partial<User>) => Promise<void>
 
   // Trainings
   trainings: Training[]
@@ -136,6 +139,27 @@ export const useAppStore = create<AppState>()(
             set({ user: data.user, userLoading: false }, false, 'user/fetch_success')
           } catch (error: any) {
             set({ userError: error.message, userLoading: false }, false, 'user/fetch_error')
+          }
+        },
+        updateUser: async (updates: Partial<User>) => {
+          const { user } = get()
+          if (!user) return
+          
+          // Optimistic update
+          set({ user: { ...user, ...updates } }, false, 'user/update_optimistic')
+          
+          try {
+            const res = await fetch('/api/user', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updates)
+            })
+            if (!res.ok) throw new Error('Failed to update user settings')
+            const data = await res.json()
+            set({ user: data.user }, false, 'user/update_success')
+          } catch (error: any) {
+            set({ userError: error.message }, false, 'user/update_error')
+            // Rollback is usually handled by fresh fetch or just keeping state and informing user
           }
         },
 
