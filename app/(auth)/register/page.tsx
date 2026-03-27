@@ -58,10 +58,11 @@ export default function RegisterPage() {
     setError('')
     try {
       const supabase = createClient()
+      const origin = window.location.origin.replace(/\.+$/, '')
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback?next=/home`,
+          redirectTo: `${origin}/api/auth/callback?next=/home`,
         },
       })
 
