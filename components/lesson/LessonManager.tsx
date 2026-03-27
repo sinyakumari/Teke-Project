@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import LessonUpload from './LessonUpload'
+import LessonSummarizer from './LessonSummarizer'
 import { useAppStore } from '@/store/useAppStore'
 
 interface Lesson {
@@ -15,13 +16,15 @@ interface Lesson {
   mime_type: string
   order_index: number
   notes?: string
+  summary?: string[]
 }
 
 interface LessonManagerProps {
   trainingId: string
 }
 
-export default function LessonManager({ trainingId }: LessonManagerProps) {
+// Lesson management interface for trainings
+export default function LessonManager({ trainingId }: { trainingId: string }) {
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [loading, setLoading] = useState(true)
   const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false)
@@ -42,13 +45,35 @@ export default function LessonManager({ trainingId }: LessonManagerProps) {
     }
   }
 
-  async function fetchLessons() {
+  async function disconnectGoogle() {
+    try {
+      await fetch('/api/auth/google/disconnect', { method: 'DELETE' })
+      setIsGoogleAuthenticated(false)
+      addToast('Google Drive disconnected. You can reconnect to grant updated permissions.', 'success')
+    } catch (error) {
+      addToast('Failed to disconnect Google Drive', 'error')
+    }
+  }
+
+  async function fetchLessons(autoTrigger = false) {
     setLoading(true)
     try {
       const response = await fetch(`/api/trainings/${trainingId}/lessons`)
       const data = await response.json()
       if (data.success) {
-        setLessons(data.lessons)
+        const newLessons = data.lessons as Lesson[]
+        
+        // Auto-summary logic: Find if there's a new lesson not in current state
+        if (autoTrigger && newLessons.length > lessons.length) {
+          const newLesson = newLessons.find(nl => !lessons.some(l => l.id === nl.id))
+          if (newLesson && !newLesson.summary) {
+            setSummaryTrigger(newLesson.id)
+            setActiveSummaryId(newLesson.id)
+            addToast(`Processing summary for ${newLesson.name}`, 'info')
+          }
+        }
+        
+        setLessons(newLessons)
       }
     } catch (error) {
       console.error('Error fetching lessons:', error)
@@ -108,7 +133,29 @@ export default function LessonManager({ trainingId }: LessonManagerProps) {
     }
   }
 
+  async function updateSummary(lessonId: string, summary: string[]) {
+    try {
+      const response = await fetch(`/api/trainings/${trainingId}/lessons/${lessonId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary })
+      })
+      if (response.ok) {
+        setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, summary } : l))
+      }
+    } catch (error) {
+      console.error('Error updating summary:', error)
+    }
+  }
+
   const [expandedNotes, setExpandedNotes] = useState<string | null>(null)
+  const [summaryTrigger, setSummaryTrigger] = useState<string | null>(null)
+  const [activeSummaryId, setActiveSummaryId] = useState<string | null>(null)
+
+  // Auto-activate summary when summarizing
+  useEffect(() => {
+    if (summaryTrigger) setActiveSummaryId(summaryTrigger)
+  }, [summaryTrigger])
 
   if (loading) {
     return <div className="text-center py-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">Syncing Lessons...</div>
@@ -118,17 +165,15 @@ export default function LessonManager({ trainingId }: LessonManagerProps) {
     <div className="space-y-3">
       <LessonUpload 
         trainingId={trainingId} 
-        onUploadComplete={fetchLessons}
+        onUploadComplete={() => fetchLessons(true)}
         isGoogleAuthenticated={isGoogleAuthenticated}
         onAuthSuccess={() => setIsGoogleAuthenticated(true)}
       />
-
+      
       <div className="space-y-2">
-        {lessons.length > 1 && (
-          <div className="flex items-center justify-between px-1">
-             <h4 className="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest">Training Media</h4>
-          </div>
-        )}
+        <div className="flex items-center justify-between px-1">
+          <h4 className="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest">Training Media</h4>
+        </div>
         
         {lessons.length > 0 && (
           <div className="space-y-1.5">
@@ -146,7 +191,7 @@ export default function LessonManager({ trainingId }: LessonManagerProps) {
                     <div className="overflow-hidden flex-1">
                       <p className="text-[10px] font-extrabold text-[#1a1f2e] truncate leading-tight">{lesson.name}</p>
                       <p className="text-[7px] text-slate-400 font-bold truncate uppercase tracking-tighter">
-                        {(lesson.file_size / (1024 * 1024)).toFixed(2)} MB • {lesson.mime_type?.split('/')[1] || 'FILE'}
+                         {(lesson.file_size / (1024 * 1024)).toFixed(2)} MB • {lesson.mime_type?.split('/')[1] || 'FILE'}
                       </p>
                     </div>
                   </div>
@@ -159,6 +204,30 @@ export default function LessonManager({ trainingId }: LessonManagerProps) {
                     >
                       <span className="material-symbols-outlined text-[13px]">sticky_note_2</span>
                     </button>
+                    
+                    {/* NEW AI Summary Icon - Now toggles activeSummaryId as well */}
+                    <button 
+                      onClick={() => {
+                        const isSummarizing = summaryTrigger === lesson.id
+                        const hasSummary = lesson.summary && lesson.summary.length > 0
+                        if (!hasSummary && !isSummarizing) {
+                           setSummaryTrigger(lesson.id)
+                        } else {
+                           setActiveSummaryId(activeSummaryId === lesson.id ? null : lesson.id)
+                        }
+                      }}
+                      disabled={summaryTrigger === lesson.id}
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all shadow-sm ${
+                        lesson.summary ? (activeSummaryId === lesson.id ? 'bg-blue-600 text-white shadow-blue-100' : 'bg-blue-50 text-blue-400 hover:bg-blue-100') : 'bg-slate-50 text-slate-300 hover:bg-blue-50 hover:text-blue-400'
+                      }`}
+                    >
+                      {summaryTrigger === lesson.id ? (
+                        <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <span className="material-symbols-outlined text-[13px]">auto_awesome</span>
+                      )}
+                    </button>
+
                     <a 
                       href={lesson.file_url} 
                       target="_blank" 
@@ -175,6 +244,19 @@ export default function LessonManager({ trainingId }: LessonManagerProps) {
                     </button>
                   </div>
                 </div>
+                {/* Summary Preview Inline (Only shows if active lesson) */}
+                <div className="mx-2">
+                  {(activeSummaryId === lesson.id || summaryTrigger === lesson.id) && (
+                    <LessonSummarizer 
+                      lesson={lesson} 
+                      onSave={(sum) => updateSummary(lesson.id, sum)} 
+                      triggerGenerate={summaryTrigger === lesson.id}
+                      onGenerateEnd={() => setSummaryTrigger(null)}
+                      isActive={activeSummaryId === lesson.id}
+                    />
+                  )}
+                </div>
+
                 {expandedNotes === lesson.id && (
                   <div className="mx-2 bg-slate-50 border border-slate-200 border-t-0 rounded-b-lg p-2 animate-in slide-in-from-top-1 duration-200">
                     <textarea

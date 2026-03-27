@@ -80,16 +80,16 @@ export default function LessonUpload({ trainingId, onUploadComplete, isGoogleAut
 
   if (!isGoogleAuthenticated) {
     return (
-      <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl mb-3">
+      <div className="flex items-center justify-between p-1 bg-slate-50 border border-slate-200 rounded-lg mb-1">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[14px] text-slate-400">cloud_off</span>
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Connect Drive</span>
+          <span className="material-symbols-outlined text-[10px] text-slate-400">cloud_off</span>
+          <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest leading-none">Connect Drive</span>
         </div>
         <button 
           onClick={handleGoogleAuth}
-          className="px-3 py-1.5 bg-[#1a1f2e] text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-sm flex items-center gap-1"
+          className="px-2 py-0.5 bg-[#1a1f2e] text-white rounded-md text-[7px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-sm flex items-center gap-1"
         >
-          <span className="material-symbols-outlined text-[12px]">add_to_drive</span>
+          <span className="material-symbols-outlined text-[10px]">add_to_drive</span>
           CONNECT
         </button>
       </div>
@@ -97,21 +97,38 @@ export default function LessonUpload({ trainingId, onUploadComplete, isGoogleAut
   }
 
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl p-2.5 shadow-sm space-y-3">
+    <div className="bg-white border border-slate-100 rounded-xl p-1 shadow-sm space-y-1">
       <div className="flex items-center justify-between px-1">
-        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest">Connect Drive</span>
-        <div className="flex items-center gap-2">
-           <div className="flex items-center gap-1">
-             <span className="material-symbols-outlined text-[12px] text-green-500">cloud_done</span>
-             <span className="text-[7px] font-black text-green-600 uppercase tracking-widest mt-0.5">ACTIVE</span>
-           </div>
-           <button 
-             onClick={() => fileInputRef.current?.click()}
-             className="w-7 h-7 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors shadow-sm"
-             title="Attach Media"
-           >
-             <span className="material-symbols-outlined text-[16px]">attach_file</span>
-           </button>
+        <span className="text-[7.5px] font-extrabold text-slate-500 uppercase tracking-widest leading-none">Connect Drive</span>
+        <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-slate-50/50 rounded-md group">
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[9px] text-green-500">cloud_done</span>
+                <span className="text-[6.5px] font-bold text-green-600 uppercase tracking-widest mt-0.5">ACTIVE</span>
+              </div>
+              <button 
+                onClick={async () => {
+                  try {
+                    await fetch('/api/auth/google/disconnect', { method: 'DELETE' })
+                    onUploadComplete() // Refresh state
+                    addToast('Google Drive disconnected', 'success')
+                  } catch (e) {
+                    addToast('Failed to disconnect', 'error')
+                  }
+                }}
+                className="w-3 h-3 flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors"
+                title="Disconnect Google Drive"
+              >
+                <span className="material-symbols-outlined text-[10px]">link_off</span>
+              </button>
+            </div>
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="w-6 h-6 bg-[#1a1f2e] text-white rounded-md flex items-center justify-center hover:bg-slate-800 transition-colors shadow-sm"
+              title="Attach Media"
+            >
+              <span className="material-symbols-outlined text-[14px]">attach_file</span>
+            </button>
         </div>
       </div>
 
