@@ -184,6 +184,26 @@ export default function ProfilePage() {
     alert('Cache cleared successfully!')
   }
 
+  const [isSwitchingDrive, setIsSwitchingDrive] = useState(false)
+
+  async function handleSwitchDrive() {
+    setIsSwitchingDrive(true)
+    try {
+      const res = await fetch('/api/auth/google')
+      const data = await res.json()
+      if (data.success && data.authUrl) {
+        window.location.href = data.authUrl
+      } else {
+        alert('Failed to initialize Drive switch')
+        setIsSwitchingDrive(false)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error switching drive')
+      setIsSwitchingDrive(false)
+    }
+  }
+
   // Only show the main loader if we don't have user data AND it's loading
   if (storeUserLoading && !storeUser) {
     return (
@@ -335,13 +355,19 @@ export default function ProfilePage() {
                                 <div className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-slate-50 transition">
                                     <div className="flex items-center gap-3">
                                         <div className="w-7 h-7 bg-white rounded-lg shadow-sm flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-[#1a1f2e] text-[16px]">notifications</span>
+                                            <span className="material-symbols-outlined text-[#1a1f2e] text-[16px]">add_to_drive</span>
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold text-[#1a1f2e]">Notifications</p>
+                                            <p className="text-xs font-bold text-[#1a1f2e]">Switch Drive</p>
                                         </div>
                                     </div>
-                                    <Toggle enabled={reviewReminders} onChange={(val) => toggleSetting('reviewReminders', val)} />
+                                    <button 
+                                        onClick={handleSwitchDrive}
+                                        disabled={isSwitchingDrive}
+                                        className="h-[24px] px-3 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-[#1a1f2e] hover:bg-slate-100 transition shadow-sm flex items-center justify-center disabled:opacity-50"
+                                    >
+                                        {isSwitchingDrive ? <div className="w-3 h-3 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" /> : 'Switch'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
