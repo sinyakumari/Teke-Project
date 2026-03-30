@@ -55,13 +55,16 @@ export async function POST(
 ) {
   const { id: trainingId, lessonId } = await params
 
-  // 1. Parse manual content
   let manualContent = ''
+  let frontendNotes = ''
+  let existingBullets: string[] = []
   try {
     const contentType = request.headers.get('content-type') || ''
     if (contentType.includes('application/json')) {
       const body = await request.json()
       manualContent = body?.manualContent || ''
+      frontendNotes = body?.notes || ''
+      existingBullets = body?.existingBullets || []
     }
   } catch (_) {}
 
@@ -77,30 +80,52 @@ export async function POST(
 
   console.log(`[Summarizer] Incoming request for: ${lesson.name}`)
 
-  let totalContent = manualContent || (lesson.notes || '').trim()
-  let pdfLog = 'No PDF'
+  let userNotes = (frontendNotes || lesson.notes || '').trim()
+  let mediaContent = manualContent || ''
+  let pdfLog = 'No Media Extracted'
 
-  // 3. Extract PDF (Standard logic)
-  if (!manualContent && lesson.file_id && lesson.mime_type?.includes('pdf')) {
+  // 3. Extract Media (Standard logic)
+  if (!mediaContent && lesson.file_id) {
     try {
       const cookieStore = await cookies()
-      let token = cookieStore.get('google_access_token')?.value
-      if (token) {
-        const buffer = await getFileBuffer({ access_token: token }, lesson.file_id)
-        const pdfParse = require('pdf-parse/lib/pdf-parse.js')
-        const parsed = await pdfParse(buffer)
-        const extracted = (parsed?.text || '').trim().replace(/[^\x20-\x7E\n\r\t]/g, '').replace(/\s{3,}/g, '\n\n').trim()
-        if (extracted.length > 5) {
-          totalContent += `\n\n${extracted}`
-          pdfLog = `Extracted ${extracted.length} chars`
+      let token = cookieStore.get('google_access_token')?.value || ''
+      const refreshToken = cookieStore.get('google_refresh_token')?.value || ''
+      
+      if (!token && refreshToken) {
+        try {
+          const credentials = await refreshAccessToken(refreshToken)
+          token = credentials.access_token || ''
+        } catch (err: any) {
+          console.error('[Summarizer] Token refresh failed:', err.message)
         }
       }
-    } catch (e: any) { pdfLog = `PDF Error: ${e.message}` }
+
+      if (token) {
+        const buffer = await getFileBuffer({ access_token: token }, lesson.file_id) // this is just a buffer
+        
+        if (lesson.mime_type?.includes('pdf')) {
+          const pdfParse = require('pdf-parse/lib/pdf-parse.js')
+          const parsed = await pdfParse(buffer)
+          const extracted = (parsed?.text || '').trim()
+          if (extracted.length > 5) {
+            mediaContent = extracted
+            pdfLog = `Extracted ${extracted.length} chars from PDF`
+          }
+        } 
+        else if (lesson.mime_type?.includes('text') || lesson.mime_type?.includes('json') || lesson.mime_type?.includes('csv')) {
+          const extracted = buffer.toString('utf-8').trim()
+          if (extracted.length > 5) {
+            mediaContent = extracted
+            pdfLog = `Extracted ${extracted.length} chars from text file`
+          }
+        }
+      }
+    } catch (e: any) { pdfLog = `Media Error: ${e.message}` }
   }
 
-  // 4. Validate
-  if (!totalContent || totalContent.length < 5) {
-     return NextResponse.json({ error: 'Lesson is empty.', debug: { pdfLog } }, { status: 400 })
+  // 4. Validate sources
+  if (!userNotes && !mediaContent) {
+     return NextResponse.json({ error: 'No readable text or notes found. Triggering OCR Fallback.', debug: { pdfLog } }, { status: 400 })
   }
 
   // 5. Call Gemini via Loop
@@ -108,23 +133,79 @@ export async function POST(
   if (!apiKey) return NextResponse.json({ error: 'Key Missing' }, { status: 500 })
 
   try {
-    const prompt = `Summarize this lesson content into a short bulleted list (only dashes '-'). Contents: \n\n ${totalContent}`
+    let prompt = `Analyze the following Lesson Sources.
+
+Source 1 (Media Content):
+${mediaContent || 'None'}
+
+Source 2 (User's Manual Notes):
+${userNotes || 'None'}
+
+Task:
+1. Provide a concise, highly relevant title for this lesson (maximum 5 words) on the FIRST line, prefixed exactly with "TITLE: ".
+2. On subsequent lines, provide a concise bulleted list summarizing the key points from both sources combined (using only dashes '-').
+3. Ensure the summary is strictly deduplicated. Merge any points with similar meanings into a single cohesive bullet. Do not repeat facts.`
     
+    if (existingBullets.length > 0) {
+      prompt = `You are a strict, analytical note-taking assistant. I provide you existing bullet points and the latest Lesson Sources.
+
+Source 1 (Media Content):
+${mediaContent || 'None'}
+
+Source 2 (User's Manual Notes):
+${userNotes || 'None'}
+
+Existing Bullet Points:
+${existingBullets.map((s: string) => `- ${s}`).join('\n')}
+
+Task:
+1. Provide a concise title for this lesson (maximum 5 words) on the FIRST line, prefixed exactly with "TITLE: ".
+2. Compare the combined Lesson Sources (Media + Notes) against the Existing Bullet Points.
+3. Identify ONLY entirely new information, facts, or concepts from the Lesson Sources that are NOT semantically captured in the Existing Bullet Points.
+4. Apply rigorous SEMANTIC deduplication: If a new concept has the same or similar meaning to an existing point, or a point you just wrote, DISCARD IT. Do not rephrase.
+5. Provide the new, strictly unique bullet points starting with "- " on subsequent lines.
+6. If absolutely ALL information is already logically covered, you MUST reply EXACTLY with the word "NO_NEW_CONTENT" immediately after the TITLE line.`
+    }
+
     const { text: rawSummary, modelUsed } = await callGeminiInLoop(apiKey, prompt)
     
-    const bullets = rawSummary
-      .split('\n')
-      .map((l: string) => l.replace(/^[-•*]\s*/, '').trim())
-      .filter((l: string) => l.length > 3)
+    let bullets: string[] = []
+    let newTitle: string | undefined = undefined;
+    
+    // First line check to robustly extract title and NO_NEW_CONTENT
+    const lines = rawSummary.split('\n').filter((l: string) => l.trim() !== '')
+    
+    const titleLine = lines.find((l: string) => l.trim().startsWith('TITLE:'))
+    if (titleLine) {
+       newTitle = titleLine.replace('TITLE:', '').trim()
+    }
+
+    // Check if the AI returned NO_NEW_CONTENT anywhere to signify no new bullets
+    if (rawSummary.includes('NO_NEW_CONTENT')) {
+      bullets = []
+    } else {
+      bullets = lines
+        .filter((l: string) => !l.trim().startsWith('TITLE:'))
+        .filter((l: string) => !l.includes('NO_NEW_CONTENT'))
+        .map((l: string) => l.replace(/^[-•*]\s*/, '').trim())
+        .filter((l: string) => l.length > 3)
+    }
+
+    const finalBullets = Array.from(new Set([...existingBullets, ...bullets]))
+
+    const updatePayload: any = { 
+      summary_raw: rawSummary,
+      summary: finalBullets,
+      updated_at: new Date().toISOString()
+    }
+    if (newTitle) {
+      updatePayload.name = newTitle
+    }
 
     // CRITICAL: Save both the raw text and the structured bullets array to the DB immediately
-    await supabase.from('lessons').update({ 
-      summary_raw: rawSummary,
-      summary: bullets,
-      updated_at: new Date().toISOString()
-    }).eq('id', lessonId)
+    await supabase.from('lessons').update(updatePayload).eq('id', lessonId)
 
-    return NextResponse.json({ success: true, bullets, source: pdfLog.includes('Extracted') ? 'PDF' : 'Notes', model: modelUsed })
+    return NextResponse.json({ success: true, bullets, finalBullets, source: pdfLog.includes('Extracted') ? 'PDF' : 'Notes', model: modelUsed, noNewContent: bullets.length === 0 })
 
   } catch (err: any) {
     console.error('[Summarizer] Final Loop Error:', err)

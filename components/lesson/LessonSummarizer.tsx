@@ -19,13 +19,14 @@ interface Lesson {
 
 interface LessonSummarizerProps {
   lesson: Lesson
-  onSave: (summary: string[]) => Promise<void>
+  onSave: (summary: string[], title?: string) => Promise<void>
   triggerGenerate?: boolean
   onGenerateEnd?: () => void
   isActive?: boolean
+  onOpenDrawer?: () => void
 }
 
-export default function LessonSummarizer({ lesson, onSave, triggerGenerate, onGenerateEnd, isActive }: LessonSummarizerProps) {
+export default function LessonSummarizer({ lesson, onSave, triggerGenerate, onGenerateEnd, isActive, onOpenDrawer }: LessonSummarizerProps) {
   const [summary, setSummary] = useState<string[]>(lesson.summary || [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +54,9 @@ export default function LessonSummarizer({ lesson, onSave, triggerGenerate, onGe
     try {
       setLoadingMsg('Analyzing...')
       const response = await fetch(`/api/trainings/${lesson.training_id}/lessons/${lesson.id}/summarize`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: lesson.notes || '', existingBullets: summary })
       })
 
       const data = await response.json().catch(() => ({}))
@@ -66,19 +69,23 @@ export default function LessonSummarizer({ lesson, onSave, triggerGenerate, onGe
             const retryRes = await fetch(`/api/trainings/${lesson.training_id}/lessons/${lesson.id}/summarize`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ manualContent: ocrText })
+              body: JSON.stringify({ manualContent: ocrText, notes: lesson.notes || '', existingBullets: summary })
             })
             const retryData = await retryRes.json();
             if (retryRes.ok) {
-              setSummary(retryData.bullets); await onSave(retryData.bullets)
-              addToast('Summary ready (OCR)', 'success'); return
+              if (retryData.noNewContent) addToast('No new content found', 'info')
+              else addToast('Summary ready (OCR)', 'success')
+              setSummary(retryData.finalBullets || summary); await onSave(retryData.finalBullets || summary, retryData.newTitle)
+              return
             }
          }
       }
 
       if (!response.ok) throw new Error(data.error || 'Failed to generate summary.')
-      setSummary(data.bullets); await onSave(data.bullets)
-      addToast('Summary generated', 'success')
+      
+      if (data.noNewContent) addToast('No new content found', 'info')
+      else addToast('Summary generated', 'success')
+      setSummary(data.finalBullets || summary); await onSave(data.finalBullets || summary, data.newTitle)
 
     } catch (err: any) {
       setError(err.message || 'Error occurred.')
@@ -115,9 +122,14 @@ export default function LessonSummarizer({ lesson, onSave, triggerGenerate, onGe
       ) : summary.length > 0 ? (
         <div className="bg-white border-b border-slate-50 p-2 animate-in fade-in duration-300">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">Summary Overview</h3>
+            <h3 className="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">
+              {lesson.name} Outline
+            </h3>
             <button
-              onClick={() => setDrawerOpen(true)}
+              onClick={() => {
+                if (onOpenDrawer) onOpenDrawer()
+                setDrawerOpen(true)
+              }}
               className="flex items-center gap-0.5 text-blue-500 hover:text-blue-700 text-[8px] font-bold uppercase tracking-widest transition-colors"
             >
               <span className="material-symbols-outlined text-[12px]">open_in_new</span>

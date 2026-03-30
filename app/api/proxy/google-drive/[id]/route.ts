@@ -39,7 +39,7 @@ export async function GET(
       // Convert to ArrayBuffer for the Response constructor
       const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
 
-      return new Response(arrayBuffer, {
+      return new Response(arrayBuffer as ArrayBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
           'Access-Control-Allow-Origin': '*', // Crucial for client-side PDF.js access

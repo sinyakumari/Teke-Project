@@ -48,7 +48,7 @@ export async function POST(
           if (!accessToken && refreshToken) {
              console.log('Refreshing expired Google Drive token...')
              const credentials = await refreshAccessToken(refreshToken)
-             accessToken = credentials.access_token
+             accessToken = credentials.access_token as string | undefined
           }
           
           if (accessToken) {
