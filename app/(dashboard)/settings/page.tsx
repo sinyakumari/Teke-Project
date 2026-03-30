@@ -113,6 +113,37 @@ export default function SettingsPage() {
             <NotificationDropdown />
           </div>
 
+          {/* New Section: Study Scheduler */}
+          <div className="mb-4 mt-12">
+             <h2 className="text-lg font-semibold text-[#1a1f2e]">Study Scheduler</h2>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-12">
+            <div className="flex items-center justify-between gap-8 max-w-2xl">
+              <div className="space-y-1">
+                <p className="text-[14px] font-bold text-[#1a1f2e]">Daily Effort Capacity</p>
+                <p className="text-[12px] text-slate-500">Maximum hours the Smart Scheduler will allocate per day. Recommended: 3-5 hours.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-slate-100 rounded-xl p-1">
+                  {[2, 4, 6, 8].map((h) => (
+                    <button
+                      key={h}
+                      onClick={() => updateUser({ daily_study_limit: h })}
+                      className={`px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${
+                        (user as any)?.daily_study_limit === h 
+                          ? 'bg-white text-indigo-600 shadow-sm shadow-slate-200' 
+                          : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      {h}H
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Section 1: Training Notifications */}
           <div className="mb-4 mt-8">
              <h2 className="text-lg font-semibold text-[#1a1f2e]">Training Notifications</h2>

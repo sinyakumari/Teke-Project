@@ -11,6 +11,7 @@ interface User {
   bio?: string
   appLock?: boolean
   reviewReminders?: boolean
+  daily_study_limit?: number
   notificationPrefs?: Record<string, { in_app: boolean; push: boolean }>
 }
 
@@ -41,6 +42,18 @@ interface Task {
   training_id?: string
   training?: { id: string; title: string }
   attachments?: { name: string; url: string; type: string }[]
+}
+
+interface StudyTask {
+  id: string
+  title: string
+  deadline: string
+  effort_level: 'low' | 'medium' | 'high'
+  effort_hours: number
+  status: 'pending' | 'in_progress' | 'complete'
+  user_id?: string
+  created_at?: string
+  updated_at?: string
 }
 
 interface Toast {
@@ -90,6 +103,14 @@ interface AppState {
   deleteTask: (id: string) => void
   toggleTaskStatus: (id: string) => Promise<void>
   deleteTaskAction: (id: string) => Promise<void>
+
+  // Study Tasks
+  studyTasks: StudyTask[]
+  studyTasksLoading: boolean
+  fetchStudyTasks: () => Promise<void>
+  addStudyTask: (task: StudyTask) => void
+  toggleStudyTaskStatus: (id: string) => Promise<void>
+  deleteStudyTask: (id: string) => Promise<void>
 
   // Notifications
   notifications: Notification[]
@@ -390,6 +411,97 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             tasks: state.tasks.filter(t => t.id !== id)
           }), false, 'tasks/delete')
+        },
+
+        // Study Tasks
+        studyTasks: [],
+        studyTasksLoading: false,
+        fetchStudyTasks: async () => {
+          if (get().studyTasksLoading) return
+          set({ studyTasksLoading: true })
+          try {
+            const res = await fetch('/api/study-tasks')
+            if (!res.ok) throw new Error('Failed to fetch study tasks')
+            const tasks = await res.json()
+            set({ studyTasks: tasks, studyTasksLoading: false })
+          } catch (error: any) {
+            console.error('Study tasks fetch failed:', error)
+            set({ studyTasksLoading: false })
+          }
+        },
+        addStudyTask: async (task) => {
+          set({ studyTasksLoading: true })
+          try {
+            const res = await fetch('/api/study-tasks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(task)
+            })
+            if (!res.ok) throw new Error('Failed to add study task')
+            const data = await res.json()
+            set((state) => ({ 
+              studyTasks: [data, ...state.studyTasks],
+              studyTasksLoading: false 
+            }))
+            get().addToast(`"${task.title}" added to schedule`, 'success')
+          } catch (error: any) {
+            console.error('Study task add failed:', error)
+            set({ studyTasksLoading: false })
+            get().addToast('Failed to save task to database', 'error')
+          }
+        },
+        toggleStudyTaskStatus: async (id) => {
+          const { studyTasks } = get()
+          const task = studyTasks.find(t => t.id === id)
+          if (!task) return
+          const newStatus = task.status === 'complete' ? 'pending' : 'complete'
+          
+          // Optimistic update
+          set((state) => ({
+            studyTasks: state.studyTasks.map(t => t.id === id ? { ...t, status: newStatus } : t)
+          }))
+
+          try {
+            const res = await fetch(`/api/study-tasks/${id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: newStatus })
+            })
+            if (!res.ok) throw new Error('Failed to update status')
+            get().addToast(`Task marked as ${newStatus}`, 'info')
+          } catch (error) {
+            console.error('Study task status toggle failed:', error)
+            get().addToast('Failed to sync status with server', 'error')
+            // Rollback
+            set((state) => ({
+              studyTasks: state.studyTasks.map(t => t.id === id ? { ...t, status: task.status } : t)
+            }))
+          }
+        },
+        deleteStudyTask: async (id) => {
+          const { studyTasks } = get()
+          const task = studyTasks.find(t => t.id === id)
+          if (!task) return
+          
+          // Optimistic delete
+          set((state) => ({
+            studyTasks: state.studyTasks.filter(t => t.id !== id)
+          }))
+
+          try {
+            const res = await fetch(`/api/study-tasks/${id}`, {
+              method: 'DELETE'
+            })
+            if (!res.ok) throw new Error('Failed to delete task')
+            get().addToast('Task removed from schedule', 'info')
+          } catch (error) {
+            console.error('Study task deletion failed:', error)
+            get().addToast('Failed to delete from database', 'error')
+            // Rollback
+            set((state) => ({
+              studyTasks: [...state.studyTasks, task]
+            }))
+          }
         },
 
         // Notifications

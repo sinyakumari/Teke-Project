@@ -16,6 +16,11 @@ const navItems = [
     icon: 'work',
   },
   {
+    href: '/scheduler',
+    label: 'Scheduler',
+    icon: 'auto_awesome',
+  },
+  {
     href: '/tasks',
     label: 'Tasks',
     icon: 'check_box',

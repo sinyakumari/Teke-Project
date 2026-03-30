@@ -49,6 +49,28 @@ const navItems = [
         ),
     },
     {
+        label: 'Scheduler',
+        href: '/scheduler',
+        icon: (active: boolean) => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect 
+                    x="3" 
+                    y="4" 
+                    width="18" 
+                    height="18" 
+                    rx="2" 
+                    ry="2" 
+                    fill={active ? '#1a1f2e' : 'none'}
+                    stroke={active ? '#1a1f2e' : '#9ca3af'}
+                    strokeWidth="2"
+                />
+                <line x1="16" y1="2" x2="16" y2="6" stroke={active ? 'white' : '#9ca3af'} strokeWidth="2" strokeLinecap="round" />
+                <line x1="8" y1="2" x2="8" y2="6" stroke={active ? 'white' : '#9ca3af'} strokeWidth="2" strokeLinecap="round" />
+                <line x1="3" y1="10" x2="21" y2="10" stroke={active ? 'white' : '#9ca3af'} strokeWidth="2" strokeLinecap="round" />
+            </svg>
+        ),
+    },
+    {
         label: 'Tasks',
         href: '/tasks',
         icon: (active: boolean) => (

@@ -27,6 +27,7 @@ export async function GET() {
         bio: user.user_metadata?.bio || '',
         appLock: settings?.app_lock ?? false,
         reviewReminders: settings?.notifications_enabled ?? true,
+        daily_study_limit: settings?.daily_study_limit ?? 4,
       }
     }
 
@@ -66,7 +67,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { name, email, profilePicture, phone, address, bio, appLock, reviewReminders, notificationPrefs } = body
+    const { name, email, profilePicture, phone, address, bio, appLock, reviewReminders, notificationPrefs, daily_study_limit } = body
 
     // Update info in Supabase Auth Metadata
     if (name || email || profilePicture || phone || address || bio) {
@@ -107,13 +108,14 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update settings in user_settings table
-    if (appLock !== undefined || reviewReminders !== undefined) {
+    if (appLock !== undefined || reviewReminders !== undefined || daily_study_limit !== undefined) {
       const { error } = await supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
           ...(appLock !== undefined && { app_lock: appLock }),
           ...(reviewReminders !== undefined && { notifications_enabled: reviewReminders }),
+          ...(daily_study_limit !== undefined && { daily_study_limit }),
           updated_at: new Date().toISOString(),
         })
 
@@ -141,6 +143,7 @@ export async function PUT(req: NextRequest) {
         bio: body.bio || user.user_metadata?.bio || '',
         appLock: updatedSettings?.app_lock ?? false,
         reviewReminders: updatedSettings?.notifications_enabled ?? true,
+        daily_study_limit: updatedSettings?.daily_study_limit ?? 4,
       }
     }
 
