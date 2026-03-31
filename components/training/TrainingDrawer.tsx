@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/useAppStore'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import TaskCard from '@/components/ui/TaskCard'
 import LessonManager from '@/components/lesson/LessonManager'
+import WorksheetManager from '@/components/worksheet/WorksheetManagerNew'
 
 interface TrainingDrawerProps {
   trainingId: string | null
@@ -45,7 +46,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
   )
 
   // UI state
-  const [activeTab, setActiveTab] = useState<'Lessons' | 'Tasks'>('Lessons')
+  const [activeTab, setActiveTab] = useState<'Lessons' | 'Tasks' | 'Worksheet'>('Lessons')
   const [actionLoading, setActionLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState(EMPTY_FORM)
@@ -350,7 +351,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
             <SegmentedControl
               options={[
                 { label: 'Lessons', value: 'Lessons' },
-                { label: 'Tasks', value: 'Tasks' }
+                { label: 'Tasks', value: 'Tasks' },
+                { label: 'Worksheet', value: 'Worksheet' }
               ]}
               value={activeTab}
               onChange={(v) => setActiveTab(v as any)}
@@ -410,6 +412,12 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                     />
                   ))
                 )}
+              </div>
+            )}
+
+            {!isCreate && activeTab === 'Worksheet' && (
+              <div className="pt-1">
+                 <WorksheetManager trainingId={trainingId!} trainingTitle={training?.title || ''} />
               </div>
             )}
           </div>

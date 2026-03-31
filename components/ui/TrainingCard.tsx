@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDateRange } from '@/lib/utils'
+import { formatDateRange, formatDateCustom } from '@/lib/utils'
 
 interface Training {
     id: string
@@ -149,12 +149,12 @@ export default function TrainingCard({
                 </span>
             </div>
 
-            <div className="flex items-center gap-1 text-gray-500 text-sm mb-3">
+            <div className="flex items-center gap-1 text-gray-500 text-[11px] mb-3 font-medium uppercase tracking-wider">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <rect x="3" y="4" width="18" height="18" rx="2" stroke="#6b7280" strokeWidth="2" />
                     <path d="M3 9H21M8 2V6M16 2V6" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" />
                 </svg>
-                <span>{formatDateRange(training.start_date, training.end_date)}</span>
+                <span>{formatDateCustom(training.end_date)}</span>
             </div>
 
             <div className="flex items-center gap-2">
