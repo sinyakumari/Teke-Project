@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const host = request.headers.get('host')
   
   // 1. Handle Trailing Dot Origin (e.g., localhost:3000.)
