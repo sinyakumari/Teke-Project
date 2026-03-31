@@ -8,7 +8,7 @@ import TaskCard from '@/components/ui/TaskCard'
 import { createClient } from '@/lib/supabase'
 import { useRef } from 'react'
 import LessonManager from '@/components/lesson/LessonManager'
-import WorksheetManager from '@/components/worksheet/WorksheetManager'
+import WorksheetManager from '@/components/worksheet/WorksheetManagerNew'
 
 interface TrainingDrawerProps {
   trainingId: string | null

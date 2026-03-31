@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDateRange } from '@/lib/utils'
+import { formatDateRange, formatDateCustom } from '@/lib/utils'
 
 interface Training {
   id: string
@@ -131,11 +131,11 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
                         {training.instructor}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap">
-                        {formatDateRange(training.start_date, training.end_date)}
-                    </span>
-                  </td>
+                <td className="px-6 py-4">
+                  <span className="text-[11px] font-medium text-slate-500 whitespace-nowrap uppercase tracking-wider">
+                      {formatDateCustom(training.end_date)}
+                  </span>
+                </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex flex-col items-end gap-1.5">
                         <div className="flex items-center gap-2">
