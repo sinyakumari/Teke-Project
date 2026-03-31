@@ -53,8 +53,10 @@ export default function WorksheetManager({ trainingId, trainingTitle }: Workshee
   }, [trainingId])
 
   async function fetchLessons() {
+    if (!trainingId) return
     try {
       const response = await fetch(`/api/trainings/${trainingId}/lessons`)
+      if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
       if (data.success) {
         setLessons(data.lessons || [])
@@ -281,8 +283,8 @@ export default function WorksheetManager({ trainingId, trainingTitle }: Workshee
               {/* COMPACT CLEAN HEADER */}
               <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between min-h-[60px] shrink-0 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.01)]">
                  <div className="min-w-0 pr-4">
-                    <h1 className="text-[17px] font-bold text-[#1a1f2e] leading-tight mb-0.5 truncate">{activeWorksheet.name}</h1>
-                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest truncate">{activeWorksheet.lessonName || activeWorksheet.lessons?.name}</p>
+                    <h1 className="text-[17px] font-bold text-[#1a1f2e] leading-tight mb-0.5 truncate">{(activeWorksheet as any).name}</h1>
+                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest truncate">{(activeWorksheet as any).lessonName || (activeWorksheet as any).lessons?.name}</p>
                  </div>
                  <button 
                   onClick={() => setActiveWorksheetId(null)}
