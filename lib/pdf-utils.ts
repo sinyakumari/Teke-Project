@@ -6,10 +6,10 @@
  */
 
 export async function extractTextFromPdf(pdfUrl: string): Promise<string> {
-  // Dynamically import to prevent server-side DOMMatrix crash
+  // Use specific build path for legacy/stable browser support
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
   
-  // Use locally hosted worker (copied from node_modules to /public)
+  // Use locally hosted worker in /public
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
   console.log('[PDF] Fetching document from:', pdfUrl)

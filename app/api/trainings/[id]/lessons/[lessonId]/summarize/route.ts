@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getFileBuffer, refreshAccessToken } from '@/lib/google-drive'
 import { cookies } from 'next/headers'
+import SHA256 from 'crypto-js/sha256'
 
 /**
  * Robust Multi-Model Gemini Call
@@ -9,18 +10,18 @@ import { cookies } from 'next/headers'
 async function callGeminiInLoop(apiKey: string, promptContent: string) {
   // Ordered list of free models CONFIRMED to be in your API list
   const modelsToTry = [
-    'gemini-2.0-flash-lite',
-    'gemini-flash-lite-latest',
-    'gemini-2.0-flash', 
-    'gemini-pro-latest'
+    'models/gemini-2.5-flash',
+    'models/gemini-flash-latest',
+    'models/gemini-2.0-flash',
+    'models/gemini-2.0-flash-lite'
   ]
 
   let lastError = 'No models tried'
 
   for (const modelName of modelsToTry) {
     try {
-      console.log(`[Summarizer] Attempting with model: ${modelName}...`)
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`
+      const fullModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`
+      const url = `https://generativelanguage.googleapis.com/v1beta/${fullModelName}:generateContent?key=${apiKey}`
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,44 +129,53 @@ export async function POST(
      return NextResponse.json({ error: 'No readable text or notes found. Triggering OCR Fallback.', debug: { pdfLog } }, { status: 400 })
   }
 
+  // --- CONTENT CHANGE DETECTION (Step 1) ---
+  const currentContentRaw = (mediaContent || '') + (userNotes || '') + (lesson.file_id || '')
+  const currentHash = SHA256(currentContentRaw).toString()
+
+  if (lesson.content_hash === currentHash && existingBullets.length > 0) {
+    console.log('[Summarizer] No change detected via hash. Skipping AI.')
+    return NextResponse.json({ 
+      success: true, 
+      noNewContent: true, 
+      message: 'No changes detected',
+      finalBullets: existingBullets 
+    })
+  }
+
   // 5. Call Gemini via Loop
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'Key Missing' }, { status: 500 })
 
   try {
-    let prompt = `Analyze the following Lesson Sources.
+    let prompt = `You are an AI summarization agent. Your task is to generate concise bullets from the lesson content provided. Follow these strict rules:
 
-Source 1 (Media Content):
-${mediaContent || 'None'}
+1. You are provided with two inputs:
+   - existing_summary: the bullets already generated for this lesson.
+   - new_content: the full lesson content.
 
-Source 2 (User's Manual Notes):
-${userNotes || 'None'}
+2. Do NOT repeat, paraphrase, or modify any bullets already in existing_summary.
 
-Task:
-1. Provide a concise, highly relevant title for this lesson (maximum 5 words) on the FIRST line, prefixed exactly with "TITLE: ".
-2. On subsequent lines, provide a concise bulleted list summarizing the key points from both sources combined (using only dashes '-').
-3. Ensure the summary is strictly deduplicated. Merge any points with similar meanings into a single cohesive bullet. Do not repeat facts.`
-    
-    if (existingBullets.length > 0) {
-      prompt = `You are a strict, analytical note-taking assistant. I provide you existing bullet points and the latest Lesson Sources.
+3. Only generate bullets for content in new_content that is NOT already covered in existing_summary.
 
-Source 1 (Media Content):
-${mediaContent || 'None'}
+4. Use clear, concise bullet points:
+   - Start each bullet with "•"
+   - Keep each bullet focused on one idea
+   - Avoid unnecessary repetition or filler words
 
-Source 2 (User's Manual Notes):
-${userNotes || 'None'}
+5. If no new content is found (i.e., everything is already in existing_summary), respond with:
+   "No new bullets needed."
 
-Existing Bullet Points:
-${existingBullets.map((s: string) => `- ${s}`).join('\n')}
+6. Maintain consistent style with existing_summary (if any).
 
-Task:
-1. Provide a concise title for this lesson (maximum 5 words) on the FIRST line, prefixed exactly with "TITLE: ".
-2. Compare the combined Lesson Sources (Media + Notes) against the Existing Bullet Points.
-3. Identify ONLY entirely new information, facts, or concepts from the Lesson Sources that are NOT semantically captured in the Existing Bullet Points.
-4. Apply rigorous SEMANTIC deduplication: If a new concept has the same or similar meaning to an existing point, or a point you just wrote, DISCARD IT. Do not rephrase.
-5. Provide the new, strictly unique bullet points starting with "- " on subsequent lines.
-6. If absolutely ALL information is already logically covered, you MUST reply EXACTLY with the word "NO_NEW_CONTENT" immediately after the TITLE line.`
-    }
+7. Only output the bullet points; do not include explanations or extra text.
+
+existing_summary: 
+${existingBullets.length > 0 ? existingBullets.map((s: string) => `• ${s}`).join('\n') : 'None'}
+
+new_content:
+${mediaContent || ''}
+${userNotes || ''}`
 
     const { text: rawSummary, modelUsed } = await callGeminiInLoop(apiKey, prompt)
     
@@ -180,32 +190,41 @@ Task:
        newTitle = titleLine.replace('TITLE:', '').trim()
     }
 
-    // Check if the AI returned NO_NEW_CONTENT anywhere to signify no new bullets
-    if (rawSummary.includes('NO_NEW_CONTENT')) {
+    // Check if the AI returned NO_NEW_CONTENT or the new "No new bullets needed" phrase
+    if (rawSummary.includes('NO_NEW_CONTENT') || rawSummary.includes('No new bullets needed')) {
       bullets = []
     } else {
       bullets = lines
         .filter((l: string) => !l.trim().startsWith('TITLE:'))
         .filter((l: string) => !l.includes('NO_NEW_CONTENT'))
-        .map((l: string) => l.replace(/^[-•*]\s*/, '').trim())
-        .filter((l: string) => l.length > 3)
+        .filter((l: string) => !l.includes('No new bullets needed'))
+        .map((l: string) => l.replace(/^[•\-\*]\s*/, '').trim())
+        .filter((l: string) => l.length > 2)
     }
 
     const finalBullets = Array.from(new Set([...existingBullets, ...bullets]))
 
-    const updatePayload: any = { 
-      summary_raw: rawSummary,
-      summary: finalBullets,
-      updated_at: new Date().toISOString()
-    }
-    if (newTitle) {
-      updatePayload.name = newTitle
+    if (bullets.length > 0) {
+      const updatePayload: any = { 
+        summary_raw: rawSummary,
+        summary: finalBullets,
+        content_hash: currentHash,
+        updated_at: new Date().toISOString()
+      }
+      if (newTitle) {
+        updatePayload.name = newTitle
+      }
+      await supabase.from('lessons').update(updatePayload).eq('id', lessonId)
     }
 
-    // CRITICAL: Save both the raw text and the structured bullets array to the DB immediately
-    await supabase.from('lessons').update(updatePayload).eq('id', lessonId)
-
-    return NextResponse.json({ success: true, bullets, finalBullets, source: pdfLog.includes('Extracted') ? 'PDF' : 'Notes', model: modelUsed, noNewContent: bullets.length === 0 })
+    return NextResponse.json({ 
+      success: true, 
+      bullets, 
+      finalBullets, 
+      source: pdfLog.includes('Extracted') ? 'PDF' : 'Notes', 
+      model: modelUsed, 
+      noNewContent: bullets.length === 0 
+    })
 
   } catch (err: any) {
     console.error('[Summarizer] Final Loop Error:', err)

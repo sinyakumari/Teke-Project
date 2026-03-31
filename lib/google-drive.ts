@@ -141,12 +141,35 @@ export async function getFileBuffer(
     { responseType: 'arraybuffer' }
   )
 
-  if (!response.data || !(response.data instanceof ArrayBuffer)) {
-    console.error('[GoogleDrive] Unexpected response type from Google Drive API:', typeof response.data)
-    throw new Error('Failed to retrieve file content from Google Drive (Invalid response type)')
+  const data = response.data
+
+  if (!data) {
+    throw new Error('Failed to retrieve file content from Google Drive (empty response)')
   }
 
-  const buffer = Buffer.from(response.data)
+  let buffer: Buffer
+
+  if (Buffer.isBuffer(data)) {
+    // Already a Node.js Buffer
+    buffer = data
+  } else if (data instanceof ArrayBuffer) {
+    // Standard ArrayBuffer
+    buffer = Buffer.from(data)
+  } else if (ArrayBuffer.isView(data)) {
+    // Typed array (Uint8Array, etc.)
+    buffer = Buffer.from(data.buffer, data.byteOffset, data.byteLength)
+  } else if (typeof data === 'object') {
+    // Fallback: googleapis sometimes wraps the arraybuffer in an object
+    // Try to convert via JSON stringification path or treat as buffer-like
+    try {
+      buffer = Buffer.from(data as any)
+    } catch {
+      throw new Error(`[GoogleDrive] Could not convert response to Buffer. Type: ${typeof data}, Constructor: ${(data as any)?.constructor?.name}`)
+    }
+  } else {
+    throw new Error(`[GoogleDrive] Unexpected response data type: ${typeof data}`)
+  }
+
   console.log(`[GoogleDrive] Downloaded ${buffer.length} bytes for ${fileId}`)
   return buffer
 }

@@ -89,14 +89,17 @@ export async function POST(
       return Response.json({ error: message }, { status: 400 })
     }
 
-    const prompt = `You are a professional educational summarizer. 
-Create a concise, structured bullet-point summary of the following lesson material.
+    const prompt = `You are a professional educational summarizer.
+Create a concise bullet-point summary of the following lesson material.
 
 Rules:
-- Strictly bullet points.
-- No paragraphs. No introductory or concluding text.
-- Focused and technical.
-- Accurate.
+- Every bullet must be a complete, self-contained, meaningful sentence.
+- Each bullet must contain the actual fact or concept — never just a label or heading word like "Definition", "Example", "Introduction", etc.
+- If something is a definition, write it as: "X is Y" — not just "Definition".
+- If something is an example, embed it into the sentence: "For example, X demonstrates Y" — not just "Example".
+- No paragraphs. No introductory or concluding text. No section headers.
+- Focused, technical, and accurate.
+
 
 Lesson Content:
 ${extractedText}`

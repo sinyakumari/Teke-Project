@@ -83,9 +83,13 @@ export default function LessonSummarizer({ lesson, onSave, triggerGenerate, onGe
 
       if (!response.ok) throw new Error(data.error || 'Failed to generate summary.')
       
-      if (data.noNewContent) addToast('No new content found', 'info')
-      else addToast('Summary generated', 'success')
-      setSummary(data.finalBullets || summary); await onSave(data.finalBullets || summary, data.newTitle)
+      if (data.noNewContent) {
+        addToast('No changes detected', 'info')
+      } else {
+        addToast('Summary updated', 'success')
+        setSummary(data.finalBullets || summary)
+        await onSave(data.finalBullets || summary, data.newTitle)
+      }
 
     } catch (err: any) {
       setError(err.message || 'Error occurred.')
