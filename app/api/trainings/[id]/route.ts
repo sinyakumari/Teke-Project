@@ -45,20 +45,23 @@ export async function PUT(
     // Build update object with only provided fields
     const updateData: any = {}
     if (body.title !== undefined) updateData.title = body.title
-    if (body.instructor !== undefined) updateData.instructor = body.instructor
-    if (body.locationType !== undefined) updateData.location_type = body.locationType.toLowerCase()
-    if (body.locationDetail !== undefined) updateData.location_detail = body.locationDetail
+    if (body.instructor !== undefined) updateData.instructor = body.instructor || null
+    if (body.locationType !== undefined) updateData.location_type = body.locationType?.toLowerCase() || null
+    if (body.locationDetail !== undefined) updateData.location_detail = body.locationDetail || null
     if (body.structure !== undefined) updateData.structure = body.structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
-    if (body.startDate !== undefined) updateData.start_date = body.startDate
-    if (body.endDate !== undefined) updateData.end_date = body.endDate
+    if (body.startDate !== undefined) updateData.start_date = body.startDate || null
+    if (body.endDate !== undefined) updateData.end_date = body.endDate || null
     if (body.duration !== undefined) updateData.duration_value = body.duration ? parseInt(body.duration) : null
-    if (body.unit !== undefined) updateData.duration_unit = body.unit.toLowerCase()
-    if (body.category !== undefined) updateData.category = body.category.toLowerCase()
-    if (body.vision !== undefined) updateData.vision = body.vision
-    if (body.objective !== undefined) updateData.mission = body.objective
-    if (body.notes !== undefined) updateData.notes_delta = { text: body.notes }
+    if (body.unit !== undefined) updateData.duration_unit = body.unit?.toLowerCase() || null
+    if (body.category !== undefined) updateData.category = body.category?.toLowerCase() || null
+    if (body.vision !== undefined) updateData.vision = body.vision || null
+    if (body.objective !== undefined) updateData.mission = body.objective || null
+    if (body.notes !== undefined) updateData.notes_delta = body.notes ? { text: body.notes } : null
     if (body.notifications_enabled !== undefined) updateData.notifications_enabled = body.notifications_enabled
     if (body.is_archived !== undefined) updateData.is_archived = body.is_archived
+
+    console.log('[PUT Training] updateData:', JSON.stringify(updateData))
+    console.log('[PUT Training] id:', id, 'user_id:', user.id)
 
     const { data: training, error } = await supabase
       .from('trainings')
@@ -68,14 +71,19 @@ export async function PUT(
       .select()
       .single()
 
-    if (error || !training) {
-      return NextResponse.json({ error: 'Training not found' }, { status: 404 })
+    if (error) {
+      console.error('[PUT Training] Supabase error:', error)
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    if (!training) {
+      return NextResponse.json({ error: 'Training not found after update' }, { status: 404 })
     }
 
     return NextResponse.json({ training }, { status: 200 })
-  } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[PUT Training] Error:', error)
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
 }
 

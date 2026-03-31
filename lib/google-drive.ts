@@ -17,12 +17,15 @@ export function createOAuth2Client() {
   return new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 }
 
+console.log('[GoogleDrive] Using REDIRECT_URI:', REDIRECT_URI)
+
 export function getAuthUrl() {
   const client = createOAuth2Client()
   return client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
     scope: SCOPES,
+    redirect_uri: REDIRECT_URI // Directly ensure it's passed
   })
 }
 

@@ -232,7 +232,7 @@ export default function LessonManager({ trainingId }: { trainingId: string }) {
         trainingId={trainingId} 
         onUploadComplete={() => fetchLessons(true)}
         isGoogleAuthenticated={isGoogleAuthenticated}
-        onAuthSuccess={() => setIsGoogleAuthenticated(true)}
+        onAuthSuccess={() => checkGoogleAuth()}
       />
       
       <div className="space-y-2">

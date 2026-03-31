@@ -123,8 +123,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
-      if (!res.ok) throw new Error('Failed')
       const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed')
       if (isCreate) {
         addTrainingStore(result.training)
         addToast('Training created!', 'success')
@@ -140,8 +140,8 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         })
         addToast('Training saved', 'success')
       }
-    } catch {
-      addToast('Failed to save training', 'error')
+    } catch (err: any) {
+      addToast(err.message || 'Failed to save training', 'error')
     } finally {
       setActionLoading(false)
     }

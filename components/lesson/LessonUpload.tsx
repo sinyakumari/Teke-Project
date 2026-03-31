@@ -110,7 +110,7 @@ export default function LessonUpload({ trainingId, onUploadComplete, isGoogleAut
                 onClick={async () => {
                   try {
                     await fetch('/api/auth/google/disconnect', { method: 'DELETE' })
-                    onUploadComplete() // Refresh state
+                    onAuthSuccess() // Reset state to check auth again
                     addToast('Google Drive disconnected', 'success')
                   } catch (e) {
                     addToast('Failed to disconnect', 'error')
