@@ -8,9 +8,12 @@ interface Worksheet {
   name: string
   training_id: string
   lesson_id: string
+  trainingId?: string
+  lessonId?: string
   lessonName?: string
   lessons?: { id: string; name: string }
   created_at: string
+  createdAt?: string
   questions: any[]
 }
 
