@@ -108,7 +108,7 @@ function TasksPageContent() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide sticky top-0 bg-[#f2f2f7] z-10">
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide sticky top-0 bg-[#f2f2f7] z-10">
             {filterOptions.map((filter) => (
               <button
                 key={filter}
