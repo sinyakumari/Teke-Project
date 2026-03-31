@@ -344,13 +344,13 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         />
 
         {/* Header */}
-        <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 min-h-[64px]">
+        <div className="px-4 py-2.5 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 min-h-[56px] shadow-sm">
           <div className="flex-1 min-w-0 pr-2">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Task Name"
-              className="text-[17px] font-black text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300"
+              className="text-[15px] font-black text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300 transition-all focus:text-[16px]"
             />
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="relative group">
@@ -529,42 +529,55 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   </div>
                 </div>
                 {commentMedia && (
-                  <div className="relative w-12 h-12 bg-slate-50 rounded-lg overflow-hidden border border-slate-100 group mt-2">
-                    <img src={commentMedia} alt="Media preview" className="w-full h-full object-cover" />
+                  <div className="relative mt-3 p-1.5 w-fit bg-slate-50 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 pr-4 group transition-all">
+                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-white border border-slate-100 shadow-inner">
+                       <img src={commentMedia} alt="Media preview" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                       <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[11px] text-indigo-400">check_circle</span>
+                          Media Attached
+                       </span>
+                    </div>
                     <button 
                       onClick={() => setCommentMedia(null)}
-                      className="absolute top-1 right-1 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white border border-slate-200 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center shadow-sm hover:border-red-200 transition-all opacity-0 group-hover:opacity-100"
                     >
-                       <span className="material-symbols-outlined text-[10px]">close</span>
+                       <span className="material-symbols-outlined text-[11px] font-bold">close</span>
                     </button>
                   </div>
                 )}
 
                 {/* Comments List */}
-                <div className="space-y-2">
+                <div className="space-y-3 mt-4">
                   {fetchingComments ? (
                     <div className="text-center py-6 text-slate-300 font-black text-[8px] uppercase tracking-widest animate-pulse">Syncing Thread...</div>
                   ) : comments.length === 0 ? null : (
                     comments.map((c) => (
-                      <div key={c.id} className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm group">
-                        <div className="flex items-center justify-between mb-1.5">
-                          {c.media_url ? (
-                            <a href={c.media_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md hover:bg-indigo-100 transition-colors w-fit">
-                              <span className="material-symbols-outlined text-[10px]">image</span>
-                              MEDIA
-                            </a>
-                          ) : <div />}
+                      <div key={c.id} className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm group hover:border-slate-200 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-[8px] font-bold text-slate-300">{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            <button 
-                              onClick={() => handleDeleteComment(c.id)}
-                              className="text-slate-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                              <span className="material-symbols-outlined text-[14px]">delete</span>
-                            </button>
+                             <div className="w-5 h-5 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
+                               <span className="material-symbols-outlined text-[10px] text-slate-400">person</span>
+                             </div>
+                             <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
+                          <button 
+                            onClick={() => handleDeleteComment(c.id)}
+                            className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">delete</span>
+                          </button>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-600 leading-relaxed">{c.content}</p>
+                        <p className="text-[11px] font-medium text-slate-700 leading-relaxed">{c.content}</p>
+                        {c.media_url && (
+                          <div className="mt-2.5">
+                            <a href={c.media_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[9px] font-bold text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors w-fit group/media">
+                              <span className="material-symbols-outlined text-[12px] text-indigo-400 group-hover/media:text-indigo-500">photo_library</span>
+                              View Attachment
+                            </a>
+                          </div>
+                        )}
                       </div>
                     ))
                   )}

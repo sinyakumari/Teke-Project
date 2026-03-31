@@ -17,3 +17,16 @@ export function formatDateRange(start?: Date | string, end?: Date | string): str
     if (start) return `From ${formatDate(start)}`
     return 'No dates set'
 }
+
+export function formatDateCustom(date: Date | string | undefined): string {
+    if (!date) return 'Not Set'
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return String(date)
+    
+    const day = String(d.getDate()).padStart(2, '0')
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const month = months[d.getMonth()]
+    const year = d.getFullYear()
+    
+    return `${day}-${month}-${year}`
+}

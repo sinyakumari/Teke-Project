@@ -29,6 +29,24 @@ interface Training {
   pdfs?: { name: string; url: string }[]
 }
 
+interface Question {
+  id: string
+  worksheetId: string
+  question: string
+  answer: string
+  order?: number
+}
+
+interface Worksheet {
+  id: string
+  name: string
+  training_id: string
+  lesson_id: string
+  created_at: string
+  lessons?: { id: string; name: string }
+  questions: Question[]
+}
+
 interface Task {
   id: string
   name: string
@@ -78,6 +96,15 @@ interface AppState {
   addTraining: (training: Training) => void
   updateTraining: (training: Training) => void
   deleteTraining: (id: string) => void
+
+  // Worksheets
+  worksheets: Record<string, Worksheet[]> // trainingId -> worksheets
+  worksheetsLoading: boolean
+  fetchWorksheets: (trainingId: string) => Promise<void>
+  addWorksheet: (trainingId: string, worksheet: Worksheet) => void
+  updateWorksheetQuestion: (trainingId: string, worksheetId: string, question: Question) => void
+  deleteWorksheetQuestion: (trainingId: string, worksheetId: string, questionId: string) => void
+  deleteWorksheet: (trainingId: string, worksheetId: string) => void
 
   // Tasks
   tasks: Task[]
@@ -218,6 +245,69 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             trainings: state.trainings.filter(t => t.id !== id)
           }), false, 'trainings/delete')
+        },
+
+        // Worksheets
+        worksheets: {},
+        worksheetsLoading: false,
+        fetchWorksheets: async (trainingId) => {
+          if (!trainingId) return
+          set({ worksheetsLoading: true }, false, 'worksheets/fetch_start')
+          try {
+            const res = await fetch(`/api/trainings/${trainingId}/worksheets`)
+            if (!res.ok) throw new Error('Failed to fetch worksheets')
+            const data = await res.json()
+            set((state) => ({
+              worksheets: {
+                ...state.worksheets,
+                [trainingId]: data.worksheets || []
+              },
+              worksheetsLoading: false
+            }), false, 'worksheets/fetch_success')
+          } catch (error) {
+            console.error('Worksheets fetch error:', error)
+            set({ worksheetsLoading: false }, false, 'worksheets/fetch_error')
+          }
+        },
+        addWorksheet: (trainingId, worksheet) => {
+          set((state) => ({
+            worksheets: {
+              ...state.worksheets,
+              [trainingId]: [worksheet, ...(state.worksheets[trainingId] || [])]
+            }
+          }), false, 'worksheets/add')
+        },
+        updateWorksheetQuestion: (trainingId, worksheetId, question) => {
+          set((state) => ({
+            worksheets: {
+              ...state.worksheets,
+              [trainingId]: (state.worksheets[trainingId] || []).map(ws => 
+                ws.id === worksheetId 
+                  ? { ...ws, questions: [...ws.questions, question] }
+                  : ws
+              )
+            }
+          }), false, 'worksheets/update_question')
+        },
+        deleteWorksheetQuestion: (trainingId, worksheetId, questionId) => {
+          set((state) => ({
+            worksheets: {
+              ...state.worksheets,
+              [trainingId]: (state.worksheets[trainingId] || []).map(ws => 
+                ws.id === worksheetId 
+                  ? { ...ws, questions: (ws.questions || []).filter(q => q.id !== questionId) }
+                  : ws
+              )
+            }
+          }), false, 'worksheets/delete_question')
+        },
+        deleteWorksheet: (trainingId, worksheetId) => {
+          set((state) => ({
+            worksheets: {
+              ...state.worksheets,
+              [trainingId]: (state.worksheets[trainingId] || []).filter(ws => ws.id !== worksheetId)
+            }
+          }), false, 'worksheets/delete')
         },
 
         // Tasks
@@ -610,6 +700,7 @@ export const useAppStore = create<AppState>()(
           user: state.user,
           trainings: state.trainings,
           tasks: state.tasks,
+          worksheets: state.worksheets,
         }),
       }
     ),
