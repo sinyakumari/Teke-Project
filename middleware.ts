@@ -1,7 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export default async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
+  const host = request.headers.get('host')
+  
+  // 1. Handle Trailing Dot Origin (e.g., localhost:3000.)
+  // This causes fatal 500 errors in Supabase/GoTrue URL parsing
+  if (host && host.endsWith('.')) {
+    const url = request.nextUrl.clone()
+    url.host = host.replace(/\.+$/, '')
+    return NextResponse.redirect(url)
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -55,12 +65,13 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/home/:path*',
-    '/trainings/:path*',
-    '/tasks/:path*',
-    '/profile/:path*',
-    '/login',
-    '/register',
-    '/api/auth/callback',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

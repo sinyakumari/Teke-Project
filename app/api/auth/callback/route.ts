@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
   // the real public origin the user is browsing from.
   const forwardedHost = request.headers.get('x-forwarded-host')
   const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
-  const publicOrigin = forwardedHost
+  const publicOrigin = (forwardedHost
     ? `${forwardedProto}://${forwardedHost}`
-    : origin
+    : origin).replace(/\.+$/, '')
 
   if (code) {
     const supabase = await createServerSupabaseClient()

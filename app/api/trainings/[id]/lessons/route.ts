@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { uploadToGoogleDrive, setCredentials, refreshAccessToken } from '@/lib/google-drive'
+import { uploadToGoogleDrive, refreshAccessToken } from '@/lib/google-drive'
 
 export async function GET(
   request: NextRequest,
@@ -70,32 +70,56 @@ export async function POST(
     let tokensUpdated = false
     let newAccessToken = ''
 
-    // If access token is missing but refresh token exists, get a new one immediately
-    if (!accessToken && refreshToken) {
-      console.log('Access token missing, attempting refresh with refresh_token...')
-      const credentials = await refreshAccessToken(refreshToken)
-      accessToken = credentials.access_token || ''
-      newAccessToken = accessToken
-      tokensUpdated = true
-    }
-
-    if (!accessToken) {
+    if (!accessToken && !refreshToken) {
       return NextResponse.json({ success: false, error: 'Google Drive authentication required' }, { status: 401 })
     }
 
-    // Set credentials for this request
-    setCredentials({ access_token: accessToken, refresh_token: refreshToken })
-
     // Convert File to Buffer
     const buffer = Buffer.from(await file.arrayBuffer())
-    
-    // Upload to Google Drive (folder selection logic could go here)
-    console.log('Initiating Google Drive upload for:', file.name)
-    const { fileId, webViewLink } = await uploadToGoogleDrive(
-      buffer,
-      file.name,
-      file.type
-    )
+
+    async function performUpload(token: string) {
+      console.log('Initiating Google Drive upload for:', file.name)
+      return await uploadToGoogleDrive(
+        { access_token: token, refresh_token: refreshToken },
+        buffer,
+        file.name,
+        file.type
+      )
+    }
+
+    let driveResult;
+    try {
+      // Attempt 1: Try with existing token
+      if (accessToken) {
+        driveResult = await performUpload(accessToken)
+      } else {
+        throw { response: { status: 401 } } // Trigger refresh if no access token
+      }
+    } catch (err: any) {
+      // Attempt 2: If 401 (Unauthorized), try to refresh token and retry once
+      if (err.response?.status === 401 && refreshToken) {
+         console.log('Access token expired/invalid, attempting token refresh...')
+         try {
+           const credentials = await refreshAccessToken(refreshToken)
+           newAccessToken = credentials.access_token || ''
+           accessToken = newAccessToken
+           tokensUpdated = true
+           
+           // Retry with new token
+           driveResult = await performUpload(newAccessToken)
+         } catch (refreshErr) {
+           console.error('Failed to refresh Google token:', refreshErr)
+           return NextResponse.json({ success: false, error: 'Google authentication session expired. Please re-connect.' }, { status: 401 })
+         }
+      } else {
+        // Other errors
+        throw err
+      }
+    }
+
+    if (!driveResult) throw new Error('Upload failed')
+
+    const { fileId, webViewLink } = driveResult
     console.log('Drive upload success:', fileId)
 
     const supabase = await createServerSupabaseClient()
@@ -134,6 +158,9 @@ export async function POST(
     return response
   } catch (error: any) {
     console.error('Detailed lesson upload error:', error)
-    return NextResponse.json({ success: false, error: error.message || 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      success: false, 
+      error: error.response?.data?.error_description || error.message || 'Internal server error' 
+    }, { status: 500 })
   }
 }
