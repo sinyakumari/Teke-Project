@@ -110,7 +110,9 @@ interface AppState {
   tasks: Task[]
   tasksLoading: boolean
   tasksError: string | null
-  fetchTasks: () => Promise<void>
+  tasksTotalCount: number
+  tasksFilter: string
+  fetchTasks: (status?: string) => Promise<void>
   addTask: (task: Task) => void
   addBulkTasks: (tasks: Task[], trainingName?: string) => void
   updateTask: (task: Task) => void
@@ -146,6 +148,10 @@ interface AppState {
   toasts: Toast[]
   addToast: (message: string, type?: Toast['type']) => void
   removeToast: (id: string) => void
+
+  // Task Counts (Global Aggregation)
+  taskCountsSummary: Record<string, { total: number; completed: number }>
+  fetchTaskCounts: () => Promise<void>
 
   // Global Sync
   isInitialized: boolean
@@ -314,17 +320,36 @@ export const useAppStore = create<AppState>()(
         tasks: [],
         tasksLoading: false,
         tasksError: null,
-        fetchTasks: async () => {
+        tasksTotalCount: 0,
+        tasksFilter: 'All',
+        taskCountsSummary: {},
+        fetchTaskCounts: async () => {
+          try {
+            const res = await fetch('/api/trainings/counts')
+            if (!res.ok) throw new Error('Failed to fetch counts')
+            const data = await res.json()
+            set({ taskCountsSummary: data.counts || {} }, false, 'tasks/fetch_counts_success')
+          } catch (error) {
+            console.error('Fetch task counts error:', error)
+          }
+        },
+        fetchTasks: async (status = 'All') => {
           set({ tasksLoading: true, tasksError: null }, false, 'tasks/fetch_start')
           try {
-            const res = await fetch('/api/tasks')
+            const statusQuery = status !== 'All' ? `?status=${status}` : ''
+            const res = await fetch(`/api/tasks${statusQuery}`)
             if (!res.ok) throw new Error('Failed to fetch tasks')
             const data = await res.json()
             const mappedTasks = (data.tasks || []).map((t: any) => ({
               ...t,
               training: Array.isArray(t.trainings) ? t.trainings[0] : (t.trainings || t.training)
             }))
-            set({ tasks: mappedTasks, tasksLoading: false }, false, 'tasks/fetch_success')
+            set({ 
+              tasks: mappedTasks, 
+              tasksTotalCount: data.totalCount || 0,
+              tasksFilter: status,
+              tasksLoading: false 
+            }, false, 'tasks/fetch_success')
           } catch (error: any) {
             set({ tasksError: error.message, tasksLoading: false }, false, 'tasks/fetch_error')
           }
@@ -338,7 +363,11 @@ export const useAppStore = create<AppState>()(
             type: 'in-app',
             related_task_ids: [task.id]
           })
-          set((state) => ({ tasks: [task, ...state.tasks] }), false, 'tasks/add')
+          set((state) => ({ 
+            tasks: [task, ...state.tasks].slice(0, 10), // Keep current page view clean
+            tasksTotalCount: state.tasksTotalCount + 1
+          }), false, 'tasks/add')
+          get().fetchTaskCounts() // Refresh counts summary
         },
         addBulkTasks: (newTasks, trainingName) => {
           const state = get()
@@ -349,7 +378,11 @@ export const useAppStore = create<AppState>()(
             type: 'in-app',
             related_task_ids: newTasks.map(t => t.id)
           })
-          set((state) => ({ tasks: [...newTasks, ...state.tasks] }), false, 'tasks/addBulk')
+          set((state) => ({ 
+            tasks: [...newTasks, ...state.tasks].slice(0, 10),
+            tasksTotalCount: state.tasksTotalCount + newTasks.length
+          }), false, 'tasks/addBulk')
+          get().fetchTaskCounts() // Refresh summary
         },
         updateTask: (task) => {
           const state = get()
@@ -439,6 +472,7 @@ export const useAppStore = create<AppState>()(
             const result = await res.json()
             // Ensure we have the latest server state (if any extra fields were updated)
             if (result.task) updateTask(result.task)
+            get().fetchTaskCounts() // Refresh summary
           } catch (error) {
             console.error('Task status toggle failed:', error)
             // 2. Rollback
@@ -478,8 +512,10 @@ export const useAppStore = create<AppState>()(
             })
           }
           set((state) => ({
-            tasks: state.tasks.filter(t => t.id !== id)
+            tasks: state.tasks.filter(t => t.id !== id),
+            tasksTotalCount: Math.max(0, state.tasksTotalCount - 1)
           }), false, 'tasks/delete')
+          get().fetchTaskCounts() // Refresh summary
         },
 
         // Notifications
@@ -686,6 +722,7 @@ export const useAppStore = create<AppState>()(
               get().fetchTrainings(false),
               get().fetchTasks(),
               get().fetchNotifications(),
+              get().fetchTaskCounts(),
             ])
             set({ isInitialized: true }, false, 'sync/complete')
           } catch (error) {

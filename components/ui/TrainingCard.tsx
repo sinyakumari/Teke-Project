@@ -104,7 +104,7 @@ export default function TrainingCard({
                 )}
                 <div className="flex items-center gap-1">
                     <span className="bg-[#1a1f2e] text-white text-[10px] font-bold px-2 py-0.5 rounded-full mr-1">
-                        {training.category.toUpperCase()}
+                        {training.category ? training.category.toUpperCase() : 'GENERAL'}
                     </span>
                     <button
                         onClick={(e) => {

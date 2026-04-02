@@ -4,9 +4,9 @@ import { useEffect, useState, useMemo } from 'react'
 import TrainingCard from '@/components/ui/TrainingCard'
 import TrainingTable from '@/components/ui/TrainingTable'
 import { useAppStore } from '@/store/useAppStore'
-import TrainingDrawer from '@/components/training/TrainingDrawer'
 import NotificationDropdown from '@/components/ui/NotificationDropdown'
-
+import Pagination from '@/components/ui/Pagination'
+import { useRouter } from 'next/navigation'
 
 interface Training {
   id: string
@@ -27,52 +27,62 @@ interface TaskCount {
 }
 
 export default function TrainingsPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
   const [view, setView] = useState<'grid' | 'table'>('grid')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  const openTrainingDrawer = useAppStore((state) => state.openTrainingDrawer)
+  
+  const allTrainings = useAppStore((state) => state.trainings)
+  const fetchTrainings = useAppStore((state) => state.fetchTrainings)
+  const loading = useAppStore((state) => state.trainingsLoading)
+  const taskCountsSummary = useAppStore((state) => state.taskCountsSummary)
+  const fetchTaskCounts = useAppStore((state) => state.fetchTaskCounts)
+
+  useEffect(() => {
+    fetchTrainings(activeTab === 'archived')
+    fetchTaskCounts()
+  }, [activeTab, fetchTrainings, fetchTaskCounts])
+
+  const trainings = useMemo(() => allTrainings.filter(t => 
+    activeTab === 'archived' ? t.is_archived : !t.is_archived
+  ), [allTrainings, activeTab])
+
+  // Slice trainings for pagination
+  const paginatedTrainings = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    const end = start + itemsPerPage
+    return trainings.slice(start, end)
+  }, [trainings, currentPage])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       setView('table')
     }
   }, [])
-  const openTrainingDrawer = useAppStore((state) => state.openTrainingDrawer)
-  const closeTrainingDrawer = useAppStore((state) => state.closeTrainingDrawer)
-  const isTrainingDrawerOpen = useAppStore((state) => state.isTrainingDrawerOpen)
-  const activeTrainingId = useAppStore((state) => state.activeTrainingId)
-  
-  const allTrainings = useAppStore((state) => state.trainings)
-  const allTasks = useAppStore((state) => state.tasks)
-  const fetchTrainings = useAppStore((state) => state.fetchTrainings)
-  const loading = useAppStore((state) => state.trainingsLoading || state.tasksLoading)
 
-  const trainings = allTrainings.filter(t => 
-    activeTab === 'archived' ? t.is_archived : !t.is_archived
-  )
+  // Reset to page 1 when tab changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
 
   useEffect(() => {
     console.log('[DEBUG - FRONTEND] All Trainings from Zustand:', allTrainings.length);
     console.log('[DEBUG - FRONTEND] Displayed Trainings (filtered):', trainings.length);
-    if (trainings.length > 0) {
-      console.log('[DEBUG - FRONTEND] Sample Training Data:', trainings[0].title);
-    }
   }, [allTrainings, trainings.length])
 
-  const taskCounts: TaskCount[] = useMemo(() => trainings.map(t => {
-    const trainingTasks = allTasks.filter(task => task.training_id === t.id)
-    const completed = trainingTasks.filter(task => task.status === 'complete').length
-    return {
+  // Convert taskCountsSummary map to TaskCount[] array for the table component
+  const taskCountsArray: TaskCount[] = useMemo(() => 
+    paginatedTrainings.map(t => ({
       training_id: t.id,
-      total: trainingTasks.length,
-      completed,
-    }
-  }), [trainings, allTasks])
-
+      total: taskCountsSummary[t.id]?.total || 0,
+      completed: taskCountsSummary[t.id]?.completed || 0
+    })), [paginatedTrainings, taskCountsSummary])
 
   function getTaskCount(training_id: string) {
-    return taskCounts.find((t) => t.training_id === training_id) || {
-      total: 0,
-      completed: 0,
-    }
+    return taskCountsSummary[training_id] || { total: 0, completed: 0 }
   }
 
   return (
@@ -127,7 +137,7 @@ export default function TrainingsPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-4 sticky top-0 bg-[#f2f2f7] z-10 pb-2">
+          <div className="flex gap-2 mb-4 pb-2">
             <button
               onClick={() => setActiveTab('active')}
               className={`px-6 py-2 rounded-full text-xs font-semibold transition-all ${
@@ -136,7 +146,7 @@ export default function TrainingsPage() {
                   : 'bg-white text-slate-400 border border-slate-200'
               }`}
             >
-              ACTIVE ({trainings.length > 0 && activeTab === 'active' ? trainings.length : 0})
+              ACTIVE ({allTrainings.filter(t => !t.is_archived).length})
             </button>
             <button
               onClick={() => setActiveTab('archived')}
@@ -146,7 +156,7 @@ export default function TrainingsPage() {
                   : 'bg-white text-slate-400 border border-slate-200'
               }`}
             >
-              ARCHIVED ({trainings.length > 0 && activeTab === 'archived' ? trainings.length : 0})
+              ARCHIVED ({allTrainings.filter(t => t.is_archived).length})
             </button>
           </div>
 
@@ -173,37 +183,52 @@ export default function TrainingsPage() {
                 Create Training
               </button>
             </div>
-          ) : view === 'table' ? (
-            <TrainingTable 
-                trainings={trainings} 
-                taskCounts={taskCounts}
-                onTrainingClick={(id) => openTrainingDrawer(id, 'view')}
-                onEditClick={(id) => openTrainingDrawer(id, 'edit')}
-                onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
-            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {trainings.map((training) => {
-                const counts = getTaskCount(training.id)
-                return (
-                  <TrainingCard
-                    key={training.id}
-                    training={training}
-                    taskCount={counts.total}
-                    completedCount={counts.completed}
-                    onClick={() => openTrainingDrawer(training.id, 'view')}
-                    onEditClick={(e) => {
-                      e.stopPropagation();
-                      openTrainingDrawer(training.id, 'edit');
-                    }}
-                    onMenuClick={(e) => {
-                      e.stopPropagation()
-                    }}
+            <>
+              {view === 'table' ? (
+                <TrainingTable 
+                    trainings={paginatedTrainings} 
+                    taskCounts={taskCountsArray}
+                    onTrainingClick={(id) => openTrainingDrawer(id, 'view')}
+                    onEditClick={(id) => openTrainingDrawer(id, 'edit')}
                     onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
-                  />
-                )
-              })}
-            </div>
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {paginatedTrainings.map((training) => {
+                    const counts = getTaskCount(training.id)
+                    return (
+                      <TrainingCard
+                        key={training.id}
+                        training={training}
+                        taskCount={counts.total}
+                        completedCount={counts.completed}
+                        onClick={() => openTrainingDrawer(training.id, 'view')}
+                        onEditClick={(e) => {
+                          e.stopPropagation();
+                          openTrainingDrawer(training.id, 'edit');
+                        }}
+                        onMenuClick={(e) => {
+                          e.stopPropagation()
+                        }}
+                        onTrainingUpdate={() => fetchTrainings(activeTab === 'archived')}
+                      />
+                    )
+                  })}
+                </div>
+              )}
+              
+              {/* Pagination */}
+              <div className="mt-8 mb-12">
+                <Pagination 
+                  totalItems={trainings.length}
+                  currentPage={currentPage}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={(page) => setCurrentPage(page)}
+                  isLoading={loading}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -222,7 +247,6 @@ export default function TrainingsPage() {
           />
         </svg>
       </button>
-
     </div>
   )
 }

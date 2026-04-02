@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/store/useAppStore'
 import Toggle from '@/components/ui/Toggle'
 import NotificationDropdown from '@/components/ui/NotificationDropdown'
+import Pagination from '@/components/ui/Pagination'
 
 const CATEGORIES = [
   { 
@@ -42,6 +43,15 @@ export default function SettingsPage() {
   const updateTraining = useAppStore((state) => state.updateTraining)
   const addToast = useAppStore((state) => state.addToast)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
+
+  // Paginated trainings for the notifications list
+  const paginatedTrainings = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return trainings.slice(start, start + itemsPerPage)
+  }, [trainings, currentPage])
 
   const handleToggleNotify = async (trainingId: string, currentStatus: boolean) => {
     setUpdatingId(trainingId)
@@ -98,7 +108,7 @@ export default function SettingsPage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Header */}
-          <div className="flex items-start justify-between mb-8 gap-2 pt-4">
+          <div className="flex items-start justify-between mb-4 gap-2 pt-1">
             <div className="flex items-center gap-4 min-w-0">
                <button 
                 onClick={() => router.back()}
@@ -118,7 +128,7 @@ export default function SettingsPage() {
              <h2 className="text-lg font-semibold text-[#1a1f2e]">Training Notifications</h2>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-12">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-4">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -139,7 +149,7 @@ export default function SettingsPage() {
                       </td>
                     </tr>
                   ) : (
-                    trainings.map((training) => (
+                    paginatedTrainings.map((training) => (
                       <tr key={training.id} className="group hover:bg-slate-50/80 transition-all duration-200">
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
@@ -173,12 +183,24 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Pagination for Training Notifications */}
+          {trainings.length > itemsPerPage && (
+            <div className="flex justify-end mt-4 mb-4">
+              <Pagination
+                totalItems={trainings.length}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          )}
+
           {/* Section 2: Other Notifications and Alerts */}
-          <div className="mb-4 mt-12">
+          <div className="mb-4 mt-4">
              <h2 className="text-lg font-semibold text-[#1a1f2e]">Other Notifications and Alerts</h2>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-24">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-4">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>

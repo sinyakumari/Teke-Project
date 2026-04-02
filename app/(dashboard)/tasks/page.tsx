@@ -6,6 +6,7 @@ import TaskCard from '@/components/ui/TaskCard'
 import TaskTable from '@/components/ui/TaskTable'
 import { useAppStore } from '@/store/useAppStore'
 import NotificationDropdown from '@/components/ui/NotificationDropdown'
+import Pagination from '@/components/ui/Pagination'
 
 const filterOptions = [
   'All',
@@ -24,6 +25,8 @@ function TasksPageContent() {
 
   const [activeFilter, setActiveFilter] = useState(initialFilter)
   const [view, setView] = useState<'grid' | 'table'>('grid')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
@@ -33,29 +36,39 @@ function TasksPageContent() {
 
   const tasks = useAppStore((state) => state.tasks)
   const loading = useAppStore((state) => state.tasksLoading)
+  const fetchTasks = useAppStore((state) => state.fetchTasks)
   const openTaskDrawer = useAppStore((state) => state.openTaskDrawer)
 
-  const filteredTasks = tasks.filter((task) => {
-    if (activeFilter === 'All') return true
-    return task.status === activeFilter
-  })
+  useEffect(() => {
+    fetchTasks(activeFilter)
+  }, [activeFilter, fetchTasks])
 
-  // Sort tasks such that tasks from the notification appear at the top
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const aInFilter = filterIds.includes(a.id)
-    const bInFilter = filterIds.includes(b.id)
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeFilter])
 
-    if (aInFilter && !bInFilter) return -1
-    if (!aInFilter && bInFilter) return 1
+  const filteredTasks = tasks
 
-    if (aInFilter && bInFilter) {
-      return filterIds.indexOf(a.id) - filterIds.indexOf(b.id)
-    }
+  // Sort tasks
+  const sortedTasks = useMemo(() => {
+    return [...filteredTasks].sort((a, b) => {
+      const aInFilter = filterIds.includes(a.id)
+      const bInFilter = filterIds.includes(b.id)
+      if (aInFilter && !bInFilter) return -1
+      if (!aInFilter && bInFilter) return 1
+      if (aInFilter && bInFilter) return filterIds.indexOf(a.id) - filterIds.indexOf(b.id)
+      return 0
+    })
+  }, [filteredTasks, filterIds])
 
-    return 0
-  })
+  // Slice for pagination
+  const paginatedTasks = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return sortedTasks.slice(start, start + itemsPerPage)
+  }, [sortedTasks, currentPage])
 
-  // Grouping logic
+  // Grouping logic for the current page
   const { todayTasks, thisWeekTasks, otherTasks, noDeadlineTasks } = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -65,13 +78,14 @@ function TasksPageContent() {
     endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
     endOfWeek.setHours(23, 59, 59, 999)
 
-    return {
-      todayTasks: filteredTasks.filter(t => t.deadline && new Date(t.deadline) <= endOfToday),
-      thisWeekTasks: filteredTasks.filter(t => t.deadline && new Date(t.deadline) > endOfToday && new Date(t.deadline) <= endOfWeek),
-      otherTasks: filteredTasks.filter(t => t.deadline && new Date(t.deadline) > endOfWeek),
-      noDeadlineTasks: filteredTasks.filter(t => !t.deadline)
-    }
-  }, [filteredTasks])
+    const list = paginatedTasks
+    const todayTasks = list.filter(t => t.deadline && new Date(t.deadline) <= endOfToday)
+    const thisWeekTasks = list.filter(t => t.deadline && new Date(t.deadline) > endOfToday && new Date(t.deadline) <= endOfWeek)
+    const upcomingTasks = list.filter(t => t.deadline && new Date(t.deadline) > endOfWeek)
+    const noDeadlineTasks = list.filter(t => !t.deadline)
+
+    return { todayTasks, thisWeekTasks, otherTasks: upcomingTasks, noDeadlineTasks }
+  }, [paginatedTasks])
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
@@ -108,7 +122,7 @@ function TasksPageContent() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide sticky top-0 bg-[#f2f2f7] z-10">
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide">
             {filterOptions.map((filter) => (
               <button
                 key={filter}
@@ -123,7 +137,7 @@ function TasksPageContent() {
           </div>
 
           {/* Content */}
-          {loading ? (
+          {loading && tasks.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
             </div>
@@ -137,7 +151,7 @@ function TasksPageContent() {
             </div>
           ) : view === 'table' ? (
             <TaskTable
-              tasks={sortedTasks}
+              tasks={paginatedTasks}
               onTaskClick={(id) => openTaskDrawer(id)}
               onEditClick={(id) => openTaskDrawer(id)}
               highlightedIds={filterIds}
@@ -169,6 +183,19 @@ function TasksPageContent() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {filteredTasks.length > 0 && (
+            <div className="mt-8">
+              <Pagination
+                totalItems={filteredTasks.length}
+                currentPage={currentPage}
+                itemsPerPage={10}
+                onPageChange={(page) => setCurrentPage(page)}
+                isLoading={loading}
+              />
             </div>
           )}
         </div>
