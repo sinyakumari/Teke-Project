@@ -257,7 +257,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         const data = await res.json()
         if (res.ok) {
           addTaskInStore(data.task)
+          addToast('Task created successfully!', 'success')
           onClose()
+        } else {
+          console.error('Create task error details:', data.error)
+          addToast(data.error || 'Failed to create task', 'error')
         }
       } else if (taskId) {
         const res = await fetch(`/api/tasks/${taskId}`, {
@@ -268,11 +272,16 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         const data = await res.json()
         if (res.ok) {
           updateTaskInStore(data.task)
+          addToast('Changes saved', 'success')
           onClose()
+        } else {
+          console.error('Update task error details:', data.error)
+          addToast(data.error || 'Failed to save changes', 'error')
         }
       }
-    } catch (error) {
-      console.error('Save error:', error)
+    } catch (error: any) {
+      console.error('Save operation failed:', error)
+      addToast('A network error occurred', 'error')
     } finally {
       setLoading(false)
     }
