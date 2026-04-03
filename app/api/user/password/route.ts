@@ -44,3 +44,31 @@ export async function PUT(req: NextRequest) {
         )
     }
 }
+
+export async function POST() {
+    try {
+        const supabase = await createServerSupabaseClient()
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        const { error } = await supabase.auth.resetPasswordForEmail(user.email!, {
+            redirectTo: `${origin}/api/auth/callback?next=/reset-password`,
+        })
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 400 })
+        }
+
+        return NextResponse.json({ message: 'Reset email sent' }, { status: 200 })
+    } catch (error) {
+        console.error('Reset request error:', error)
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        )
+    }
+}

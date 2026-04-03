@@ -55,6 +55,7 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('')
   const [pwdLoading, setPwdLoading] = useState(false)
   const [pwdError, setPwdError] = useState('')
+  const [pwdSuccess, setPwdSuccess] = useState('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -156,6 +157,7 @@ export default function ProfilePage() {
     e.preventDefault()
     setPwdLoading(true)
     setPwdError('')
+    setPwdSuccess('')
     try {
       const res = await fetch('/api/user/password', {
         method: 'PUT',
@@ -173,6 +175,25 @@ export default function ProfilePage() {
       }
     } catch (error) {
       setPwdError('An error occurred')
+    } finally {
+      setPwdLoading(false)
+    }
+  }
+
+  async function handleRequestReset() {
+    setPwdLoading(true)
+    setPwdError('')
+    setPwdSuccess('')
+    try {
+      const res = await fetch('/api/user/password', { method: 'POST' })
+      if (res.ok) {
+        setPwdSuccess('Verification link sent to your email! Please check your inbox.')
+      } else {
+        const data = await res.json()
+        setPwdError(data.error || 'Failed to send reset link')
+      }
+    } catch (err) {
+      setPwdError('Could not connect to server')
     } finally {
       setPwdLoading(false)
     }
@@ -486,44 +507,72 @@ export default function ProfilePage() {
                   {pwdError}
                 </div>
               )}
+              {pwdSuccess && (
+                <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs p-4 rounded-2xl font-bold flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                    Sent Successfully!
+                  </div>
+                  <p className="font-medium text-[10px] text-emerald-500/80 leading-relaxed pl-7">
+                    {pwdSuccess}
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Current Password</label>
-                  <input 
-                    type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">New Secure Password</label>
-                  <input 
-                    type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <div className="flex justify-end mt-1">
-                  <Link 
-                    href="/forgot-password" 
-                    title="Go to forgot password flow" 
-                    className="text-[10px] font-semibold text-slate-400 hover:text-[#1a1f2e] transition-all uppercase tracking-widest"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
-              </div>
-              <button 
-                type="submit" disabled={pwdLoading}
-                className="w-full bg-[#1a1f2e] text-white font-semibold py-5 rounded-2xl hover:shadow-xl hover:scale-[1.01] transition-all active:scale-[0.99] disabled:opacity-70 flex items-center justify-center gap-3 mt-4"
-              >
-                {pwdLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                    <span className="material-symbols-outlined text-[20px]">shield_check</span>
+                {!pwdSuccess && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Current Password</label>
+                      <input 
+                        type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">New Secure Password</label>
+                      <input 
+                        type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div className="flex justify-end mt-1">
+                      <button 
+                        type="button"
+                        onClick={handleRequestReset}
+                        disabled={pwdLoading}
+                        className="text-[10px] font-bold text-[#1a1f2e]/60 hover:text-[#1a1f2e] transition-all uppercase tracking-[0.1em]"
+                      >
+                        forget using email
+                      </button>
+                    </div>
+                  </>
                 )}
-                {pwdLoading ? 'Verifying...' : 'Authenticate & Update'}
-              </button>
+              </div>
+
+              {!pwdSuccess ? (
+                <button 
+                  type="submit" disabled={pwdLoading}
+                  className="w-full bg-[#1a1f2e] text-white font-semibold py-5 rounded-2xl hover:shadow-xl hover:scale-[1.01] transition-all active:scale-[0.99] disabled:opacity-70 flex items-center justify-center gap-3 mt-4"
+                >
+                  {pwdLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                      <span className="material-symbols-outlined text-[20px]">shield_check</span>
+                  )}
+                  {pwdLoading ? 'Verifying...' : 'Authenticate & Update'}
+                </button>
+              ) : (
+                <button 
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="w-full bg-slate-100 text-[#1a1f2e] font-bold py-5 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-3 mt-4"
+                >
+                  Got it, Close
+                </button>
+              )}
             </form>
           </div>
         </div>

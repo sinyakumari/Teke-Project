@@ -10,8 +10,6 @@ export async function DELETE(
     const supabase = await createServerSupabaseClient()
     const { id } = await params
     
-    const { user_id } = await req.json() // Or get it from auth for security
-
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

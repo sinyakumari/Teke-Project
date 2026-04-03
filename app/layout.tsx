@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { SyncStore } from '@/components/SyncStore'
 
 export const metadata: Metadata = {
   title: 'TEKE',

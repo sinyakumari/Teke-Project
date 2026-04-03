@@ -353,20 +353,20 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         />
 
         {/* Header */}
-        <div className="px-4 py-2.5 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 min-h-[56px] shadow-sm">
+        <div className="px-4 py-2 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-10 min-h-[56px] shadow-sm">
           <div className="flex-1 min-w-0 pr-2">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Task Name"
-              className="text-[15px] font-black text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300 transition-all focus:text-[16px]"
+              className="text-[15px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300 transition-all"
             />
             <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="relative group">
+              <div className="relative group inline-flex items-center">
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className={`text-[9px] font-black uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
+                  className={`text-[9px] font-bold uppercase tracking-wider rounded-lg pl-2 pr-6 py-0.5 outline-none border-none cursor-pointer appearance-none ${statusColors[status]}`}
                 >
                   {AVAILABLE_STATUSES.map(s => (
                     <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
@@ -382,14 +382,14 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             {!isCreateMode && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-all border border-slate-100"
+                className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-200"
               >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
               </button>
             )}
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all border border-slate-100"
+              className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all border border-slate-200"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
@@ -397,18 +397,18 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide p-3 space-y-3 pb-32">
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-3 space-y-2.5 pb-32">
 
           {/* Blocked Warning Banner */}
           {(() => {
             const blocker = blockedBy ? tasks.find(t => t.id === blockedBy) : null;
             if (blocker && blocker.status !== 'complete') {
               return (
-                <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3 flex items-start gap-3 animate-in fade-in slide-in-from-top-1">
-                  <span className="material-symbols-outlined text-orange-400 text-[20px] shrink-0 mt-0.5">lock</span>
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1">
+                  <span className="material-symbols-outlined text-orange-400 text-[18px] shrink-0 mt-0.5">lock</span>
                   <div className="flex-1">
-                    <p className="text-[#1a1f2e] text-[11px] font-black uppercase tracking-tight leading-none mb-1">TASK IS BLOCKED</p>
-                    <p className="text-orange-600 text-[10px] font-bold leading-tight">
+                    <p className="text-[#1a1f2e] text-[10px] font-bold uppercase tracking-tight leading-none mb-1">TASK IS BLOCKED</p>
+                    <p className="text-orange-600 text-[9px] font-medium leading-tight">
                       This task depends on <span className="underline italic">&quot;{blocker.name}&quot;</span> being completed first.
                     </p>
                   </div>
@@ -418,9 +418,9 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             return null;
           })()}
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm flex flex-col">
-              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-sm flex flex-col">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                 Priority
               </label>
               <div className="flex gap-1 justify-between">
@@ -428,34 +428,34 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   <button
                     key={opt}
                     onClick={() => setPriority(opt as any)}
-                    className={`flex-1 py-1 rounded-lg text-[9px] font-black transition-all ${priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                    className={`flex-1 py-1 rounded-lg text-[9px] font-bold transition-all ${priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                   >
                     {opt}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
-              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+            <div className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-sm">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                 Deadline
               </label>
               <input
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="w-full text-xs font-bold text-[#1a1f2e] bg-transparent outline-none cursor-pointer"
+                className="w-full text-[11px] font-semibold text-[#1a1f2e] bg-transparent outline-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-2.5 border border-slate-100 shadow-sm">
-            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-              Linked Training
+          <div className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-sm">
+            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+               Linked Training
             </label>
             <select
               value={trainingId}
               onChange={(e) => setTrainingId(e.target.value)}
-              className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+              className="w-full text-[11px] font-semibold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
             >
               <option value="">NO TRAINING</option>
               {trainings.map(t => (
@@ -464,7 +464,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             </select>
           </div>
 
-          <div className="bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
             <SegmentedControl
               options={[
                 { label: 'Dependency', value: 'Dependencies' },
@@ -475,31 +475,31 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             />
           </div>
 
-          <div className="min-h-[180px]">
+          <div className="min-h-[160px]">
             {activeTab === 'Dependencies' && (
-              <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-                <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[11px]">device_hub</span> Dependency
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[13px]">device_hub</span> Dependency
                 </label>
                 <select
                   value={blockedBy}
                   onChange={(e) => setBlockedBy(e.target.value)}
-                  className="w-full text-xs font-black text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+                  className="w-full text-[11px] font-semibold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
                 >
                   <option value="">NOT BLOCKED</option>
                   {tasks.filter(t => t.id !== taskId).map(t => (
                     <option key={t.id} value={t.id}>{t.name.toUpperCase()}</option>
                   ))}
                 </select>
-                <p className="text-[9px] text-slate-400 font-bold italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
+                <p className="text-[9px] text-slate-400 font-medium italic leading-tight bg-blue-50/50 p-2 rounded-lg border border-blue-50">
                   If this task depends on another, it will be marked as &apos;Blocked&apos; in the system until the dependency is completed.
                 </p>
               </div>
             )}
 
             {activeTab === 'Comments' && (
-              <div className="space-y-4">
-                <div className="bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm flex items-end gap-1.5 focus-within:border-indigo-200 transition-colors">
+              <div className="space-y-3">
+                <div className="bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm flex items-end gap-1.5 focus-within:border-indigo-200 transition-colors">
                   <textarea
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
@@ -509,9 +509,22 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                     }}
                     placeholder="Write a comment..."
                     rows={1}
-                    className="flex-1 text-[11px] font-medium text-[#1a1f2e] outline-none min-h-[16px] max-h-[100px] resize-none overflow-y-auto bg-transparent py-1.5 px-2 placeholder-slate-400"
+                    className="flex-1 text-[11px] font-medium text-[#1a1f2e] outline-none min-h-[18px] max-h-[100px] resize-none overflow-y-auto bg-transparent py-1 px-1.5 placeholder-slate-400"
                   />
-                  <div className="flex items-center gap-1 shrink-0 pb-0.5 pr-0.5">
+                  <div className="flex items-center gap-1 shrink-0 pb-0.5">
+                    {commentMedia && (
+                      <div className="relative group/preview mx-1">
+                        <div className="w-6 h-6 rounded-lg overflow-hidden border border-slate-200 bg-white shadow-inner">
+                          <img src={commentMedia} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                        <button 
+                          onClick={() => setCommentMedia(null)}
+                          className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-white border border-slate-200 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center shadow-sm transition-all opacity-0 group-hover/preview:opacity-100 scale-90"
+                        >
+                          <span className="material-symbols-outlined text-[9px] font-bold">close</span>
+                        </button>
+                      </div>
+                    )}
                     <button 
                       onClick={() => {
                         const input = document.createElement('input')
@@ -523,7 +536,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                       className="w-6 h-6 flex items-center justify-center text-slate-400 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-slate-200"
                       title="Attach Media"
                     >
-                      <span className="material-symbols-outlined text-[13px]">
+                      <span className="material-symbols-outlined text-[14px]">
                         {uploadingCommentMedia ? 'hourglass_top' : 'attach_file'}
                       </span>
                     </button>
@@ -533,60 +546,38 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                       className="w-6 h-6 flex items-center justify-center bg-[#1a1f2e] text-white rounded-lg shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:bg-slate-200"
                       title="Send Comment"
                     >
-                      <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                     </button>
                   </div>
                 </div>
-                {commentMedia && (
-                  <div className="relative mt-3 p-1.5 w-fit bg-slate-50 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 pr-4 group transition-all">
-                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-white border border-slate-100 shadow-inner">
-                       <img src={commentMedia} alt="Media preview" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                       <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-[11px] text-indigo-400">check_circle</span>
-                          Media Attached
-                       </span>
-                    </div>
-                    <button 
-                      onClick={() => setCommentMedia(null)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white border border-slate-200 text-slate-400 hover:text-red-500 rounded-full flex items-center justify-center shadow-sm hover:border-red-200 transition-all opacity-0 group-hover:opacity-100"
-                    >
-                       <span className="material-symbols-outlined text-[11px] font-bold">close</span>
-                    </button>
-                  </div>
-                )}
 
                 {/* Comments List */}
-                <div className="space-y-3 mt-4">
+                <div className="space-y-2 mt-3">
                   {fetchingComments ? (
-                    <div className="text-center py-6 text-slate-300 font-black text-[8px] uppercase tracking-widest animate-pulse">Syncing Thread...</div>
+                    <div className="text-center py-6 text-slate-300 font-bold text-[10px] uppercase tracking-widest animate-pulse">Syncing Thread...</div>
                   ) : comments.length === 0 ? null : (
                     comments.map((c) => (
-                      <div key={c.id} className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm group hover:border-slate-200 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                             <div className="w-5 h-5 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
-                               <span className="material-symbols-outlined text-[10px] text-slate-400">person</span>
-                             </div>
-                             <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <div key={c.id} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm transition-all group hover:border-slate-300">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[7.5px] font-bold text-slate-400 uppercase tracking-widest tabular-nums mb-1">
+                              {new Date(c.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            </div>
+                            <p className="text-[11px] font-medium text-slate-700 leading-normal break-words whitespace-pre-wrap">{c.content}</p>
                           </div>
-                          <button 
-                            onClick={() => handleDeleteComment(c.id)}
-                            className="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <span className="material-symbols-outlined text-[13px]">delete</span>
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0 pt-3">
+                            {c.media_url && (
+                              <a href={c.media_url} target="_blank" rel="noopener noreferrer" 
+                                 className="block w-7 h-7 rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors bg-white/50">
+                                <img src={c.media_url} alt="Comment" className="w-full h-full object-cover" />
+                              </a>
+                            )}
+                            <button onClick={() => handleDeleteComment(c.id)}
+                                    className="w-5 h-5 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-all opacity-0 group-hover:opacity-100">
+                              <span className="material-symbols-outlined text-[12px]">close</span>
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-700 leading-relaxed">{c.content}</p>
-                        {c.media_url && (
-                          <div className="mt-2.5">
-                            <a href={c.media_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[9px] font-bold text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors w-fit group/media">
-                              <span className="material-symbols-outlined text-[12px] text-indigo-400 group-hover/media:text-indigo-500">photo_library</span>
-                              View Attachment
-                            </a>
-                          </div>
-                        )}
                       </div>
                     ))
                   )}
@@ -597,18 +588,18 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         </div>
 
         {/* Fixed Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/90 backdrop-blur-md border-t border-slate-100 flex items-center justify-between gap-3 z-20 min-h-[72px]">
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-between gap-3 z-20 min-h-[64px]">
           <button
             onClick={onClose}
-            className="px-5 py-3 rounded-2xl text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
+            className="px-5 py-2.5 rounded-xl text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!hasChanges || loading || !name}
-            className={`flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${hasChanges && !loading && name
-                ? 'bg-[#1a1f2e] text-white shadow-xl shadow-slate-200 active:scale-[0.98]'
+            className={`flex-1 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${hasChanges && !loading && name
+                ? 'bg-[#1a1f2e] text-white shadow-lg shadow-slate-200 active:scale-[0.98]'
                 : 'bg-slate-100 text-slate-300 cursor-not-allowed'
               }`}
           >
@@ -617,10 +608,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         </div>
       </div>
 
+
       {/* Delete Confirmation Overlay */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-sm rounded-[32px] p-8 shadow-2xl space-y-6">
+          <div className="bg-white w-full max-w-sm rounded-xl p-8 shadow-2xl space-y-6">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
               <span className="material-symbols-outlined text-3xl">delete_forever</span>
             </div>
@@ -629,12 +621,13 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
               <p className="text-xs text-slate-500 font-medium px-2 leading-relaxed">This will permanently remove the task.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl">Cancel</button>
-              <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl">Delete</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="py-3.5 bg-slate-50 text-slate-400 font-bold text-xs uppercase tracking-widest rounded-xl border border-slate-200">Cancel</button>
+              <button onClick={handleDelete} className="py-3.5 bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl">Delete</button>
             </div>
           </div>
         </div>
       )}
     </>
+
   )
 }

@@ -43,6 +43,7 @@ export default function TaskTable({
     setUpdatingId(task.id)
     try {
       await toggleTaskStatus(task.id)
+      if (onTaskUpdate) onTaskUpdate()
     } catch (error) {
       console.error('Error toggling task status:', error)
     } finally {
@@ -150,7 +151,7 @@ export default function TaskTable({
                           setEditingId(task.id)
                           setEditName(task.name)
                         }}
-                        className={`text-[14px] font-semibold border-b border-transparent hover:border-slate-300 transition-colors ${isComplete ? 'text-slate-400 line-through hover:border-transparent' : 'text-[#1a1f2e]'}`}
+                        className={`text-[14px] font-semibold transition-colors ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'}`}
                       >
                         {task.name}
                       </span>
@@ -172,9 +173,21 @@ export default function TaskTable({
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
-                      <span className={`w-1.5 h-1.5 rounded-full ${isComplete ? 'bg-green-500' : isBlocked ? 'bg-slate-300' : 'bg-orange-500'}`} />
-                      <span className={`text-[10px] font-black uppercase tracking-wider ${isComplete ? 'text-green-600' : isBlocked ? 'text-slate-400' : 'text-orange-500'}`}>
-                        {isComplete ? 'complete' : isBlocked ? 'blocked' : task.status}
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        isComplete ? 'bg-green-500' : 
+                        isBlocked ? 'bg-slate-300' : 
+                        task.status === 'delayed' ? 'bg-red-500' :
+                        task.status === 'canceled' ? 'bg-slate-400' :
+                        'bg-orange-500'
+                      }`} />
+                      <span className={`text-[10px] font-black uppercase tracking-wider ${
+                        isComplete ? 'text-green-600' : 
+                        isBlocked ? 'text-slate-400' : 
+                        task.status === 'delayed' ? 'text-red-600' :
+                        task.status === 'canceled' ? 'text-slate-500' :
+                        'text-orange-500'
+                      }`}>
+                        {isComplete ? 'complete' : isBlocked ? 'blocked' : task.status.replace('_', ' ')}
                       </span>
                     </div>
                   </td>

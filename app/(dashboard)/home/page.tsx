@@ -82,11 +82,12 @@ export default function HomePage() {
   
   const weekCompleted = weekTasksDue.filter(t => t.status === 'complete').length
   const pendingThisWeek = weekTasksDue.filter(t => t.status !== 'complete').length
+  const totalPending = allTasks.filter(t => t.status !== 'complete').length
 
   const stats = {
     activeTrainings: trainings.length,
     tasksDone: completedTotal,
-    pending: pendingThisWeek,
+    pending: totalPending,
     weekTotal: weekTasksDue.length,
     weekCompleted: weekCompleted
   }
@@ -111,7 +112,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           
           {/* Exact Header Layout */}
-          <div className="flex items-start justify-between mb-4 gap-2">
+          <div className="flex items-start justify-between mb-5 gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                  <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f2e] tracking-tight">
@@ -119,9 +120,6 @@ export default function HomePage() {
                  </h1>
                  <span className="text-2xl sm:text-3xl">👋</span>
               </div>
-              <p className="text-[#10b981] text-sm font-semibold">
-                {stats.pending} tasks due this week
-              </p>
             </div>
             
             <div className="flex items-center gap-4 shrink-0">
@@ -144,7 +142,7 @@ export default function HomePage() {
           </div>
 
           {/* Stat Grid (4 Cards) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-stretch">
             <StatCard
               label="Active Trainings"
               value={stats.activeTrainings}
@@ -188,9 +186,9 @@ export default function HomePage() {
               iconBg="bg-indigo-50"
             />
           </div>
-
+ 
           {/* Combined Task Area Layout */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             
             {/* All Tasks Section */}
             <div>
@@ -224,7 +222,7 @@ export default function HomePage() {
                     />
                   </div>
                   {/* Mobile view: Cards grid */}
-                  <div className="grid grid-cols-1 md:hidden gap-3">
+                  <div className="grid grid-cols-1 md:hidden gap-4">
                     {dashboardTasks.map((task) => (
                       <div key={task.id} className="h-[140px]">
                           <TaskCard

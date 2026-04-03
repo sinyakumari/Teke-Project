@@ -1,7 +1,7 @@
 'use client'
-
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
+import { useShallow } from 'zustand/react/shallow'
 
 interface Worksheet {
   id: string
@@ -37,13 +37,22 @@ export default function WorksheetManager({ trainingId, trainingTitle }: Workshee
   const [newAnswerText, setNewAnswerText] = useState('')
   const [addingQuestion, setAddingQuestion] = useState(false)
 
-  // App Store actions
-  const worksheets = useAppStore((state) => state.worksheets[trainingId] || [])
-  const fetchWorksheets = useAppStore((state) => state.fetchWorksheets)
-  const addWorksheetStore = useAppStore((state) => state.addWorksheet)
-  const deleteWorksheetStore = useAppStore((state) => state.deleteWorksheet)
-  const updateQuestionStore = useAppStore((state) => state.updateWorksheetQuestion)
-  const deleteQuestionStore = useAppStore((state) => state.deleteWorksheetQuestion)
+  // Stable App Store selectors
+  const { 
+    worksheets, 
+    fetchWorksheets, 
+    addWorksheetStore, 
+    deleteWorksheetStore, 
+    updateQuestionStore, 
+    deleteQuestionStore 
+  } = useAppStore(useShallow((state) => ({
+    worksheets: state.worksheets[trainingId] || [],
+    fetchWorksheets: state.fetchWorksheets,
+    addWorksheetStore: state.addWorksheet,
+    deleteWorksheetStore: state.deleteWorksheet,
+    updateQuestionStore: state.updateWorksheetQuestion,
+    deleteQuestionStore: state.deleteWorksheetQuestion,
+  })))
 
   useEffect(() => {
     if (worksheets.length === 0) {

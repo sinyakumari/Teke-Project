@@ -80,17 +80,20 @@ export default function LessonUpload({ trainingId, onUploadComplete, isGoogleAut
 
   if (!isGoogleAuthenticated) {
     return (
-      <div className="flex items-center justify-between p-1 bg-slate-50 border border-slate-200 rounded-lg mb-1">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[10px] text-slate-400">cloud_off</span>
-          <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest leading-none">Connect Drive</span>
+      <div className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 border-dashed rounded-2xl mb-2 text-center">
+        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-2">
+          <span className="material-symbols-outlined text-2xl text-slate-300">cloud_off</span>
+        </div>
+        <div className="space-y-1 mb-4">
+          <span className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">Connect Google Drive</span>
+          <p className="text-[8px] text-slate-400 font-bold uppercase leading-relaxed tracking-wider px-4">Secure your media & notes by syncing with your drive account</p>
         </div>
         <button 
           onClick={handleGoogleAuth}
-          className="px-2 py-0.5 bg-[#1a1f2e] text-white rounded-md text-[7px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-sm flex items-center gap-1"
+          className="px-6 py-2.5 bg-[#1a1f2e] text-white rounded-xl text-[9px] font-black uppercase tracking-[0.15em] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-slate-200 flex items-center gap-2 group"
         >
-          <span className="material-symbols-outlined text-[10px]">add_to_drive</span>
-          CONNECT
+          <span className="material-symbols-outlined text-[14px] group-hover:rotate-12 transition-transform">add_to_drive</span>
+          CONNECT NOW
         </button>
       </div>
     )

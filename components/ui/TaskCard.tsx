@@ -121,31 +121,84 @@ export default function TaskCard({ task, onClick, onEditClick, onTaskUpdate, com
         </button>
 
         <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <input
-              type="text"
-              autoFocus
-              value={editName}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => setEditName(e.target.value)}
-              onBlur={() => saveName()}
-              onKeyDown={handleKeyDown}
-              className={`w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 font-semibold outline-none ${compact ? 'text-[14px] mb-1.5' : 'text-[17px] mb-2'
-                }`}
-            />
-          ) : (
-            <h3
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsEditing(true)
-              }}
-              className={`font-semibold truncate transition-colors ${compact ? 'text-[12px] mb-1' : 'text-[15px] mb-1.5'
-                } ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
-                }`}
-            >
-              {task.name}
-            </h3>
-          )}
+          <div className="flex items-center justify-between gap-2 mb-1">
+            {isEditing ? (
+              <input
+                type="text"
+                autoFocus
+                value={editName}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={() => saveName()}
+                onKeyDown={handleKeyDown}
+                className={`w-full bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 font-semibold outline-none ${compact ? 'text-[14px]' : 'text-[17px]'
+                  }`}
+              />
+            ) : (
+              <h3
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsEditing(true)
+                }}
+                className={`flex-1 font-semibold truncate transition-colors ${compact ? 'text-[13px]' : 'text-[15px]'
+                  } ${isComplete ? 'text-slate-400 line-through' : 'text-[#1a1f2e]'
+                  }`}
+              >
+                {task.name}
+              </h3>
+            )}
+
+            {!isEditing && (
+              <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                {isBlocked && (
+                  <div className="text-orange-400 flex items-center mr-0.5" title={`Blocked by ${blockerTask?.name || 'another task'}`}>
+                    <span className="material-symbols-outlined text-[13px]">lock</span>
+                  </div>
+                )}
+                <div className="relative flex items-center group">
+                  <select
+                    value={isComplete ? 'complete' : isBlocked ? 'blocked' : task.status || 'pending'}
+                    disabled={isBlocked || isUpdating}
+                    onChange={async (e) => {
+                      const newVal = e.target.value
+                      if (newVal === 'blocked') return
+                      setIsUpdating(true)
+                      try {
+                        const res = await fetch(`/api/tasks/${task.id}`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ status: newVal })
+                        })
+                        if (res.ok && onTaskUpdate) onTaskUpdate()
+                      } catch (err) {
+                        console.error(err)
+                      } finally {
+                        setIsUpdating(false)
+                      }
+                    }}
+                    className={`bg-transparent outline-none cursor-pointer appearance-none pr-3.5 py-0.5 ${compact ? 'text-[10px]' : 'text-[11px]'} font-bold capitalize leading-normal ${isComplete ? 'text-green-600' : isBlocked ? 'text-slate-400' : 'text-slate-500 hover:text-slate-700'} transition-colors`}
+                  >
+                    {isBlocked && <option value="blocked">Blocked</option>}
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="complete">Complete</option>
+                    <option value="delayed">Delayed</option>
+                    <option value="canceled">Canceled</option>
+                  </select>
+                  <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[12px] text-slate-300 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">expand_more</span>
+                </div>
+                {onEditClick && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onEditClick(e); }}
+                    className="p-1 hover:bg-slate-100 rounded-lg text-slate-300 hover:text-indigo-500 transition-colors"
+                    title="Edit Task"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {task.training && (
@@ -163,55 +216,7 @@ export default function TaskCard({ task, onClick, onEditClick, onTaskUpdate, com
               </p>
             )}
           </div>
-
         </div>
-
-          <div className="flex items-center gap-1.5 ml-auto mt-0.5" onClick={(e) => e.stopPropagation()}>
-            {isBlocked && (
-              <div className="text-orange-400 flex items-center mr-1" title={`Blocked by ${blockerTask?.name || 'another task'}`}>
-                <span className="material-symbols-outlined text-[13px]">lock</span>
-              </div>
-            )}
-            <div className="relative flex items-center group">
-              <select
-                value={isComplete ? 'complete' : isBlocked ? 'blocked' : task.status || 'pending'}
-                disabled={isBlocked || isUpdating}
-                onChange={async (e) => {
-                   const newVal = e.target.value
-                   if (newVal === 'blocked') return
-                   setIsUpdating(true)
-                   try {
-                     const res = await fetch(`/api/tasks/${task.id}`, {
-                       method: 'PUT',
-                       headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify({ status: newVal })
-                     })
-                     if (res.ok && onTaskUpdate) onTaskUpdate()
-                   } catch (err) {
-                     console.error(err)
-                   } finally {
-                     setIsUpdating(false)
-                   }
-                }}
-                className={`bg-transparent outline-none cursor-pointer appearance-none pr-3 py-0.5 ${compact ? 'text-[10px]' : 'text-[12px]'} font-medium capitalize ${isComplete ? 'text-green-600' : isBlocked ? 'text-slate-400' : 'text-slate-500 hover:text-slate-700'} transition-colors`}
-              >
-                {isBlocked && <option value="blocked">Blocked</option>}
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="complete">Complete</option>
-              </select>
-              <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[12px] text-slate-300 pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">expand_more</span>
-            </div>
-            {onEditClick && (
-              <button
-                 onClick={(e) => { e.stopPropagation(); onEditClick(e); }}
-                 className="ml-0.5 p-1 hover:bg-slate-100 rounded-lg text-slate-300 hover:text-indigo-500 transition-colors"
-                 title="Edit Task"
-              >
-                 <span className="material-symbols-outlined text-[14px] block">edit</span>
-              </button>
-            )}
-          </div>
       </div>
     </div>
   )

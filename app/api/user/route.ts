@@ -69,15 +69,15 @@ export async function PUT(req: NextRequest) {
     const { name, email, profilePicture, phone, address, bio, appLock, reviewReminders, notificationPrefs } = body
 
     // Update info in Supabase Auth Metadata
-    if (name || email || profilePicture || phone || address || bio) {
+    if (name !== undefined || email !== undefined || profilePicture !== undefined || phone !== undefined || address !== undefined || bio !== undefined) {
       const { error } = await supabase.auth.updateUser({
         ...(email && { email }),
         data: {
-          ...(name && { name }),
-          ...(profilePicture && { profile_picture: profilePicture }),
-          ...(phone && { phone }),
-          ...(address && { address }),
-          ...(bio && { bio }),
+          ...(name !== undefined && { name }),
+          ...(profilePicture !== undefined && { profile_picture: profilePicture }),
+          ...(phone !== undefined && { phone }),
+          ...(address !== undefined && { address }),
+          ...(bio !== undefined && { bio }),
         }
       })
       if (error) {

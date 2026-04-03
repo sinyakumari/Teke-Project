@@ -26,6 +26,8 @@ interface TaskCount {
   completed: number
 }
 
+import { useShallow } from 'zustand/react/shallow'
+
 export default function TrainingsPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
@@ -33,13 +35,21 @@ export default function TrainingsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const openTrainingDrawer = useAppStore((state) => state.openTrainingDrawer)
-  
-  const allTrainings = useAppStore((state) => state.trainings)
-  const fetchTrainings = useAppStore((state) => state.fetchTrainings)
-  const loading = useAppStore((state) => state.trainingsLoading)
-  const taskCountsSummary = useAppStore((state) => state.taskCountsSummary)
-  const fetchTaskCounts = useAppStore((state) => state.fetchTaskCounts)
+  const { 
+    openTrainingDrawer, 
+    allTrainings, 
+    fetchTrainings, 
+    loading, 
+    taskCountsSummary, 
+    fetchTaskCounts 
+  } = useAppStore(useShallow((state) => ({
+    openTrainingDrawer: state.openTrainingDrawer,
+    allTrainings: state.trainings,
+    fetchTrainings: state.fetchTrainings,
+    loading: state.trainingsLoading,
+    taskCountsSummary: state.taskCountsSummary,
+    fetchTaskCounts: state.fetchTaskCounts,
+  })))
 
   useEffect(() => {
     fetchTrainings(activeTab === 'archived')
@@ -87,7 +97,7 @@ export default function TrainingsPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-32 lg:px-6 lg:pt-3">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1  lg:px-6 lg:pt-3">
         <div className="max-w-7xl mx-auto">
           
           {/* Header */}
@@ -137,7 +147,7 @@ export default function TrainingsPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-4 pb-2">
+          <div className="flex gap-2 mb-4">
             <button
               onClick={() => setActiveTab('active')}
               className={`px-6 py-2 rounded-full text-xs font-semibold transition-all ${

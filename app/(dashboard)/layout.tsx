@@ -2,7 +2,6 @@
 
 import SidebarNav from '@/components/ui/SidebarLink'
 import MobileNav from '@/components/ui/BottomNav'
-import { SyncStore } from '@/components/SyncStore'
 import TaskDrawer from '@/components/task/TaskDrawer'
 import { useAppStore } from '@/store/useAppStore'
 import ToastContainer from '@/components/ui/ToastContainer'
@@ -10,6 +9,7 @@ import NotificationManager from '@/components/NotificationManager'
 
 import NotificationHistory from '@/components/ui/NotificationHistory'
 import TrainingDrawer from '@/components/training/TrainingDrawer'
+import { SyncStore } from '@/components/SyncStore'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const activeTaskId = useAppStore((state) => state.activeTaskId)

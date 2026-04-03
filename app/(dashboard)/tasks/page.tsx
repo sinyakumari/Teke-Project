@@ -62,34 +62,63 @@ function TasksPageContent() {
     })
   }, [filteredTasks, filterIds])
 
-  // Slice for pagination
-  const paginatedTasks = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage
-    return sortedTasks.slice(start, start + itemsPerPage)
-  }, [sortedTasks, currentPage])
-
-  // Grouping logic for the current page
-  const { todayTasks, thisWeekTasks, otherTasks, noDeadlineTasks } = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const endOfToday = new Date()
-    endOfToday.setHours(23, 59, 59, 999)
-    const endOfWeek = new Date()
-    endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()))
+  // 1. Reorder the full filtered list: "This Week" tasks first, then everything else.
+  const reorderedTasks = useMemo(() => {
+    const now = new Date()
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - now.getDay())
+    startOfWeek.setHours(0, 0, 0, 0)
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6)
     endOfWeek.setHours(23, 59, 59, 999)
 
-    const list = paginatedTasks
-    const todayTasks = list.filter(t => t.deadline && new Date(t.deadline) <= endOfToday)
-    const thisWeekTasks = list.filter(t => t.deadline && new Date(t.deadline) > endOfToday && new Date(t.deadline) <= endOfWeek)
-    const upcomingTasks = list.filter(t => t.deadline && new Date(t.deadline) > endOfWeek)
-    const noDeadlineTasks = list.filter(t => !t.deadline)
+    const urgent = sortedTasks.filter(t => {
+      if (!t.deadline) return false
+      const d = new Date(t.deadline)
+      return d >= startOfWeek && d <= endOfWeek
+    })
+    const others = sortedTasks.filter(t => {
+      if (!t.deadline) return true
+      const d = new Date(t.deadline)
+      return d < startOfWeek || d > endOfWeek
+    })
 
-    return { todayTasks, thisWeekTasks, otherTasks: upcomingTasks, noDeadlineTasks }
+    return [...urgent, ...others]
+  }, [sortedTasks])
+
+  // 2. Paginate from the REORDERED list
+  const paginatedTasks = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return reorderedTasks.slice(start, start + itemsPerPage)
+  }, [reorderedTasks, currentPage])
+
+  // 3. For the CURRENT PAGE slice, split them for visual headers
+  const { weekUrgent, restOfPage } = useMemo(() => {
+    const now = new Date()
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - now.getDay())
+    startOfWeek.setHours(0, 0, 0, 0)
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6)
+    endOfWeek.setHours(23, 59, 59, 999)
+
+    const weekUrgent = paginatedTasks.filter(t => {
+      if (!t.deadline) return false
+      const d = new Date(t.deadline)
+      return d >= startOfWeek && d <= endOfWeek
+    })
+    const restOfPage = paginatedTasks.filter(t => {
+      if (!t.deadline) return true
+      const d = new Date(t.deadline)
+      return d < startOfWeek || d > endOfWeek
+    })
+
+    return { weekUrgent, restOfPage }
   }, [paginatedTasks])
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-32 lg:px-6 lg:pt-3">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 lg:px-6 lg:pt-3">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 gap-2">
@@ -141,7 +170,7 @@ function TasksPageContent() {
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : filteredTasks.length === 0 ? (
+          ) : reorderedTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <div className="bg-white w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl">📎</div>
               <div className="text-center">
@@ -154,43 +183,66 @@ function TasksPageContent() {
               tasks={paginatedTasks}
               onTaskClick={(id) => openTaskDrawer(id)}
               onEditClick={(id) => openTaskDrawer(id)}
+              onTaskUpdate={fetchTasks}
               highlightedIds={filterIds}
             />
           ) : (
-            <div className="flex flex-col gap-8">
-              {[{ title: 'Today', list: todayTasks, color: 'bg-red-50 text-red-500' },
-                { title: 'This Week', list: thisWeekTasks, color: 'bg-indigo-50 text-indigo-500' },
-                { title: 'Upcoming', list: otherTasks, color: 'bg-blue-50 text-blue-500' },
-                { title: 'No Deadline', list: noDeadlineTasks, color: 'bg-slate-100 text-slate-500' }
-              ].map(section => section.list.length > 0 && (
-                <div key={section.title}>
+            <div className="flex flex-col gap-6">
+              {/* This Week */}
+              {weekUrgent.length > 0 && (
+                <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{section.title}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">This Week</p>
                     <div className="h-[1px] flex-1 bg-slate-200" />
-                    <span className={`${section.color} px-2 py-0.5 rounded-lg text-[10px] font-bold`}>{section.list.length}</span>
+                    <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg text-[10px] font-bold">{weekUrgent.length}</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {section.list.map((task) => (
+                    {weekUrgent.map((task: any) => (
                       <TaskCard
                         key={task.id}
                         task={task}
                         compact={true}
                         onClick={() => openTaskDrawer(task.id)}
                         onEditClick={() => openTaskDrawer(task.id)}
+                        onTaskUpdate={fetchTasks}
                         highlighted={filterIds.includes(task.id)}
                       />
                     ))}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Tasks */}
+              {restOfPage.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Tasks</p>
+                    <div className="h-[1px] flex-1 bg-slate-200" />
+                    <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg text-[10px] font-bold">{restOfPage.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {restOfPage.map((task: any) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        compact={true}
+                        onClick={() => openTaskDrawer(task.id)}
+                        onEditClick={() => openTaskDrawer(task.id)}
+                        onTaskUpdate={fetchTasks}
+                        highlighted={filterIds.includes(task.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Pagination */}
-          {filteredTasks.length > 0 && (
+          {reorderedTasks.length > 0 && (
             <div className="mt-8">
               <Pagination
-                totalItems={filteredTasks.length}
+                totalItems={reorderedTasks.length}
                 currentPage={currentPage}
                 itemsPerPage={10}
                 onPageChange={(page) => setCurrentPage(page)}

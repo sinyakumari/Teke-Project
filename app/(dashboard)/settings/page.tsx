@@ -104,7 +104,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-32 lg:px-6 lg:pt-3">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 pb-10 lg:px-6 lg:pt-3">
         <div className="max-w-7xl mx-auto">
           
           {/* Header */}

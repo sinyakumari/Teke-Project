@@ -248,23 +248,36 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         <div className="p-2.5 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10 min-h-[50px]">
           <div className="flex-1 min-w-0 pr-2">
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-bold uppercase tracking-wider ${
-                  isCreate
-                    ? 'bg-blue-600 text-white'
-                    : training?.is_archived
-                    ? 'bg-slate-100 text-slate-400'
-                    : 'bg-blue-50 text-blue-600'
-                }`}>
-                  {isCreate ? 'New' : training?.is_archived ? 'Archived' : 'Active'}
-                </span>
-              </div>
               <input
                 value={formData.title}
                 placeholder="Training Title..."
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="text-[17px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder:text-slate-300"
+                className="text-[17px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder:text-slate-300 mb-1"
               />
+              <div className="flex items-center gap-1.5">
+                {isCreate ? (
+                  <span className="px-1.5 py-0 rounded text-[7px] font-normal text-white bg-blue-600 uppercase tracking-wider flex items-center h-[14px]">
+                    New
+                  </span>
+                ) : (
+                  <div className={`relative flex items-center px-1.5 py-0 rounded h-[14px] text-black w-max ${
+                    training?.is_archived ? 'bg-slate-100' : 'bg-blue-50'
+                  }`}>
+                    <select
+                      value={training?.is_archived ? 'archived' : 'active'}
+                      onChange={() => handleArchive()}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                      <option value="active">Active</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                    <span className="text-[7px] font-normal uppercase tracking-wider mt-px">
+                      {training?.is_archived ? 'Archived' : 'Active'}
+                    </span>
+                    <span className="material-symbols-outlined text-[8px] ml-0.5 pointer-events-none opacity-80">expand_more</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -324,15 +337,17 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
 
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
-              <label className="text-[7px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 block">Status</label>
+              <label className="text-[7px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 block">Category</label>
               <select
-                value={isCreate ? 'active' : (training?.is_archived ? 'archived' : 'active')}
-                onChange={() => !isCreate && handleArchive()}
-                disabled={isCreate}
-                className="w-full bg-slate-50 border-none rounded-lg px-2 py-1 text-[11px] font-black text-slate-800 outline-none cursor-pointer disabled:cursor-default"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full bg-slate-50 border-none rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-700 outline-none cursor-pointer"
               >
-                <option value="active">Active</option>
-                <option value="archived">Archived</option>
+                <option value="" disabled>Select Category</option>
+                <option value="tech">Tech</option>
+                <option value="business">Business</option>
+                <option value="health">Health</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
@@ -391,7 +406,10 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                     </span>
                   </div>
                   <button
-                    onClick={() => router.push(`/tasks/extract?training_id=${trainingId}`)}
+                    onClick={() => {
+                      onClose()
+                      router.push(`/tasks/extract?training_id=${trainingId}`)
+                    }}
                     className="flex items-center justify-center p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors group"
                     title="Auto-Extract from Syllabus"
                   >

@@ -168,7 +168,11 @@ export const useAppStore = create<AppState>()(
         userError: null,
         setUser: (user) => set({ user }, false, 'user/setUser'),
         fetchUser: async () => {
-          set({ userLoading: true, userError: null }, false, 'user/fetch_start')
+          const { user } = get()
+          // Only show hard loading if we have no user data yet
+          if (!user) {
+            set({ userLoading: true, userError: null }, false, 'user/fetch_start')
+          }
           try {
             const res = await fetch('/api/user')
             if (!res.ok) throw new Error('Failed to fetch user')
@@ -181,6 +185,9 @@ export const useAppStore = create<AppState>()(
         updateUser: async (updates: Partial<User>) => {
           const { user } = get()
           if (!user) return
+          
+          // Save previous state for rollback
+          const previousUser = user
           
           // Optimistic update
           set({ user: { ...user, ...updates } }, false, 'user/update_optimistic')
@@ -195,8 +202,9 @@ export const useAppStore = create<AppState>()(
             const data = await res.json()
             set({ user: data.user }, false, 'user/update_success')
           } catch (error: any) {
-            set({ userError: error.message }, false, 'user/update_error')
-            // Rollback is usually handled by fresh fetch or just keeping state and informing user
+            // Rollback optimistic update
+            set({ user: previousUser, userError: error.message }, false, 'user/update_error')
+            get().addToast('Failed to save settings. Changes reverted.', 'error')
           }
         },
 
@@ -205,7 +213,11 @@ export const useAppStore = create<AppState>()(
         trainingsLoading: false,
         trainingsError: null,
         fetchTrainings: async (isArchived = false) => {
-          set({ trainingsLoading: true, trainingsError: null }, false, 'trainings/fetch_start')
+          const { trainings } = get()
+          // Only show hard loading if we have no trainings to display
+          if (trainings.length === 0) {
+            set({ trainingsLoading: true, trainingsError: null }, false, 'trainings/fetch_start')
+          }
           try {
             const res = await fetch(`/api/trainings?is_archived=${isArchived}`)
             if (!res.ok) throw new Error('Failed to fetch trainings')
@@ -334,7 +346,11 @@ export const useAppStore = create<AppState>()(
           }
         },
         fetchTasks: async (status = 'All') => {
-          set({ tasksLoading: true, tasksError: null }, false, 'tasks/fetch_start')
+          const { tasks } = get()
+          // Only show hard loading if we have no tasks for the initial view
+          if (tasks.length === 0) {
+            set({ tasksLoading: true, tasksError: null }, false, 'tasks/fetch_start')
+          }
           try {
             const statusQuery = status !== 'All' ? `?status=${status}` : ''
             const res = await fetch(`/api/tasks${statusQuery}`)
@@ -524,7 +540,10 @@ export const useAppStore = create<AppState>()(
         notificationsLoading: false,
         fetchNotifications: async () => {
           if (get().notificationsLoading) return
-          set({ notificationsLoading: true }, false, 'notifications/fetch_start')
+          const { notifications } = get()
+          if (notifications.length === 0) {
+            set({ notificationsLoading: true }, false, 'notifications/fetch_start')
+          }
           try {
             const res = await fetch('/api/notifications')
             if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -716,6 +735,7 @@ export const useAppStore = create<AppState>()(
         isInitialized: false,
         syncAll: async () => {
           if (get().isInitialized) return
+          set({ isInitialized: true }, false, 'sync/start')
           try {
             await Promise.all([
               get().fetchUser(),
@@ -724,7 +744,6 @@ export const useAppStore = create<AppState>()(
               get().fetchNotifications(),
               get().fetchTaskCounts(),
             ])
-            set({ isInitialized: true }, false, 'sync/complete')
           } catch (error) {
             console.error('Initial sync failed:', error)
           }

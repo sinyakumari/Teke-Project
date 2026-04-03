@@ -46,8 +46,8 @@ export default async function proxy(request: NextRequest) {
     return supabaseResponse
   }
 
-  const protectedRoutes = ['/home', '/trainings', '/tasks', '/profile']
-  const authRoutes = ['/login', '/register']
+  const protectedRoutes = ['/home', '/trainings', '/tasks', '/profile', '/settings']
+  const authRoutes = ['/login', '/register', '/signup']
 
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))

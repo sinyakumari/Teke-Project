@@ -103,8 +103,8 @@ export default function TrainingCard({
                     </h3>
                 )}
                 <div className="flex items-center gap-1">
-                    <span className="bg-[#1a1f2e] text-white text-[10px] font-bold px-2 py-0.5 rounded-full mr-1">
-                        {training.category ? training.category.toUpperCase() : 'GENERAL'}
+                    <span className="text-[12px] font-medium text-[#1a1f2e] capitalize mr-1">
+                        {training.category || 'general'}
                     </span>
                     <button
                         onClick={(e) => {
@@ -117,16 +117,6 @@ export default function TrainingCard({
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </button>
-                    <button
-                        onClick={onMenuClick}
-                        className="p-1 hover:bg-gray-100 rounded-full"
-                    >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="5" r="1.5" fill="#6b7280" />
-                            <circle cx="12" cy="12" r="1.5" fill="#6b7280" />
-                            <circle cx="12" cy="19" r="1.5" fill="#6b7280" />
                         </svg>
                     </button>
                 </div>

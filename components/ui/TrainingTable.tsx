@@ -77,7 +77,7 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Training Name</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Category</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest lg:table-cell hidden">Instructor</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dates</th>
+              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">EndDate</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Progress</th>
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right w-16">Actions</th>
             </tr>
@@ -116,13 +116,13 @@ export default function TrainingTable({ trainings, taskCounts, onTrainingClick, 
                             {training.title}
                           </span>
                         )}
-                        <span className="text-[11px] font-medium text-slate-400 md:hidden">
+                        <span className="text-[11px] font-medium text-slate-400 md:hidden capitalize">
                             {training.category}
                         </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">
-                    <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg uppercase tracking-tight">
+                    <span className="text-[12px] font-medium text-[#1a1f2e] capitalize">
                         {training.category}
                     </span>
                   </td>
