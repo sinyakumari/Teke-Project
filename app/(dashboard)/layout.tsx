@@ -10,6 +10,7 @@ import NotificationManager from '@/components/NotificationManager'
 import NotificationHistory from '@/components/ui/NotificationHistory'
 import TrainingDrawer from '@/components/training/TrainingDrawer'
 import { SyncStore } from '@/components/SyncStore'
+import { RealtimeSync } from '@/components/RealtimeSync'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const activeTaskId = useAppStore((state) => state.activeTaskId)
@@ -20,6 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SyncStore>
+      <RealtimeSync />
       <ToastContainer />
       <NotificationManager />
       <NotificationHistory />

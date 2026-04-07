@@ -25,72 +25,42 @@ interface LessonManagerProps {
 
 // Lesson management interface for trainings
 export default function LessonManager({ trainingId }: { trainingId: string }) {
-  const [lessons, setLessons] = useState<Lesson[]>([])
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(false)
-  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false)
+  const lessonsData = useAppStore(state => state.lessons[trainingId])
+  const lessons = lessonsData || []
+  const loading = useAppStore(state => state.lessonsLoading[trainingId] || false)
+  const fetchLessonsStore = useAppStore(state => state.fetchLessons)
+  const deleteLessonStore = useAppStore(state => state.deleteLesson)
+  const updateLessonStore = useAppStore(state => state.updateLesson)
+
+  const isGoogleAuthenticated = useAppStore(state => state.isGoogleAuthenticated)
+  const checkGoogleAuth = useAppStore(state => state.checkGoogleAuth)
   const addToast = useAppStore((state) => state.addToast)
 
   useEffect(() => {
     if (!trainingId) return
-    fetchLessons()
-    checkGoogleAuth()
-  }, [trainingId])
-
-  async function checkGoogleAuth() {
-    try {
-      const response = await fetch('/api/auth/google/check')
-      if (!response.ok) { setIsGoogleAuthenticated(false); return }
-      const data = await response.json()
-      setIsGoogleAuthenticated(data.success)
-    } catch {
-      setIsGoogleAuthenticated(false)
+    fetchLessonsStore(trainingId)
+    if (isGoogleAuthenticated === null) {
+      checkGoogleAuth()
     }
-  }
+  }, [trainingId, fetchLessonsStore, isGoogleAuthenticated, checkGoogleAuth])
 
-  async function disconnectGoogle() {
-    try {
-      await fetch('/api/auth/google/disconnect', { method: 'DELETE' })
-      setIsGoogleAuthenticated(false)
-      addToast('Google Drive disconnected. You can reconnect to grant updated permissions.', 'success')
-    } catch {
-      addToast('Failed to disconnect Google Drive', 'error')
-    }
-  }
+  const [summaryTrigger, setSummaryTrigger] = useState<string | null>(null)
+  const [activeSummaryId, setActiveSummaryId] = useState<string | null>(null)
+  const [notesDrawerId, setNotesDrawerId] = useState<string | null>(null)
+  const [previousLessonCount, setPreviousLessonCount] = useState(0)
 
-  async function fetchLessons(autoTrigger = false) {
-    setLoading(true)
-    setFetchError(false)
-    try {
-      const response = await fetch(`/api/trainings/${trainingId}/lessons`)
-      if (!response.ok) {
-        console.warn(`[LessonManager] Lessons fetch returned ${response.status}`)
-        setFetchError(true)
-        return
+  // Auto-summary trigger when new lessons are added
+  useEffect(() => {
+    if (lessons.length > previousLessonCount && previousLessonCount > 0) {
+      const newLesson = lessons.find(nl => !lessons.slice(0, previousLessonCount).some(l => l.id === nl.id)) || lessons[0]
+      if (newLesson && !newLesson.summary) {
+        setSummaryTrigger(newLesson.id)
+        setActiveSummaryId(newLesson.id)
+        addToast(`Processing summary for ${newLesson.name}`, 'info')
       }
-      const data = await response.json()
-      if (data.success) {
-        const newLessons = data.lessons as Lesson[]
-        
-        // Auto-summary logic: Find if there's a new lesson not in current state
-        if (autoTrigger && newLessons.length > lessons.length) {
-          const newLesson = newLessons.find(nl => !lessons.some(l => l.id === nl.id))
-          if (newLesson && !newLesson.summary) {
-            setSummaryTrigger(newLesson.id)
-            setActiveSummaryId(newLesson.id)
-            addToast(`Processing summary for ${newLesson.name}`, 'info')
-          }
-        }
-        
-        setLessons(newLessons)
-      }
-    } catch {
-      console.warn('[LessonManager] Failed to fetch lessons — network or server issue')
-      setFetchError(true)
-    } finally {
-      setLoading(false)
     }
-  }
+    setPreviousLessonCount(lessons.length)
+  }, [lessons.length, addToast, lessons, previousLessonCount])
 
   async function handleDeleteLesson(lessonId: string) {
     if (!confirm('Are you sure you want to delete this lesson?')) return
@@ -101,7 +71,7 @@ export default function LessonManager({ trainingId }: { trainingId: string }) {
       })
       const data = await response.json()
       if (data.success) {
-        setLessons(prev => prev.filter(l => l.id !== lessonId))
+        deleteLessonStore(trainingId, lessonId)
         addToast('Lesson deleted successfully', 'success')
       } else {
         addToast(data.error || 'Failed to delete lesson', 'error')
@@ -119,87 +89,68 @@ export default function LessonManager({ trainingId }: { trainingId: string }) {
         body: JSON.stringify({ order_index: newOrder })
       })
       if (response.ok) {
-        setLessons(prev => 
-          prev.map(l => l.id === lessonId ? { ...l, order_index: newOrder } : l)
-          .sort((a, b) => a.order_index - b.order_index)
-        )
+        updateLessonStore(trainingId, lessonId, { order_index: newOrder })
+        // A direct DB sync is helpful if we want global ordering, but we can just trigger a fetch silently:
+        fetchLessonsStore(trainingId, true)
       }
     } catch (error) {
     }
   }
 
   async function updateNotes(lessonId: string, notes: string) {
-    // Optimistic update so that the summarizer has immediate access to the latest typed notes
-    setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, notes } : l))
+    updateLessonStore(trainingId, lessonId, { notes })
     try {
       const response = await fetch(`/api/trainings/${trainingId}/lessons/${lessonId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes })
       })
-      if (!response.ok) {
-        // Handle error by fetching real state
-        fetchLessons()
-      }
+      if (!response.ok) fetchLessonsStore(trainingId, true)
     } catch {
-      console.warn('[LessonManager] Error updating notes')
-      fetchLessons()
+      fetchLessonsStore(trainingId, true)
     }
   }
 
   async function updateLessonName(lessonId: string, name: string) {
     if (!name.trim() || name === lessons.find(l => l.id === lessonId)?.name) return
-    setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, name } : l))
+    updateLessonStore(trainingId, lessonId, { name })
     try {
       const response = await fetch(`/api/trainings/${trainingId}/lessons/${lessonId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       })
-      if (!response.ok) fetchLessons()
+      if (!response.ok) fetchLessonsStore(trainingId, true)
     } catch {
-      console.warn('[LessonManager] Error updating name')
-      fetchLessons()
+      fetchLessonsStore(trainingId, true)
     }
   }
 
   async function updateSummary(lessonId: string, summary: string[], newTitle?: string) {
     try {
-      // The API endpoint handles saving the summary to DB. 
-      // If we trigger this strictly from the UI updates (drawer interactions), we might need to actually PUT. 
-      // Luckily, the backend already saves it during generation!
       const payload: any = { summary }
-      
       const response = await fetch(`/api/trainings/${trainingId}/lessons/${lessonId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
       if (response.ok) {
-        setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, summary, ...(newTitle ? { name: newTitle } : {}) } : l))
+        updateLessonStore(trainingId, lessonId, { summary, ...(newTitle ? { name: newTitle } : {}) })
       }
     } catch {
       console.warn('[LessonManager] Error updating summary')
     }
   }
 
-  const [summaryTrigger, setSummaryTrigger] = useState<string | null>(null)
-  const [activeSummaryId, setActiveSummaryId] = useState<string | null>(null)
-  const [notesDrawerId, setNotesDrawerId] = useState<string | null>(null)
-
   const handleLessonInteraction = (id: string) => {
     if (activeSummaryId && activeSummaryId !== id) setActiveSummaryId(null)
     if (notesDrawerId && notesDrawerId !== id) setNotesDrawerId(null)
   }
 
-  // Effect to close summary if notes drawer opens for same/other lesson
   useEffect(() => {
-    if (notesDrawerId) {
-       setActiveSummaryId(null)
-    }
+    if (notesDrawerId) setActiveSummaryId(null)
   }, [notesDrawerId])
 
-  // Auto-activate summary when summarizing
   useEffect(() => {
     if (summaryTrigger) {
       handleLessonInteraction(summaryTrigger)
@@ -207,30 +158,15 @@ export default function LessonManager({ trainingId }: { trainingId: string }) {
     }
   }, [summaryTrigger])
 
-  if (loading) {
+  if (loading && lessons.length === 0) {
     return <div className="text-center py-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">Syncing Lessons...</div>
-  }
-
-  if (fetchError) {
-    return (
-      <div className="text-center py-8 bg-white border border-slate-100 rounded-2xl">
-        <span className="material-symbols-outlined text-2xl text-slate-300 block mb-2">cloud_off</span>
-        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Couldn't load lessons</p>
-        <button
-          onClick={() => fetchLessons()}
-          className="mt-3 px-4 py-1.5 bg-slate-100 text-slate-600 text-[9px] font-bold uppercase tracking-widest rounded-lg hover:bg-slate-200 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    )
   }
 
   return (
     <div className="space-y-3">
       <LessonUpload 
         trainingId={trainingId} 
-        onUploadComplete={() => fetchLessons(true)}
+        onUploadComplete={() => fetchLessonsStore(trainingId, true)}
         isGoogleAuthenticated={isGoogleAuthenticated}
         onAuthSuccess={() => checkGoogleAuth()}
       />

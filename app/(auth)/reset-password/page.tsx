@@ -22,21 +22,11 @@ export default function ResetPasswordPage() {
       const supabase = createClient()
       const { data: { session }, error } = await supabase.auth.getSession()
       
-      // If we don't have a session, we're likely not in a valid recovery flow
-      // we check for error or null session
       if (error || !session) {
-        // We'll wait a brief moment to allow any code exchange to finish,
-        // then if still nothing, we set an error message
-        setTimeout(async () => {
-          const { data: { session: retrySession } } = await supabase.auth.getSession()
-          if (!retrySession) {
-            setError('Your reset link is invalid or has expired. Please request a new one.')
-          }
-          setVerifying(false)
-        }, 1000)
-      } else {
-        setVerifying(false)
+        // If no session found immediately, the link might be invalid or expired
+        setError('Your reset link is invalid or has expired. Please request a new one.')
       }
+      setVerifying(false)
     }
     
     checkSession()

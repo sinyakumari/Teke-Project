@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
-import { useShallow } from 'zustand/react/shallow'
+
 
 interface Worksheet {
   id: string
@@ -23,7 +23,6 @@ interface WorksheetManagerProps {
 }
 
 export default function WorksheetManager({ trainingId, trainingTitle }: WorksheetManagerProps) {
-  const [lessons, setLessons] = useState<any[]>([])
   const [worksheetName, setWorksheetName] = useState('')
   const [selectedLessonId, setSelectedLessonId] = useState('')
   const [creating, setCreating] = useState(false)
@@ -38,42 +37,24 @@ export default function WorksheetManager({ trainingId, trainingTitle }: Workshee
   const [addingQuestion, setAddingQuestion] = useState(false)
 
   // Stable App Store selectors
-  const { 
-    worksheets, 
-    fetchWorksheets, 
-    addWorksheetStore, 
-    deleteWorksheetStore, 
-    updateQuestionStore, 
-    deleteQuestionStore 
-  } = useAppStore(useShallow((state) => ({
-    worksheets: state.worksheets[trainingId] || [],
-    fetchWorksheets: state.fetchWorksheets,
-    addWorksheetStore: state.addWorksheet,
-    deleteWorksheetStore: state.deleteWorksheet,
-    updateQuestionStore: state.updateWorksheetQuestion,
-    deleteQuestionStore: state.deleteWorksheetQuestion,
-  })))
+  const worksheetsData = useAppStore(state => state.worksheets[trainingId])
+  const worksheets = worksheetsData || []
+  const fetchWorksheets = useAppStore(state => state.fetchWorksheets)
+  const addWorksheetStore = useAppStore(state => state.addWorksheet)
+  const deleteWorksheetStore = useAppStore(state => state.deleteWorksheet)
+  const updateQuestionStore = useAppStore(state => state.updateWorksheetQuestion)
+  const deleteQuestionStore = useAppStore(state => state.deleteWorksheetQuestion)
+
+  const lessonsData = useAppStore(state => state.lessons[trainingId])
+  const lessons = lessonsData || []
+  const fetchLessonsStore = useAppStore(state => state.fetchLessons)
 
   useEffect(() => {
     if (worksheets.length === 0) {
       fetchWorksheets(trainingId)
     }
-    fetchLessons()
-  }, [trainingId])
-
-  async function fetchLessons() {
-    if (!trainingId) return
-    try {
-      const response = await fetch(`/api/trainings/${trainingId}/lessons`)
-      if (!response.ok) throw new Error('Failed to fetch')
-      const data = await response.json()
-      if (data.success) {
-        setLessons(data.lessons || [])
-      }
-    } catch (error) {
-      console.error('Error fetching lessons:', error)
-    }
-  }
+    fetchLessonsStore(trainingId)
+  }, [trainingId, fetchWorksheets, worksheets.length, fetchLessonsStore])
 
   async function handleCreateWorksheet() {
     if (!worksheetName.trim() || !selectedLessonId) return

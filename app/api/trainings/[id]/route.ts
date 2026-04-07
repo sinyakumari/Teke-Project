@@ -48,15 +48,8 @@ export async function PUT(
     if (body.instructor !== undefined) updateData.instructor = body.instructor || null
     if (body.locationType !== undefined) updateData.location_type = body.locationType?.toLowerCase() || null
     if (body.locationDetail !== undefined) updateData.location_detail = body.locationDetail || null
-    if (body.structure !== undefined) updateData.structure = body.structure === 'Multi-Lesson' ? 'multi-lesson' : 'single'
-    if (body.startDate !== undefined) updateData.start_date = body.startDate || null
     if (body.endDate !== undefined) updateData.end_date = body.endDate || null
-    if (body.duration !== undefined) updateData.duration_value = body.duration ? parseInt(body.duration) : null
-    if (body.unit !== undefined) updateData.duration_unit = body.unit?.toLowerCase() || null
     if (body.category !== undefined) updateData.category = body.category?.toLowerCase() || null
-    if (body.vision !== undefined) updateData.vision = body.vision || null
-    if (body.objective !== undefined) updateData.mission = body.objective || null
-    if (body.notes !== undefined) updateData.notes_delta = body.notes ? { text: body.notes } : null
     if (body.notifications_enabled !== undefined) updateData.notifications_enabled = body.notifications_enabled
     if (body.is_archived !== undefined) updateData.is_archived = body.is_archived
 

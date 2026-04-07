@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/useAppStore'
 interface LessonUploadProps {
   trainingId: string
   onUploadComplete: () => void
-  isGoogleAuthenticated: boolean
+  isGoogleAuthenticated: boolean | null
   onAuthSuccess: () => void
 }
 
@@ -78,7 +78,20 @@ export default function LessonUpload({ trainingId, onUploadComplete, isGoogleAut
     }
   }
 
-  if (!isGoogleAuthenticated) {
+  if (isGoogleAuthenticated === null) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 border-dashed rounded-2xl mb-2 text-center animate-pulse">
+        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-2">
+          <div className="w-6 h-6 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
+        </div>
+        <div className="space-y-1 mb-4 opacity-50">
+          <span className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">Verifying Access...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (isGoogleAuthenticated === false) {
     return (
       <div className="flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 border-dashed rounded-2xl mb-2 text-center">
         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-2">

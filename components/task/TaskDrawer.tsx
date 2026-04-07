@@ -514,8 +514,12 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   <div className="flex items-center gap-1 shrink-0 pb-0.5">
                     {commentMedia && (
                       <div className="relative group/preview mx-1">
-                        <div className="w-6 h-6 rounded-lg overflow-hidden border border-slate-200 bg-white shadow-inner">
-                          <img src={commentMedia} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="w-6 h-6 rounded-lg overflow-hidden border border-slate-200 bg-white shadow-inner flex items-center justify-center">
+                          {commentMedia.toLowerCase().endsWith('.pdf') ? (
+                            <span className="material-symbols-outlined text-red-500 text-[16px]">picture_as_pdf</span>
+                          ) : (
+                            <img src={commentMedia} alt="Preview" className="w-full h-full object-cover" />
+                          )}
                         </div>
                         <button 
                           onClick={() => setCommentMedia(null)}
@@ -529,6 +533,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                       onClick={() => {
                         const input = document.createElement('input')
                         input.type = 'file'
+                        input.accept = "image/*,application/pdf"
                         input.onchange = (e) => handleCommentMediaUpload(e as any)
                         input.click()
                       }}
@@ -568,8 +573,12 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                           <div className="flex items-center gap-1.5 shrink-0 pt-3">
                             {c.media_url && (
                               <a href={c.media_url} target="_blank" rel="noopener noreferrer" 
-                                 className="block w-7 h-7 rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors bg-white/50">
-                                <img src={c.media_url} alt="Comment" className="w-full h-full object-cover" />
+                                 className="block w-7 h-7 rounded-lg overflow-hidden border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors bg-white/50 flex items-center justify-center">
+                                {c.media_url.toLowerCase().endsWith('.pdf') ? (
+                                  <span className="material-symbols-outlined text-red-500 text-[14px]">picture_as_pdf</span>
+                                ) : (
+                                  <img src={c.media_url} alt="Comment" className="w-full h-full object-cover" />
+                                )}
                               </a>
                             )}
                             <button onClick={() => handleDeleteComment(c.id)}

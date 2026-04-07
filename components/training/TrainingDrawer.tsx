@@ -20,9 +20,7 @@ const EMPTY_FORM = {
   category: '',
   locationType: 'offline',
   locationDetail: '',
-  startDate: '',
-  endDate: '',
-  objective: ''
+  endDate: ''
 }
 
 export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerProps) {
@@ -65,9 +63,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         category: training.category || '',
         locationType: (training as any).location_type || 'offline',
         locationDetail: (training as any).location_detail || (training as any).location_name || '',
-        startDate: (training as any).start_date || '',
-        endDate: (training as any).end_date || '',
-        objective: (training as any).mission || (training as any).description || ''
+        endDate: (training as any).end_date || ''
       })
       setHasChanges(false)
     }
@@ -82,9 +78,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         formData.category !== (training.category || '') ||
         formData.locationType !== ((training as any).location_type || 'offline') ||
         formData.locationDetail !== ((training as any).location_detail || (training as any).location_name || '') ||
-        formData.startDate !== ((training as any).start_date || '') ||
-        formData.endDate !== ((training as any).end_date || '') ||
-        formData.objective !== ((training as any).mission || (training as any).description || '')
+        formData.endDate !== ((training as any).end_date || '')
       setHasChanges(isDifferent)
     }
   }, [formData, training, isCreate])

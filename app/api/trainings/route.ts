@@ -53,15 +53,8 @@ export async function POST(req: NextRequest) {
         instructor: body.instructor || null,
         location_type: body.locationType?.toLowerCase() || null,
         location_detail: body.locationDetail || null,
-        structure: body.structure === 'Multi-Lesson' ? 'multi-lesson' : 'single',
-        start_date: body.startDate || null,
         end_date: body.endDate || null,
-        duration_value: body.duration ? parseInt(body.duration) : null,
-        duration_unit: body.unit?.toLowerCase() || null,
         category: body.category?.toLowerCase() || null,
-        vision: body.vision || null,
-        mission: body.objective || null,
-        notes_delta: body.notes ? { text: body.notes } : null,
         is_archived: false,
       })
       .select()

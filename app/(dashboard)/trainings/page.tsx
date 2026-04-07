@@ -26,7 +26,7 @@ interface TaskCount {
   completed: number
 }
 
-import { useShallow } from 'zustand/react/shallow'
+
 
 export default function TrainingsPage() {
   const router = useRouter()
@@ -35,21 +35,12 @@ export default function TrainingsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const { 
-    openTrainingDrawer, 
-    allTrainings, 
-    fetchTrainings, 
-    loading, 
-    taskCountsSummary, 
-    fetchTaskCounts 
-  } = useAppStore(useShallow((state) => ({
-    openTrainingDrawer: state.openTrainingDrawer,
-    allTrainings: state.trainings,
-    fetchTrainings: state.fetchTrainings,
-    loading: state.trainingsLoading,
-    taskCountsSummary: state.taskCountsSummary,
-    fetchTaskCounts: state.fetchTaskCounts,
-  })))
+  const openTrainingDrawer = useAppStore((state) => state.openTrainingDrawer)
+  const allTrainings = useAppStore((state) => state.trainings)
+  const fetchTrainings = useAppStore((state) => state.fetchTrainings)
+  const loading = useAppStore((state) => state.trainingsLoading)
+  const taskCountsSummary = useAppStore((state) => state.taskCountsSummary)
+  const fetchTaskCounts = useAppStore((state) => state.fetchTaskCounts)
 
   useEffect(() => {
     fetchTrainings(activeTab === 'archived')

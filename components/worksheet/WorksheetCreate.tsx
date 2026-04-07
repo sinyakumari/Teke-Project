@@ -9,34 +9,22 @@ interface WorksheetCreateProps {
   onWorksheetCreated?: (worksheet: any) => void
   onClose?: () => void
 }
+import { useAppStore } from '@/store/useAppStore'
 
 export default function WorksheetCreate({ trainingId, trainingTitle, onWorksheetCreated, onClose }: WorksheetCreateProps) {
   const [worksheetName, setWorksheetName] = useState('')
   const [selectedLessonId, setSelectedLessonId] = useState('')
-  const [lessons, setLessons] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    fetchLessons()
-  }, [trainingId])
+  const lessonsData = useAppStore(state => state.lessons[trainingId])
+  const lessons = lessonsData || []
+  const loading = useAppStore(state => state.lessonsLoading[trainingId] || false)
+  const fetchLessonsStore = useAppStore(state => state.fetchLessons)
 
-  async function fetchLessons() {
-    try {
-      setLoading(true)
-      const response = await fetch(`/api/trainings/${trainingId}/lessons`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setLessons(data.lessons || [])
-      }
-    } catch (error) {
-      console.error('Error fetching lessons:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    fetchLessonsStore(trainingId)
+  }, [trainingId, fetchLessonsStore])
 
   async function handleCreateWorksheet() {
     if (!worksheetName.trim() || !selectedLessonId) {

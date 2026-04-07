@@ -29,6 +29,19 @@ interface Training {
   pdfs?: { name: string; url: string }[]
 }
 
+interface Lesson {
+  id: string
+  name: string
+  file_url: string
+  file_id: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  order_index: number
+  notes?: string
+  summary?: string[]
+}
+
 interface Question {
   id: string
   worksheetId: string
@@ -97,6 +110,15 @@ interface AppState {
   updateTraining: (training: Training) => void
   deleteTraining: (id: string) => void
 
+  // Lessons
+  lessons: Record<string, Lesson[]> // trainingId -> lessons
+  lessonsLoading: Record<string, boolean> // trainingId -> is loading
+  lessonsFetched: Record<string, boolean> // trainingId -> fetched successfully
+  fetchLessons: (trainingId: string, force?: boolean) => Promise<void>
+  addLesson: (trainingId: string, lesson: Lesson) => void
+  updateLesson: (trainingId: string, lessonId: string, updates: Partial<Lesson>) => void
+  deleteLesson: (trainingId: string, lessonId: string) => void
+
   // Worksheets
   worksheets: Record<string, Worksheet[]> // trainingId -> worksheets
   worksheetsLoading: boolean
@@ -137,6 +159,13 @@ interface AppState {
   isTaskDrawerOpen: boolean
   isTrainingDrawerOpen: boolean
   trainingDrawerMode: 'view' | 'edit'
+  
+  // Integrations State
+  isGoogleAuthenticated: boolean | null
+  checkGoogleAuth: () => Promise<void>
+  disconnectGoogleAuth: () => Promise<void>
+
+  // Actions
   isNotificationHistoryOpen: boolean
   openTaskDrawer: (id: string | 'new', trainingId?: string) => void
   closeTaskDrawer: () => void
@@ -263,6 +292,65 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             trainings: state.trainings.filter(t => t.id !== id)
           }), false, 'trainings/delete')
+        },
+
+        // Lessons
+        lessons: {},
+        lessonsLoading: {},
+        lessonsFetched: {},
+        fetchLessons: async (trainingId, force = false) => {
+          if (!trainingId) return
+          const state = get()
+          if (!force && (state.lessonsFetched[trainingId] || state.lessonsLoading[trainingId])) return
+
+          set((s) => ({ 
+            lessonsLoading: { ...s.lessonsLoading, [trainingId]: true }
+          }), false, 'lessons/fetch_start')
+          
+          try {
+            const res = await fetch(`/api/trainings/${trainingId}/lessons`)
+            if (!res.ok) throw new Error('Failed to fetch lessons')
+            const data = await res.json()
+            set((s) => ({
+              lessons: {
+                ...s.lessons,
+                [trainingId]: data.lessons || []
+              },
+              lessonsFetched: { ...s.lessonsFetched, [trainingId]: true },
+              lessonsLoading: { ...s.lessonsLoading, [trainingId]: false }
+            }), false, 'lessons/fetch_success')
+          } catch (error) {
+            console.error('Lessons fetch error:', error)
+            set((s) => ({
+              lessonsLoading: { ...s.lessonsLoading, [trainingId]: false }
+            }), false, 'lessons/fetch_error')
+          }
+        },
+        addLesson: (trainingId, lesson) => {
+          set((state) => ({
+            lessons: {
+              ...state.lessons,
+              [trainingId]: [...(state.lessons[trainingId] || []), lesson]
+            }
+          }), false, 'lessons/add')
+        },
+        updateLesson: (trainingId, lessonId, updates) => {
+          set((state) => ({
+            lessons: {
+              ...state.lessons,
+              [trainingId]: (state.lessons[trainingId] || []).map(l =>
+                l.id === lessonId ? { ...l, ...updates } : l
+              )
+            }
+          }), false, 'lessons/update')
+        },
+        deleteLesson: (trainingId, lessonId) => {
+          set((state) => ({
+            lessons: {
+              ...state.lessons,
+              [trainingId]: (state.lessons[trainingId] || []).filter(l => l.id !== lessonId)
+            }
+          }), false, 'lessons/delete')
         },
 
         // Worksheets
@@ -684,6 +772,30 @@ export const useAppStore = create<AppState>()(
         isTaskDrawerOpen: false,
         isTrainingDrawerOpen: false,
         trainingDrawerMode: 'view',
+
+        isGoogleAuthenticated: null,
+        checkGoogleAuth: async () => {
+          try {
+            const response = await fetch('/api/auth/google/check')
+            if (!response.ok) {
+              set({ isGoogleAuthenticated: false }, false, 'integrations/google_auth_fail')
+              return
+            }
+            const data = await response.json()
+            set({ isGoogleAuthenticated: data.success }, false, 'integrations/google_auth_success')
+          } catch {
+            set({ isGoogleAuthenticated: false }, false, 'integrations/google_auth_error')
+          }
+        },
+        disconnectGoogleAuth: async () => {
+          try {
+            await fetch('/api/auth/google/disconnect', { method: 'DELETE' })
+            set({ isGoogleAuthenticated: false }, false, 'integrations/google_auth_disconnect')
+          } catch (e) {
+            console.error('Failed to disconnect Google', e)
+          }
+        },
+
         isNotificationHistoryOpen: false,
         openTaskDrawer: (id, trainingId) => set({
           activeTaskId: id,
@@ -751,12 +863,11 @@ export const useAppStore = create<AppState>()(
       }),
       {
         name: 'teke-app-storage',
-        // Don't persist notifications - always fetch fresh from DB on load
+        // Only persist static-ish data like user details and top-level training categories
+        // All dynamic data like tasks, worksheets, and lessons are fetched fresh on sync/load
         partialize: (state) => ({
           user: state.user,
           trainings: state.trainings,
-          tasks: state.tasks,
-          worksheets: state.worksheets,
         }),
       }
     ),
