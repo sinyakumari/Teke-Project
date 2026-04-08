@@ -258,6 +258,15 @@ export const useAppStore = create<AppState>()(
         },
         addTraining: (training) => {
           const state = get()
+          const exists = state.trainings.some(t => t.id === training.id)
+          
+          if (exists) {
+            set((state) => ({
+              trainings: state.trainings.map(t => t.id === training.id ? { ...t, ...training } : t)
+            }), false, 'trainings/update-from-add')
+            return
+          }
+
           state.addNotification({
             title: 'New Training Added 🎓',
             message: `"${training.title}" is now in your dashboard. Start planning your tasks!`,
@@ -327,12 +336,19 @@ export const useAppStore = create<AppState>()(
           }
         },
         addLesson: (trainingId, lesson) => {
-          set((state) => ({
-            lessons: {
-              ...state.lessons,
-              [trainingId]: [...(state.lessons[trainingId] || []), lesson]
+          set((state) => {
+            const currentLessons = state.lessons[trainingId] || []
+            const exists = currentLessons.some(l => l.id === lesson.id)
+
+            return {
+              lessons: {
+                ...state.lessons,
+                [trainingId]: exists
+                  ? currentLessons.map(l => l.id === lesson.id ? { ...l, ...lesson } : l)
+                  : [...currentLessons, lesson]
+              }
             }
-          }), false, 'lessons/add')
+          }, false, 'lessons/add')
         },
         updateLesson: (trainingId, lessonId, updates) => {
           set((state) => ({
@@ -376,12 +392,19 @@ export const useAppStore = create<AppState>()(
           }
         },
         addWorksheet: (trainingId, worksheet) => {
-          set((state) => ({
-            worksheets: {
-              ...state.worksheets,
-              [trainingId]: [worksheet, ...(state.worksheets[trainingId] || [])]
+          set((state) => {
+            const currentWorksheets = state.worksheets[trainingId] || []
+            const exists = currentWorksheets.some(w => w.id === worksheet.id)
+
+            return {
+              worksheets: {
+                ...state.worksheets,
+                [trainingId]: exists
+                  ? currentWorksheets.map(w => w.id === worksheet.id ? { ...w, ...worksheet } : w)
+                  : [worksheet, ...currentWorksheets]
+              }
             }
-          }), false, 'worksheets/add')
+          }, false, 'worksheets/add')
         },
         updateWorksheetQuestion: (trainingId, worksheetId, question) => {
           set((state) => ({
@@ -389,7 +412,7 @@ export const useAppStore = create<AppState>()(
               ...state.worksheets,
               [trainingId]: (state.worksheets[trainingId] || []).map(ws => 
                 ws.id === worksheetId 
-                  ? { ...ws, questions: [...ws.questions, question] }
+                  ? { ...ws, questions: [...(ws.questions || []), question] }
                   : ws
               )
             }
@@ -460,6 +483,15 @@ export const useAppStore = create<AppState>()(
         },
         addTask: (task) => {
           const state = get()
+          const exists = state.tasks.some(t => t.id === task.id)
+          
+          if (exists) {
+            set((state) => ({
+              tasks: state.tasks.map(t => t.id === task.id ? { ...t, ...task } : t)
+            }), false, 'tasks/update-from-add')
+            return
+          }
+
           state.addNotification({
             title: 'Task Created ✅',
             message: `"${task.name}" has been added to your board.`,

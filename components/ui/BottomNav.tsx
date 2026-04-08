@@ -8,7 +8,7 @@ const navItems = [
         label: 'Home',
         href: '/home',
         icon: (active: boolean) => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path
                     d="M3 9.5L12 3L21 9.5V20C21 20.5523 20.5523 21 20 21H15V15H9V21H4C3.44772 21 3 20.5523 3 20V9.5Z"
                     fill={active ? '#1a1f2e' : 'none'}
@@ -24,7 +24,7 @@ const navItems = [
         label: 'Trainings',
         href: '/trainings',
         icon: (active: boolean) => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path
                     d="M12 3L22 8.5V10H2V8.5L12 3Z"
                     fill={active ? '#1a1f2e' : 'none'}
@@ -52,7 +52,7 @@ const navItems = [
         label: 'Tasks',
         href: '/tasks',
         icon: (active: boolean) => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <rect
                     x="5"
                     y="3"
@@ -83,7 +83,7 @@ const navItems = [
         label: 'Profile',
         href: '/profile',
         icon: (active: boolean) => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <circle
                     cx="12"
                     cy="8"
@@ -101,21 +101,44 @@ const navItems = [
             </svg>
         ),
     },
+    {
+        label: 'Settings',
+        href: '/settings',
+        icon: (active: boolean) => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    fill={active ? '#1a1f2e' : 'none'}
+                    stroke={active ? '#1a1f2e' : '#9ca3af'}
+                    strokeWidth="2"
+                />
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                    stroke={active ? '#1a1f2e' : '#9ca3af'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        ),
+    },
 ]
 
 export default function BottomNav() {
     const pathname = usePathname()
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            <div className="max-w-lg mx-auto flex items-center justify-around py-2">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className="max-w-lg mx-auto flex items-center justify-around py-1">
                 {navItems.map((item) => {
                     const active = pathname.startsWith(item.href)
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="flex flex-col items-center gap-1 px-4 py-2 min-h-[48px] justify-center"
+                            className="flex flex-col items-center gap-0.5 px-2 py-1 min-h-[42px] justify-center"
                         >
                             {active && (
                                 <div className="w-1 h-1 rounded-full bg-[#1a1f2e] mb-1" />

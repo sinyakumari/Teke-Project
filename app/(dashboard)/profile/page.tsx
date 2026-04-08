@@ -229,7 +229,7 @@ export default function ProfilePage() {
   if (storeUserLoading && !storeUser) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#f2f2f7]">
-        <div className="w-6 h-6 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -241,12 +241,12 @@ export default function ProfilePage() {
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <button 
             onClick={() => router.back()}
-            className="text-[#1a1f2e] hover:bg-slate-50 p-2 rounded-full transition shrink-0"
+            className="text-[#000000] hover:bg-slate-50 p-2 rounded-full transition shrink-0"
           >
             <span className="material-symbols-outlined text-[22px]">arrow_back</span>
           </button>
           <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-[#1a1f2e] truncate">Profile Dashboard</h1>
+            <h1 className="text-base sm:text-lg font-bold text-[#000000] truncate">Profile Dashboard</h1>
             <div className="hidden sm:flex items-center gap-1.5 ml-1">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Online</span>
@@ -272,7 +272,7 @@ export default function ProfilePage() {
             <div className="lg:w-[320px] shrink-0">
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col items-center lg:sticky lg:top-20">
                     <div className="relative mb-6">
-                        <div className="w-32 h-32 rounded-full bg-[#1a1f2e] text-white flex items-center justify-center text-4xl font-bold overflow-hidden shadow-xl border-4 border-white">
+                        <div className="w-32 h-32 rounded-full bg-[#000000] text-white flex items-center justify-center text-4xl font-bold overflow-hidden shadow-xl border-4 border-white">
                             {uploadingImage ? (
                                 <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
                             ) : storeUser?.profilePicture ? (
@@ -283,14 +283,14 @@ export default function ProfilePage() {
                         </div>
                         <button 
                             onClick={() => fileInputRef.current?.click()}
-                            className="absolute bottom-1 right-1 w-9 h-9 bg-white rounded-full border border-gray-100 flex items-center justify-center shadow-lg hover:bg-gray-50 transition text-[#1a1f2e]"
+                            className="absolute bottom-1 right-1 w-9 h-9 bg-white rounded-full border border-gray-100 flex items-center justify-center shadow-lg hover:bg-gray-50 transition text-[#000000]"
                         >
                             <span className="material-symbols-outlined text-[20px]">photo_camera</span>
                         </button>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                     </div>
 
-                    <h2 className="text-xl font-bold text-[#1a1f2e] mb-1 text-center">{storeUser?.name}</h2>
+                    <h2 className="text-xl font-bold text-[#000000] mb-1 text-center">{storeUser?.name}</h2>
                     <p className="text-xs text-slate-400 mb-6 text-center">{storeUser?.email}</p>
 
                     <div className="w-full space-y-4">
@@ -300,7 +300,7 @@ export default function ProfilePage() {
                               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">person</span>
                               <input 
                                   type="text" value={name} onChange={(e) => setName(e.target.value)}
-                                  className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] transition"
+                                  className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#000000] outline-none focus:border-[#000000] transition"
                               />
                             </div>
                         </div>
@@ -310,7 +310,7 @@ export default function ProfilePage() {
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">mail</span>
                                 <input 
                                     type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] transition"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#000000] outline-none focus:border-[#000000] transition"
                                 />
                             </div>
                         </div>
@@ -320,7 +320,7 @@ export default function ProfilePage() {
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">phone</span>
                                 <input 
                                     type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 000 000 000"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] transition"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#000000] outline-none focus:border-[#000000] transition"
                                 />
                             </div>
                         </div>
@@ -330,7 +330,7 @@ export default function ProfilePage() {
                                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">location_on</span>
                                 <input 
                                     type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="City, Country"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] transition"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#000000] outline-none focus:border-[#000000] transition"
                                 />
                             </div>
                         </div>
@@ -347,17 +347,17 @@ export default function ProfilePage() {
                     {/* Card 1: Account & Performance - Natural Height */}
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-9 h-9 bg-[#1a1f2e]/5 rounded-xl flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[#1a1f2e] text-[20px]">settings</span>
+                            <div className="w-9 h-9 bg-[#000000]/5 rounded-xl flex items-center justify-center">
+                                <span className="material-symbols-outlined text-[#000000] text-[20px]">settings</span>
                             </div>
-                            <h3 className="text-base font-bold text-[#1a1f2e]">Account Settings</h3>
+                            <h3 className="text-base font-bold text-[#000000]">Account Settings</h3>
                         </div>
                         <div className="flex-1 flex flex-col space-y-4">
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Professional Bio</label>
                                 <textarea 
                                     value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Share a few words about your journey..."
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] transition resize-none min-h-[80px]"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm text-[#000000] outline-none focus:border-[#000000] transition resize-none min-h-[80px]"
                                 />
                             </div>
                             
@@ -365,10 +365,10 @@ export default function ProfilePage() {
                                 <div className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-slate-50 transition">
                                     <div className="flex items-center gap-3">
                                         <div className="w-7 h-7 bg-white rounded-lg shadow-sm flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-[#1a1f2e] text-[16px]">lock</span>
+                                            <span className="material-symbols-outlined text-[#000000] text-[16px]">lock</span>
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold text-[#1a1f2e]">Privacy Lock</p>
+                                            <p className="text-xs font-bold text-[#000000]">Privacy Lock</p>
                                         </div>
                                     </div>
                                     <Toggle enabled={appLock} onChange={(val) => toggleSetting('appLock', val)} />
@@ -376,18 +376,18 @@ export default function ProfilePage() {
                                 <div className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-slate-50 transition">
                                     <div className="flex items-center gap-3">
                                         <div className="w-7 h-7 bg-white rounded-lg shadow-sm flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-[#1a1f2e] text-[16px]">add_to_drive</span>
+                                            <span className="material-symbols-outlined text-[#000000] text-[16px]">add_to_drive</span>
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold text-[#1a1f2e]">Switch Drive</p>
+                                            <p className="text-xs font-bold text-[#000000]">Switch Drive</p>
                                         </div>
                                     </div>
                                     <button 
                                         onClick={handleSwitchDrive}
                                         disabled={isSwitchingDrive}
-                                        className="h-[24px] px-3 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-[#1a1f2e] hover:bg-slate-100 transition shadow-sm flex items-center justify-center disabled:opacity-50"
+                                        className="h-[24px] px-3 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-[#000000] hover:bg-slate-100 transition shadow-sm flex items-center justify-center disabled:opacity-50"
                                     >
-                                        {isSwitchingDrive ? <div className="w-3 h-3 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" /> : 'Switch'}
+                                        {isSwitchingDrive ? <div className="w-3 h-3 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" /> : 'Switch'}
                                     </button>
                                 </div>
                             </div>
@@ -398,18 +398,18 @@ export default function ProfilePage() {
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 flex flex-col">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 bg-[#1a1f2e]/5 rounded-xl flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-[#1a1f2e] text-[20px]">auto_stories</span>
+                                <div className="w-9 h-9 bg-[#000000]/5 rounded-xl flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[#000000] text-[20px]">auto_stories</span>
                                 </div>
-                                <h3 className="text-base font-bold text-[#1a1f2e]">Joined</h3>
+                                <h3 className="text-base font-bold text-[#000000]">Joined</h3>
                             </div>
-                            <span className="text-[10px] bg-[#1a1f2e] text-white px-2 py-0.5 rounded-full font-bold">{storeTrainings.length}</span>
+                            <span className="text-[10px] bg-[#000000] text-white px-2 py-0.5 rounded-full font-bold">{storeTrainings.length}</span>
                         </div>
 
                         <div className="flex-1 flex flex-col gap-2">
                             {storeTrainingsLoading && storeTrainings.length === 0 ? (
                                 <div className="flex-1 flex items-center justify-center">
-                                    <div className="w-4 h-4 border-2 border-[#1a1f2e] border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
                                 </div>
                             ) : storeTrainings.length === 0 ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-slate-100 rounded-2xl">
@@ -419,14 +419,11 @@ export default function ProfilePage() {
                                 storeTrainings.slice(0, 3).map((t) => (
                                     <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-xl hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all group cursor-pointer" onClick={() => router.push(`/trainings/${t.id}`)}>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center text-[#1a1f2e]">
-                                                <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
-                                            </div>
                                             <div>
-                                                <p className="text-xs font-bold text-[#1a1f2e] group-hover:text-blue-600 transition-colors uppercase tracking-tight leading-tight">{t.title}</p>
+                                                <p className="text-xs font-bold text-[#000000] group-hover:text-blue-600 transition-colors uppercase tracking-tight leading-tight">{t.title}</p>
                                             </div>
                                         </div>
-                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-[#1a1f2e] transition-colors text-[18px]">chevron_right</span>
+                                        <span className="material-symbols-outlined text-slate-300 group-hover:text-[#000000] transition-colors text-[18px]">chevron_right</span>
                                     </div>
                                 ))
                             )}
@@ -434,7 +431,7 @@ export default function ProfilePage() {
 
                         <button 
                             onClick={() => router.push('/trainings')}
-                            className="w-full mt-4 py-2.5 text-[10px] font-semibold text-[#1a1f2e] hover:bg-slate-50 border border-slate-100 rounded-xl transition-all flex items-center justify-center gap-2"
+                            className="w-full mt-4 py-2.5 text-[10px] font-semibold text-[#000000] hover:bg-slate-50 border border-slate-100 rounded-xl transition-all flex items-center justify-center gap-2"
                         >
                             Explore Catalog
                             <span className="material-symbols-outlined text-[14px]">arrow_right_alt</span>
@@ -448,7 +445,7 @@ export default function ProfilePage() {
                     <button 
                         onClick={handleSaveProfile}
                         disabled={saving}
-                        className="w-44 bg-[#1a1f2e] text-white py-3.5 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#2a2f3e] transition-all active:scale-[0.98] shadow-lg shadow-slate-200 disabled:opacity-50 ring-1 ring-white/10"
+                        className="w-44 bg-[#000000] text-white py-3.5 rounded-2xl font-semibold text-[10px] uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#2a2f3e] transition-all active:scale-[0.98] shadow-lg shadow-slate-200 disabled:opacity-50 ring-1 ring-white/10"
                     >
                         {saving ? (
                             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
@@ -461,10 +458,10 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-2">
                         <button 
                             onClick={() => setShowPasswordModal(true)}
-                            className="px-5 h-11 bg-white text-[#1a1f2e] rounded-2xl hover:bg-slate-50 transition-all border border-slate-200 active:scale-[0.98] flex items-center justify-center gap-2 group shadow-sm"
+                            className="px-5 h-11 bg-white text-[#000000] rounded-2xl hover:bg-slate-50 transition-all border border-slate-200 active:scale-[0.98] flex items-center justify-center gap-2 group shadow-sm"
                         >
-                            <span className="material-symbols-outlined text-[16px] text-slate-400 group-hover:text-[#1a1f2e] transition-colors">lock_person</span>
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#1a1f2e]">Update Password</span>
+                            <span className="material-symbols-outlined text-[16px] text-slate-400 group-hover:text-[#000000] transition-colors">lock_person</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#000000]">Update Password</span>
                         </button>
                         <button 
                             onClick={handleClearCache}
@@ -483,15 +480,15 @@ export default function ProfilePage() {
 
       {/* Modern Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-[#1a1f2e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-300 border border-white/20">
             <div className="p-8 pb-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[#1a1f2e] text-[24px]">lock_reset</span>
+                    <span className="material-symbols-outlined text-[#000000] text-[24px]">lock_reset</span>
                 </div>
                 <div>
-                    <h3 className="font-bold text-lg text-[#1a1f2e]">Security Update</h3>
+                    <h3 className="font-bold text-lg text-[#000000]">Security Update</h3>
                     <p className="text-xs text-slate-400">Protect your account access</p>
                 </div>
               </div>
@@ -526,7 +523,7 @@ export default function ProfilePage() {
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Current Password</label>
                       <input 
                         type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#000000] outline-none focus:border-[#000000] focus:bg-white transition"
                         placeholder="••••••••"
                       />
                     </div>
@@ -534,7 +531,7 @@ export default function ProfilePage() {
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">New Secure Password</label>
                       <input 
                         type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#1a1f2e] outline-none focus:border-[#1a1f2e] focus:bg-white transition"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm text-[#000000] outline-none focus:border-[#000000] focus:bg-white transition"
                         placeholder="••••••••"
                       />
                     </div>
@@ -543,7 +540,7 @@ export default function ProfilePage() {
                         type="button"
                         onClick={handleRequestReset}
                         disabled={pwdLoading}
-                        className="text-[10px] font-bold text-[#1a1f2e]/60 hover:text-[#1a1f2e] transition-all uppercase tracking-[0.1em]"
+                        className="text-[10px] font-bold text-[#000000]/60 hover:text-[#000000] transition-all uppercase tracking-[0.1em]"
                       >
                         forget using email
                       </button>
@@ -555,7 +552,7 @@ export default function ProfilePage() {
               {!pwdSuccess ? (
                 <button 
                   type="submit" disabled={pwdLoading}
-                  className="w-full bg-[#1a1f2e] text-white font-semibold py-5 rounded-2xl hover:shadow-xl hover:scale-[1.01] transition-all active:scale-[0.99] disabled:opacity-70 flex items-center justify-center gap-3 mt-4"
+                  className="w-full bg-[#000000] text-white font-semibold py-5 rounded-2xl hover:shadow-xl hover:scale-[1.01] transition-all active:scale-[0.99] disabled:opacity-70 flex items-center justify-center gap-3 mt-4"
                 >
                   {pwdLoading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -568,7 +565,7 @@ export default function ProfilePage() {
                 <button 
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
-                  className="w-full bg-slate-100 text-[#1a1f2e] font-bold py-5 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-3 mt-4"
+                  className="w-full bg-slate-100 text-[#000000] font-bold py-5 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-3 mt-4"
                 >
                   Got it, Close
                 </button>

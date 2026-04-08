@@ -246,12 +246,12 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                 value={formData.title}
                 placeholder="Training Title..."
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="text-[17px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder:text-slate-300 mb-1"
+                className="text-[17px] font-bold text-[#000000] bg-transparent outline-none w-full placeholder:text-slate-300 mb-1"
               />
               <div className="flex items-center gap-1.5">
                 {isCreate ? (
-                  <span className="px-1.5 py-0 rounded text-[7px] font-normal text-white bg-blue-600 uppercase tracking-wider flex items-center h-[14px]">
-                    New
+                  <span className="px-1.5 py-0 rounded text-[7px] font-normal text-white bg-black uppercase tracking-wider flex items-center h-[14px]">
+                    NEW
                   </span>
                 ) : (
                   <div className={`relative flex items-center px-1.5 py-0 rounded h-[14px] text-black w-max ${
@@ -304,7 +304,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                 value={formData.instructor}
                 placeholder="e.g. Jane Doe"
                 onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
-                className="w-full bg-slate-50 border-none rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:ring-1 focus:ring-[#1a1f2e] outline-none placeholder:font-normal placeholder:text-slate-300"
+                className="w-full bg-slate-50 border-none rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-700 focus:ring-1 focus:ring-[#000000] outline-none placeholder:font-normal placeholder:text-slate-300"
               />
             </div>
             <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
@@ -404,7 +404,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
                       onClose()
                       router.push(`/tasks/extract?training_id=${trainingId}`)
                     }}
-                    className="flex items-center justify-center p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors group"
+                    className="flex items-center justify-center p-1.5 bg-black text-white rounded-lg border border-black hover:bg-slate-900 transition-colors group"
                     title="Auto-Extract from Syllabus"
                   >
                     <span className="material-symbols-outlined text-[14px] group-hover:rotate-180 transition-transform duration-500">auto_awesome</span>
@@ -443,7 +443,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
               onClick={handleArchive}
               disabled={actionLoading || isCreate}
               title={isCreate ? 'Save training first' : (training?.is_archived ? 'Restore' : 'Archive')}
-              className={`w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#1a1f2e] transition-all shadow-sm ${isCreate ? 'opacity-25 cursor-not-allowed' : 'hover:bg-slate-100'}`}
+              className={`w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#000000] transition-all shadow-sm ${isCreate ? 'opacity-25 cursor-not-allowed' : 'hover:bg-slate-100'}`}
             >
               <span className="material-symbols-outlined text-[18px]">
                 {training?.is_archived ? 'unarchive' : 'archive'}
@@ -453,7 +453,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
               onClick={() => handleAddTask()}
               disabled={actionLoading}
               title={isCreate ? 'Auto-save training & add task' : 'Add Task'}
-              className="h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center gap-1.5 text-[#1a1f2e] hover:bg-slate-100 transition-all shadow-sm disabled:opacity-50"
+              className="h-10 px-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center gap-1.5 text-[#000000] hover:bg-slate-100 transition-all shadow-sm disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-[18px]">add_task</span>
               <span className="text-[9px] font-bold uppercase tracking-widest">Task</span>
@@ -464,7 +464,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
           <div className="flex items-center gap-2 flex-1 justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-[#1a1f2e] font-bold text-[9px] uppercase tracking-widest border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm"
+              className="px-4 py-2.5 rounded-xl text-[#000000] font-bold text-[9px] uppercase tracking-widest border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm"
             >
               Cancel
             </button>
@@ -473,7 +473,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
               disabled={!canSave || actionLoading}
               className={`px-5 py-2.5 rounded-xl font-bold text-[9px] uppercase tracking-widest transition-all min-w-[130px] ${
                 canSave && !actionLoading
-                  ? 'bg-[#1a1f2e] text-white shadow-lg active:scale-95'
+                  ? 'bg-black text-white shadow-lg active:scale-95'
                   : 'bg-slate-100 text-slate-300 border border-slate-100 cursor-not-allowed'
               }`}
             >

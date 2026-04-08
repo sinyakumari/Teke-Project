@@ -38,13 +38,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
 
   // Local state for editing
   const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [status, setStatus] = useState('pending')
   const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium')
   const [deadline, setDeadline] = useState('')
   const [trainingId, setTrainingId] = useState('')
   const [blockedBy, setBlockedBy] = useState('')
-  const [notes, setNotes] = useState('')
   const [attachments, setAttachments] = useState<{ name: string; url: string; type: string }[]>([])
   const [uploading, setUploading] = useState(false)
 
@@ -66,24 +64,22 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   useEffect(() => {
     if (isCreateMode) {
       setName('')
-      setDescription('')
+      // Description removed
       setStatus('pending')
       setPriority('Medium')
       setDeadline('')
       setTrainingId(activeTrainingId || '')
       setBlockedBy('')
-      setNotes('')
       setAttachments([])
       setHasChanges(false)
     } else if (task) {
       setName(task.name || '')
-      setDescription(task.description || '')
+      // Description removed
       setStatus(task.status || 'pending')
       setPriority(task.priority || 'Medium')
       setDeadline(task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : '')
       setTrainingId(task.training_id || '')
       setBlockedBy(task.blocked_by_task_id || '')
-      setNotes(task.notes || '')
       setAttachments(task.attachments || [])
       setHasChanges(false)
     }
@@ -96,17 +92,15 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     } else if (task) {
       const changed =
         name !== task.name ||
-        description !== (task.description || '') ||
         status !== task.status ||
         priority !== (task.priority || 'Medium') ||
         deadline !== (task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : '') ||
         trainingId !== (task.training_id || '') ||
         blockedBy !== (task.blocked_by_task_id || '') ||
-        attachments !== (task.attachments || []) ||
-        notes !== (task.notes || '')
+        attachments !== (task.attachments || []);
       setHasChanges(changed)
     }
-  }, [name, description, status, priority, deadline, trainingId, blockedBy, notes, attachments, task, isCreateMode])
+  }, [name, status, priority, deadline, trainingId, blockedBy, attachments, task, isCreateMode])
 
   useEffect(() => {
     if (taskId && taskId !== 'new' && activeTab === 'Comments') {
@@ -238,13 +232,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
     try {
       const payload = {
         name,
-        description,
         status,
         priority,
         deadline: deadline || null,
         training_id: trainingId || null,
         blocked_by_task_id: blockedBy || null,
-        notes,
         attachments
       }
 
@@ -359,7 +351,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Task Name"
-              className="text-[15px] font-bold text-[#1a1f2e] bg-transparent outline-none w-full placeholder-slate-300 transition-all"
+              className="text-[15px] font-bold text-[#000000] bg-transparent outline-none w-full placeholder-slate-300 transition-all"
             />
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="relative group inline-flex items-center">
@@ -407,7 +399,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1">
                   <span className="material-symbols-outlined text-orange-400 text-[18px] shrink-0 mt-0.5">lock</span>
                   <div className="flex-1">
-                    <p className="text-[#1a1f2e] text-[10px] font-bold uppercase tracking-tight leading-none mb-1">TASK IS BLOCKED</p>
+                    <p className="text-[#000000] text-[10px] font-bold uppercase tracking-tight leading-none mb-1">TASK IS BLOCKED</p>
                     <p className="text-orange-600 text-[9px] font-medium leading-tight">
                       This task depends on <span className="underline italic">&quot;{blocker.name}&quot;</span> being completed first.
                     </p>
@@ -428,7 +420,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   <button
                     key={opt}
                     onClick={() => setPriority(opt as any)}
-                    className={`flex-1 py-1 rounded-lg text-[9px] font-bold transition-all ${priority === opt ? 'bg-[#1a1f2e] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                    className={`flex-1 py-1 rounded-lg text-[9px] font-bold transition-all ${priority === opt ? 'bg-[#000000] text-white shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                   >
                     {opt}
                   </button>
@@ -443,7 +435,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="w-full text-[11px] font-semibold text-[#1a1f2e] bg-transparent outline-none cursor-pointer"
+                className="w-full text-[11px] font-semibold text-[#000000] bg-transparent outline-none cursor-pointer"
               />
             </div>
           </div>
@@ -455,7 +447,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             <select
               value={trainingId}
               onChange={(e) => setTrainingId(e.target.value)}
-              className="w-full text-[11px] font-semibold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+              className="w-full text-[11px] font-semibold text-[#000000] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
             >
               <option value="">NO TRAINING</option>
               {trainings.map(t => (
@@ -484,7 +476,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 <select
                   value={blockedBy}
                   onChange={(e) => setBlockedBy(e.target.value)}
-                  className="w-full text-[11px] font-semibold text-[#1a1f2e] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
+                  className="w-full text-[11px] font-semibold text-[#000000] bg-slate-50 p-2 rounded-xl border-none outline-none appearance-none cursor-pointer"
                 >
                   <option value="">NOT BLOCKED</option>
                   {tasks.filter(t => t.id !== taskId).map(t => (
@@ -509,7 +501,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                     }}
                     placeholder="Write a comment..."
                     rows={1}
-                    className="flex-1 text-[11px] font-medium text-[#1a1f2e] outline-none min-h-[18px] max-h-[100px] resize-none overflow-y-auto bg-transparent py-1 px-1.5 placeholder-slate-400"
+                    className="flex-1 text-[11px] font-medium text-[#000000] outline-none min-h-[18px] max-h-[100px] resize-none overflow-y-auto bg-transparent py-1 px-1.5 placeholder-slate-400"
                   />
                   <div className="flex items-center gap-1 shrink-0 pb-0.5">
                     {commentMedia && (
@@ -548,7 +540,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                     <button 
                       onClick={handleAddComment}
                       disabled={(!commentContent.trim() && !commentMedia) || uploadingCommentMedia}
-                      className="w-6 h-6 flex items-center justify-center bg-[#1a1f2e] text-white rounded-lg shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:bg-slate-200"
+                      className="w-6 h-6 flex items-center justify-center bg-[#000000] text-white rounded-lg shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:bg-slate-200"
                       title="Send Comment"
                     >
                       <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
@@ -608,7 +600,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             onClick={handleSave}
             disabled={!hasChanges || loading || !name}
             className={`flex-1 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${hasChanges && !loading && name
-                ? 'bg-[#1a1f2e] text-white shadow-lg shadow-slate-200 active:scale-[0.98]'
+                ? 'bg-[#000000] text-white shadow-lg shadow-slate-200 active:scale-[0.98]'
                 : 'bg-slate-100 text-slate-300 cursor-not-allowed'
               }`}
           >

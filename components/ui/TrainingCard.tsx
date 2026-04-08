@@ -8,7 +8,7 @@ interface Training {
     title: string
     instructor: string
     location_type: string
-    location_name?: string
+    location_detail?: string
     start_date?: string
     end_date?: string
     category: string
@@ -89,7 +89,7 @@ export default function TrainingCard({
                         onChange={(e) => setEditTitle(e.target.value)}
                         onBlur={() => saveTitle()}
                         onKeyDown={handleKeyDown}
-                        className="bg-white border-2 border-[#1a1f2e] rounded-lg px-2 py-1 font-semibold outline-none w-full mr-2 text-base"
+                        className="bg-white border-2 border-[#000000] rounded-lg px-2 py-1 font-semibold outline-none w-full mr-2 text-base"
                     />
                 ) : (
                     <h3 
@@ -97,13 +97,13 @@ export default function TrainingCard({
                             e.stopPropagation()
                             setIsEditing(true)
                         }}
-                        className="font-semibold text-[#1a1f2e] text-base flex-1 pr-2"
+                        className="font-semibold text-[#000000] text-base flex-1 pr-2"
                     >
                         {training.title}
                     </h3>
                 )}
                 <div className="flex items-center gap-1">
-                    <span className="text-[12px] font-medium text-[#1a1f2e] capitalize mr-1">
+                    <span className="text-[12px] font-medium text-[#000000] capitalize mr-1">
                         {training.category || 'general'}
                     </span>
                     <button
@@ -111,7 +111,7 @@ export default function TrainingCard({
                             e.stopPropagation();
                             onEditClick?.(e);
                         }}
-                        className="p-1.5 hover:bg-gray-100 rounded-lg text-slate-400 hover:text-[#1a1f2e] transition-colors"
+                        className="p-1.5 hover:bg-gray-100 rounded-lg text-slate-400 hover:text-[#000000] transition-colors"
                         title="Edit Training"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -150,7 +150,7 @@ export default function TrainingCard({
             <div className="flex items-center gap-2">
                 <div className="flex-1 bg-gray-200 rounded-full h-1.5">
                     <div
-                        className="bg-[#1a1f2e] h-1.5 rounded-full transition-all"
+                        className="bg-[#000000] h-1.5 rounded-full transition-all"
                         style={{ width: `${progress}%` }}
                     />
                 </div>

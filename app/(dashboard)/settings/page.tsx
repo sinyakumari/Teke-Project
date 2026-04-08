@@ -45,7 +45,7 @@ export default function SettingsPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   // Paginated trainings for the notifications list
   const paginatedTrainings = React.useMemo(() => {
@@ -184,7 +184,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Pagination for Training Notifications */}
-          {trainings.length > itemsPerPage && (
+          {trainings.length > 0 && (
             <div className="flex justify-end mt-4 mb-4">
               <Pagination
                 totalItems={trainings.length}

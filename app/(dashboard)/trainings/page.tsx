@@ -88,7 +88,7 @@ export default function TrainingsPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1  lg:px-6 lg:pt-3">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-3  lg:px-6 lg:pt-3">
         <div className="max-w-7xl mx-auto">
           
           {/* Header */}
@@ -234,20 +234,7 @@ export default function TrainingsPage() {
         </div>
       </div>
 
-      {/* Floating + Button (Mobile) */}
-      <button
-        onClick={() => openTrainingDrawer('new')}
-        className="lg:hidden fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg z-20"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 5V19M5 12H19"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
+
     </div>
   )
 }

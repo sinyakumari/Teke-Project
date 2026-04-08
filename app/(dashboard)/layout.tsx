@@ -38,11 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
 
         {/* Mobile Bottom Nav */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-          <div className="bg-white border-t border-gray-200">
-            <MobileNav />
-          </div>
-        </div>
+        <MobileNav />
 
         {/* Global Task Drawer */}
         <TaskDrawer 

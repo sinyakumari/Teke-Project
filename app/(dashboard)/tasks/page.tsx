@@ -118,7 +118,7 @@ function TasksPageContent() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#f2f2f7]">
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-1 lg:px-6 lg:pt-3">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-3 pb-4 lg:px-6 lg:pt-3">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 gap-2">
@@ -253,12 +253,7 @@ function TasksPageContent() {
         </div>
       </div>
 
-      <button
-        onClick={() => openTaskDrawer('new')}
-        className="lg:hidden fixed bottom-24 right-6 bg-[#1a1f2e] w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg z-20"
-      >
-        <span className="material-symbols-outlined text-white text-3xl">add</span>
-      </button>
+
     </div>
   )
 }

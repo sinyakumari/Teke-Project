@@ -103,7 +103,7 @@ export default function RegisterPage() {
     )
   }
   return (
-    <div className="h-screen flex bg-white lg:bg-[#1a1f2e] overflow-hidden">
+    <div className="min-h-screen overflow-y-auto lg:h-screen lg:overflow-hidden flex bg-white lg:bg-[#1a1f2e]">
       {/* Left Panel - Signup Form */}
       <div className="flex-1 h-full bg-[#f2f2f7] lg:bg-white flex items-center justify-center px-4 lg:rounded-r-[40px] relative z-20 animate-in fade-in slide-in-from-left duration-700">
         <div className="w-full max-w-md bg-white lg:bg-transparent rounded-3xl shadow-xl lg:shadow-none p-8 lg:p-10">

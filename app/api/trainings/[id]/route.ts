@@ -50,7 +50,6 @@ export async function PUT(
     if (body.locationDetail !== undefined) updateData.location_detail = body.locationDetail || null
     if (body.endDate !== undefined) updateData.end_date = body.endDate || null
     if (body.category !== undefined) updateData.category = body.category?.toLowerCase() || null
-    if (body.notifications_enabled !== undefined) updateData.notifications_enabled = body.notifications_enabled
     if (body.is_archived !== undefined) updateData.is_archived = body.is_archived
 
     console.log('[PUT Training] updateData:', JSON.stringify(updateData))

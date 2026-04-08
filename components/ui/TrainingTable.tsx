@@ -8,7 +8,7 @@ interface Training {
   title: string
   instructor: string
   location_type: string
-  location_name?: string
+  location_detail?: string
   start_date?: string
   end_date?: string
   category: string

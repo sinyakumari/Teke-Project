@@ -80,7 +80,7 @@ export default function NotificationDropdown() {
       <button
         id="notification-bell"
         onClick={() => setIsOpen((v) => !v)}
-        className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-[#1a1f2e] hover:bg-slate-50 active:scale-95 transition-all shadow-sm group"
+        className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-[#000000] hover:bg-slate-50 active:scale-95 transition-all shadow-sm group"
         aria-label="Notifications"
       >
         <span className="material-symbols-outlined text-[22px] group-hover:rotate-12 transition-transform">
@@ -99,7 +99,7 @@ export default function NotificationDropdown() {
           {/* Header */}
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-black text-[#1a1f2e]">Notifications</h3>
+              <h3 className="text-sm font-black text-[#000000]">Notifications</h3>
               <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
                 {unreadCount} unread
               </p>
@@ -108,7 +108,7 @@ export default function NotificationDropdown() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-[10px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-wider transition-colors"
+                  className="text-[10px] font-black text-black hover:text-slate-700 uppercase tracking-wider transition-colors"
                 >
                   Mark all read
                 </button>
@@ -140,7 +140,7 @@ export default function NotificationDropdown() {
                     key={notif.id}
                     onClick={() => handleNotifClick(notif)}
                     className={`flex items-start gap-3 px-4 py-3 transition-colors relative
-                      ${!notif.is_read ? 'bg-indigo-50/20' : ''}
+                      ${!notif.is_read ? 'bg-slate-100/40' : ''}
                       ${clickable ? 'cursor-pointer hover:bg-slate-50' : ''}
                     `}
                   >
@@ -151,7 +151,7 @@ export default function NotificationDropdown() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={`text-xs font-black truncate ${!notif.is_read ? 'text-[#1a1f2e]' : 'text-slate-500'}`}>
+                        <p className={`text-xs font-black truncate ${!notif.is_read ? 'text-[#000000]' : 'text-slate-500'}`}>
                           {notif.title}
                         </p>
                         <span className="text-[9px] text-slate-400 whitespace-nowrap flex-shrink-0">
@@ -163,7 +163,7 @@ export default function NotificationDropdown() {
                       </p>
                     </div>
                     {!notif.is_read && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-indigo-600 flex-shrink-0" />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-black flex-shrink-0" />
                     )}
                   </div>
                 )
@@ -176,7 +176,7 @@ export default function NotificationDropdown() {
             <div className="px-4 py-2.5 border-t border-slate-50 bg-slate-50/50">
               <button
                 onClick={() => { setIsOpen(false); toggleHistory(true) }}
-                className="w-full text-center text-[10px] font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest transition-colors"
+                className="w-full text-center text-[10px] font-black text-black hover:underline uppercase tracking-widest transition-colors"
               >
                 View all history ({notifications.length})
               </button>

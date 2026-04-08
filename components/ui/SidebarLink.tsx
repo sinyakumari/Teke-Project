@@ -37,11 +37,11 @@ export default function SidebarNav() {
   const { user, loading } = useUser()
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 bg-[#1a1f2e] fixed h-full z-50 border-r border-slate-800/20 text-white font-sans">
+    <aside className="hidden lg:flex flex-col w-72 bg-[#000000] fixed h-full z-50 border-r border-slate-800/20 text-white font-sans">
 
       {/* Logo */}
       <div className="p-8 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#1a1f2e] shadow-lg shadow-white/5">
+        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#000000] shadow-lg shadow-white/5">
           <span className="material-symbols-outlined font-bold text-2xl">
             rocket_launch
           </span>
@@ -73,7 +73,7 @@ export default function SidebarNav() {
               href={item.href}
               className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
                 active
-                  ? 'bg-white text-[#1a1f2e] shadow-xl shadow-white/10'
+                  ? 'bg-white text-[#000000] shadow-xl shadow-white/10'
                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
             >
@@ -119,7 +119,7 @@ export default function SidebarNav() {
             </div>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-full bg-[#1a1f2e] overflow-hidden shrink-0 border border-slate-700/50 shadow-inner flex items-center justify-center text-xs font-bold text-slate-400 group-hover:border-slate-500 transition-all">
+              <div className="w-10 h-10 rounded-full bg-[#000000] overflow-hidden shrink-0 border border-slate-700/50 shadow-inner flex items-center justify-center text-xs font-bold text-slate-400 group-hover:border-slate-500 transition-all">
                 {user?.profilePicture ? (
                   <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
                 ) : user?.name ? (

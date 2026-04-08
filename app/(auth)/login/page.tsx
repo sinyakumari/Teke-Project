@@ -69,7 +69,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="h-screen flex bg-white lg:bg-[#1a1f2e] overflow-hidden">
+    <div className="min-h-screen overflow-y-auto lg:h-screen lg:overflow-hidden flex bg-white lg:bg-[#1a1f2e]">
       {/* Left Panel - Brand Messaging (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:w-[55%] h-full flex-col justify-between p-10 bg-[#1a1f2e] relative overflow-hidden animate-in fade-in slide-in-from-left duration-700">
         {/* Subtle Decorative Rings */}

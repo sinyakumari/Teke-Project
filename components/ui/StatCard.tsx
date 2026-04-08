@@ -22,7 +22,7 @@ export default function StatCard({
         </div>
       </div>
       <div>
-        <h3 className="text-2xl font-bold text-[#1a1f2e] leading-none mb-1">
+        <h3 className="text-2xl font-bold text-[#000000] leading-none mb-1">
           {value}
         </h3>
       </div>
