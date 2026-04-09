@@ -436,7 +436,7 @@ export default function TrainingDrawer({ trainingId, onClose }: TrainingDrawerPr
         </div>
 
         {/* ── Footer ── */}
-        <div className="p-3.5 bg-white border-t border-slate-100 flex items-center justify-between gap-2.5 sticky bottom-0 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] min-h-[60px]">
+        <div className="hidden lg:flex p-3.5 bg-white border-t border-slate-100 items-center justify-between gap-2.5 sticky bottom-0 z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] min-h-[60px]">
           {/* Left actions */}
           <div className="flex items-center gap-1.5">
             <button

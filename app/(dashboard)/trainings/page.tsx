@@ -95,8 +95,8 @@ export default function TrainingsPage() {
           <div className="flex items-center justify-between mb-4 gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f2e] tracking-tight shrink-0">Trainings</h1>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* View Toggle */}
-              <div className="bg-white p-1 rounded-xl border border-slate-100 flex items-center gap-1">
+              {/* View Toggle - Hidden on Mobile */}
+              <div className="hidden lg:flex bg-white p-1 rounded-xl border border-slate-100 items-center gap-1">
                  <button 
                   onClick={() => setView('grid')}
                   className={`p-1.5 rounded-lg transition-all ${view === 'grid' ? 'bg-[#1a1f2e] text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}

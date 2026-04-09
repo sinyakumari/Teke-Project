@@ -77,7 +77,7 @@ export default function TrainingCard({
     return (
         <div
             onClick={isEditing ? undefined : onClick}
-            className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all"
+            className="bg-white rounded-2xl p-3.5 lg:p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all"
         >
             <div className="flex items-start justify-between mb-2">
                 {isEditing ? (

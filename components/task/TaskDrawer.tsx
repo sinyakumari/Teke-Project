@@ -589,7 +589,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
         </div>
 
         {/* Fixed Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-between gap-3 z-20 min-h-[64px]">
+        <div className="hidden lg:flex absolute bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 items-center justify-between gap-3 z-20 min-h-[64px]">
           <button
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200"

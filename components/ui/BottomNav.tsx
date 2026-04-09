@@ -138,14 +138,14 @@ export default function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="flex flex-col items-center gap-0.5 px-2 py-1 min-h-[42px] justify-center"
+                            className="flex flex-col items-center gap-0.5 px-1 py-1 min-h-[42px] justify-center flex-1"
                         >
                             {active && (
                                 <div className="w-1 h-1 rounded-full bg-[#1a1f2e] mb-1" />
                             )}
                             {item.icon(active)}
                             <span
-                                className={`text-xs ${active ? 'text-[#1a1f2e] font-medium' : 'text-gray-400'
+                                className={`text-[10px] sm:text-xs ${active ? 'text-[#1a1f2e] font-medium' : 'text-gray-400'
                                     }`}
                             >
                                 {item.label}
