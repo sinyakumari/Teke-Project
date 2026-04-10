@@ -24,3 +24,38 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Premium Login Design Utilities */
+.hero-mesh {
+  background-color: #030714;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.1) 0, transparent 50%);
+}
+
+.technical-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 1);
+  border-color: #030714;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.font-headline {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.font-body {
+  font-family: 'Manrope', sans-serif;
+}
